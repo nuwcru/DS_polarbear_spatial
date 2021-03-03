@@ -141,7 +141,7 @@ plot(used_avail_spatial)
 
 ###
 
-# import cropped raster_list
+# import cropped raster_list (it's fine that 2020 data isn't in here; we don't have bear data for 2020)
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
 names(raster_list)
 proj4string(raster_list$`19781026`) # check that it's in polar stereographic
@@ -470,11 +470,17 @@ summary(DIST_WATER_final)
 head(used_avail)
 used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "")
 used_avail$DIST_WATER <- as.numeric(rep(NA, nrow(used_avail)))
+head(used_avail)
 
 # make all NA values in raster_list = 100
 for(i in 1:length(raster_list)){
   raster_list[is.na(raster_list[i])] <- 100
 }
+
+raster_list$`19781026`[] # this is the issue; replacing the NA values with 100 didn't work
+
+
+
 
 # make new list for water pixels and pull out all 0 values, also make sure that they're in the right projection
       # I'm not sure how to do this one

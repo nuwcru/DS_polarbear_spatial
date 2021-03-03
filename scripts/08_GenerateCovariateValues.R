@@ -140,9 +140,9 @@ plot(used_avail_spatial)
 
 
 ###
-
+/Users/erikhedlin/Downloads/Long-term_Ecosystem_Monitoring_Project_WILDTRAX_REPORT 17.csv
 # import cropped raster_list
-raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
+raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
 names(raster_list)
 proj4string(raster_list$`19781026`) # check that it's in polar stereographic
 
@@ -473,21 +473,27 @@ used_avail$DIST_WATER <- as.numeric(rep(NA, nrow(used_avail)))
 
 # make all NA values in raster_list = 100
 for(i in 1:length(raster_list)){
-  raster_list[is.na(raster_list[i])] <- 100
+  raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
+
+raster_list[[1]][]
+
 
 # make new list for water pixels and pull out all 0 values, also make sure that they're in the right projection
       # I'm not sure how to do this one
       # we need to pull out the water values for every raster, but do we put those values into a new list?
       # we need the date attached to them to make sure that we can pull the correct point for each date
 
-water <- list(length(raster_list)) #?
-
+water <- list() #?
+water_spatial <- list()
+water_coordinates <- list()
 for(i in 1:length(raster_list)){
-  water[i] = as(raster_list[i], "SpatialPoints")[raster_list[i]==0] # pull out the water pixels
-  water_spatial[i] <- spTransform(water[i], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
-  water_lat[] <- coordinates(water[i])[,2] # separate coordinates for each water raster
-  water_long[] <- coordinates(water[i])[,1]
+  i = 1
+  water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
+  water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
+  lat <- coordinates(water_spatial[[i]])[,2] # I'm not actually sure this is lat? double check
+  long <-  coordinates(water_spatial[[i]])[,1]
+  water_coordinates[[i]] <- cbind(lat, long)
 }
 
 

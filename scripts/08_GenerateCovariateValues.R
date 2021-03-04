@@ -191,7 +191,7 @@ value <- raster::extract(raster_list$'19940404', testbear_spatial)
 
 used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv")
 head(used_avail)
-used_avail = subset(select=-c(field_1, BATH))
+used_avail = subset(used_avail, select=-c(field_1, BATH))
 
 # let's make a column that matches the raster_list names
 used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "")
@@ -467,27 +467,56 @@ summary(DIST_WATER_final)
 
 # 10. Loops to extract all distance to water values --------
 
-
-
-
-# make column in used_avail to match raster names and empty column for distance to water values
+# import and format data
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points.csv")
 head(used_avail)
-used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "")
+used_avail=subset(used_avail, select=-c(X)) # remove unneccessary columns
+used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "") # make column to match raster names and empty column for distance to water values
 used_avail$DIST_WATER <- as.numeric(rep(NA, nrow(used_avail)))
 head(used_avail)
 
-# make all NA values in raster_list = 100
+used_avail_spatial <- used_avail
+coordinates(used_avail_spatial) <- c("LONG", "LAT")
+proj4string(used_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
+
+head(used_avail_spatial) # lat and long are missing, which is good
+class(used_avail_spatial) # spatialpointsdataframe
+
+#raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
+
+
+###
+
+
+# Steps
+      # [x] 1. For all rasters in raster_list, change NA values to 100 (necessary for next step to work)
+      # [x] 2. For all rasters, pull out water pixels (0 values) and make into new water list of spatial points
+      # [x] 3. Make sure names of new water list match names of raster_list
+      # [x] 4. Make sure that projections of used_avail and water list match
+      # [x] 5. Set coordinates of used_avail and water points (using coordinates())
+      # [x] 6. Make both into SpatialPointsDataFrame
+      # [] 7. Use both SpatialPointsDataFrame and dist2Line() to get distance to water values
+      # [] 8. merge new values with original used_avail points to have data altogether
+
+
+###
+
+
+# Step 1: make all NA values in raster_list = 100
 for(i in 1:length(raster_list)){
   raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
 
-
-
 raster_list$`19781026`[] # this worked
+
 
 ###
 
-# make new list for water pixels and pull out all 0 values, also make sure that they're in the right projection
+
+# Step 2: make new list for water pixels and pull out all 0 values; set projection; pull coordinates
+# Step 5: set coordinates for this new list (water_coordinates)
+# Step 6: make into spatialpointsdataframe (water_coordinates)
 
 water <- list() 
 water_spatial <- list()
@@ -498,58 +527,76 @@ for(i in 1:length(raster_list)){
   water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
   lat <- coordinates(water_spatial[[i]])[,2] 
   long <-  coordinates(water_spatial[[i]])[,1]
-  water_coordinates[[i]] <- cbind(lat, long)
+  #water_coordinates[[i]] <- cbind(lat, long)
+  water_coordinates[[i]] <- SpatialPointsDataFrame(matrix(c(lat, long), ncol=2), data.frame(ID=seq(1:length(water[[i]]))), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+} 
+# this new water_coordinates line works in that it makes the SpatialPointsDataFrames we need (so we can skip the xy_water part)
+# but I'm not sure what the ID column is doing
+
+
+###
+
+# Steps 3 and 4: match names and check projections
+names(water_coordinates) 
+names(water_coordinates) <- names(raster_list) # can I just do that?
+head(water_coordinates$`19781026`) # the ID column is just a list of numbers
+tail(water_coordinates$`19781026`) # it must be counting the # of water pixels for each dataframe in the list
+class(water_coordinates$`19781026`) # but they're the right class now
+summary(coordinates(water_coordinates$`19781026`)) # coords.x1 = lat, coords.x2 = long
+proj4string(used_avail_spatial)
+proj4string(water_coordinates$`19781026`) # this looks right
+
+
+###
+
+# I don't think this is necessary anymore
+
+# create matrix of bear/random points - I think I can just use used_avail_spatial here 
+#bear_lat <- coordinates(used_avail_spatial)[,2]
+#bear_long <- coordinates(used_avail_spatial)[,1]
+
+#xy_bear <- SpatialPointsDataFrame(
+  #matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
+  #proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+
+#head(xy_bear)
+#class(xy_bear)
+
+
+###
+
+
+# at this point we have the bear points as a spatialpointsdataframe (xy_bear or used_avail_spatial)
+# we also have a list of the water pixels as spatialpointsdataframes (water_coordinates), with the dates as the names
+# all of these have matching projections, so we should just be able to get the distances now
+
+
+###
+
+
+# Steps 7 and 8: pull distance to water values and add to used_avail dataframe
+
+# there are 2 different options here and they take a long time to load (20-30 min)
+# I based these off of the loops we made in section 5, but I cannot get them to work
+
+
+# this is what we had originally, but I don't think it's necessary to use xy_bear, as I'm not sure how it's different than used_avail_spatial
+# either way it's throwing an error: "in names(water_coordinates)==used_avail$date_char: longer object length is not a multiple of shorter object length"
+for(i in 1:nrow(used_avail)){ 
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail$date_char)] # extract matching raster using the date_char
+  used_avail[i, "DIST_WATER"] <- geosphere::dist2Line(xy_bear, water_coordinates[[i]]) # get distance and put into dataframe
 }
 
-# now we have a list of water coordinates
-length(water_coordinates)
-names(water_coordinates) # but you can see we don't actually have them named
-
-names(raster_list) # use this, to attach names to water_coordinates so we know the dates of each item in the list
-
-# I don't have time to think to heavily about this next part right now, but can you outline 
-# what it is you'd like to do? stepwise? so I'm assuming you want distance from each bear point
-# to open water, and that is complicated by the fact that we have a list of water points by date?
-# Is this right?
-
-
-
-
-
-
-
-coordinates(water_coordinates)
-
-# create matrix of bear/random points
-xy_bear <- SpatialPointsDataFrame(
-  matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
-  proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
-
-# create matrix of all water points
-xy_water <- SpatialPointsDataFrame(
-  matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(openwater_long))),
-  proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
-
-
-# set projection/coordinates for used_avail
+# this one is basically copied and pasted from section 5 and takes even longer to run
+# I let it run for over an hour and then just stopped it as I'm guessing there's something wrong with the code
 for(i in 1:nrow(used_avail)){
-  # i = 1
-  # convert ith ROWID to spatial
-  test <- used_avail[i,]
-  used_avail_spatial <- test
-  coordinates(used_avail_spatial) <- c("LONG", "LAT")
-  proj4string(used_avail_spatial) <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
-  bear_lat  <- coordinates(used_avail_spatial)[,2]
-  bear_long <- coordinates(used_avail_spatial)[,1]
+  testbear <- used_avail[i,]
+  testbear_spatial <- testbear
+  coordinates(testbear_spatial) <- c("LONG", "LAT")
+  proj4string(testbear_spatial) <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
+  matching_raster <- water_coordinates[which(names(water_coordinates) == testbear$date_char)]
+  used_avail[i, "DIST_WATER"] <- geosphere::dist2Line(testbear_spatial, matching_raster[[1]])
 }
-
-# pull distance to water values 
-for(i in 1:nrow(used_avail)){
-  # extract matching raster using the date_char
-  matching_raster <- water[which(names(water) == used_avail$date_char)]
-  used_avail[i, "DIST_WATER"] <- geosphere::dist2Line(xy_bear, water[i])
-}
-
 
 
 

@@ -140,9 +140,15 @@ plot(used_avail_spatial)
 
 
 ###
+<<<<<<< HEAD
+/Users/erikhedlin/Downloads/Long-term_Ecosystem_Monitoring_Project_WILDTRAX_REPORT 17.csv
+# import cropped raster_list
+raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
+=======
 
 # import cropped raster_list (it's fine that 2020 data isn't in here; we don't have bear data for 2020)
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
+>>>>>>> 91cadab36217f31e5b3d8e6461daa8c6a7e28550
 names(raster_list)
 proj4string(raster_list$`19781026`) # check that it's in polar stereographic
 
@@ -474,15 +480,19 @@ head(used_avail)
 
 # make all NA values in raster_list = 100
 for(i in 1:length(raster_list)){
-  raster_list[is.na(raster_list[i])] <- 100
+  raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
 
+<<<<<<< HEAD
 for(i in 1:length(raster_list)){
   raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
 
 
 raster_list$`19781026`[] # this is the issue; replacing the NA values with 100 didn't work
+=======
+
+>>>>>>> 9b5268193ebcf44215c7e8e73bd24392ec96a24c
 
 
 
@@ -492,13 +502,16 @@ raster_list$`19781026`[] # this is the issue; replacing the NA values with 100 d
       # we need to pull out the water values for every raster, but do we put those values into a new list?
       # we need the date attached to them to make sure that we can pull the correct point for each date
 
-water <- list(length(raster_list)) #?
-
+water <- list() #?
+water_spatial <- list()
+water_coordinates <- list()
 for(i in 1:length(raster_list)){
-  water[i] = as(raster_list[i], "SpatialPoints")[raster_list[i]==0] # pull out the water pixels
-  water_spatial[i] <- spTransform(water[i], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
-  water_lat[] <- coordinates(water[i])[,2] # separate coordinates for each water raster
-  water_long[] <- coordinates(water[i])[,1]
+  i = 1
+  water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
+  water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
+  lat <- coordinates(water_spatial[[i]])[,2] # I'm not actually sure this is lat? double check
+  long <-  coordinates(water_spatial[[i]])[,1]
+  water_coordinates[[i]] <- cbind(lat, long)
 }
 
 

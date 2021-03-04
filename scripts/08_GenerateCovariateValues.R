@@ -477,6 +477,11 @@ for(i in 1:length(raster_list)){
   raster_list[is.na(raster_list[i])] <- 100
 }
 
+for(i in 1:length(raster_list)){
+  raster_list[[i]][is.na(raster_list[[i]][])] <- 100
+}
+
+
 raster_list$`19781026`[] # this is the issue; replacing the NA values with 100 didn't work
 
 

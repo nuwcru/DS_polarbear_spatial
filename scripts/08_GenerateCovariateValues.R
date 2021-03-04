@@ -192,8 +192,9 @@ value <- raster::extract(raster_list$'19940404', testbear_spatial)
 # need a different loop to pull matching raster for each date? Or can this be a line?
 # also need the values to go into a dataframe; the test went into "Values"..?
 
-
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv")
 head(used_avail)
+used_avail = subset(select=-c(field_1, BATH))
 
 # let's make a column that matches the raster_list names
 used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "")
@@ -483,37 +484,27 @@ for(i in 1:length(raster_list)){
   raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
 
-<<<<<<< HEAD
-for(i in 1:length(raster_list)){
-  raster_list[[i]][is.na(raster_list[[i]][])] <- 100
-}
 
 
-raster_list$`19781026`[] # this is the issue; replacing the NA values with 100 didn't work
-=======
+raster_list$`19781026`[] # this worked
 
->>>>>>> 9b5268193ebcf44215c7e8e73bd24392ec96a24c
-
-
-
+###
 
 # make new list for water pixels and pull out all 0 values, also make sure that they're in the right projection
-      # I'm not sure how to do this one
-      # we need to pull out the water values for every raster, but do we put those values into a new list?
-      # we need the date attached to them to make sure that we can pull the correct point for each date
 
-water <- list() #?
+water <- list() 
 water_spatial <- list()
 water_coordinates <- list()
 for(i in 1:length(raster_list)){
   i = 1
   water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
   water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
-  lat <- coordinates(water_spatial[[i]])[,2] # I'm not actually sure this is lat? double check
+  lat <- coordinates(water_spatial[[i]])[,2] 
   long <-  coordinates(water_spatial[[i]])[,1]
   water_coordinates[[i]] <- cbind(lat, long)
 }
 
+coordinates(water_coordinates)
 
 # create matrix of bear/random points
 xy_bear <- SpatialPointsDataFrame(

@@ -140,15 +140,12 @@ plot(used_avail_spatial)
 
 
 ###
-<<<<<<< HEAD
-/Users/erikhedlin/Downloads/Long-term_Ecosystem_Monitoring_Project_WILDTRAX_REPORT 17.csv
 # import cropped raster_list
 raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
-=======
+
 
 # import cropped raster_list (it's fine that 2020 data isn't in here; we don't have bear data for 2020)
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
->>>>>>> 91cadab36217f31e5b3d8e6461daa8c6a7e28550
 names(raster_list)
 proj4string(raster_list$`19781026`) # check that it's in polar stereographic
 
@@ -496,13 +493,30 @@ water <- list()
 water_spatial <- list()
 water_coordinates <- list()
 for(i in 1:length(raster_list)){
-  i = 1
+  # i = 1 this was in the loop, so the loop was only ever producing a list of "1"
   water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
   water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
   lat <- coordinates(water_spatial[[i]])[,2] 
   long <-  coordinates(water_spatial[[i]])[,1]
   water_coordinates[[i]] <- cbind(lat, long)
 }
+
+# now we have a list of water coordinates
+length(water_coordinates)
+names(water_coordinates) # but you can see we don't actually have them named
+
+names(raster_list) # use this, to attach names to water_coordinates so we know the dates of each item in the list
+
+# I don't have time to think to heavily about this next part right now, but can you outline 
+# what it is you'd like to do? stepwise? so I'm assuming you want distance from each bear point
+# to open water, and that is complicated by the fact that we have a list of water points by date?
+# Is this right?
+
+
+
+
+
+
 
 coordinates(water_coordinates)
 

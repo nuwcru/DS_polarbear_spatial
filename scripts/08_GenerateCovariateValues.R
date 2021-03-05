@@ -592,6 +592,7 @@ for(i in 1:nrow(used_avail)){
 
 dim(used_avail)
 
+
 for(i in 1:nrow(used_avail)){
   matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail[i,"date_char"])]
   water_lat <- coordinates(matching_raster)[,3]
@@ -612,8 +613,93 @@ for(i in 1:nrow(used_avail)){
 }
 
 
+warnings()
 
 
+# make subset
+used_avail=subset(used_avail, select=-c(DIST_WATER))
+used_avail_subset <- used_avail %>% filter(date_char==19940404)
+unique(used_avail_subset$date_char)
+head(used_avail)
+used_avail_subset_spatial <- used_avail_subset
+coordinates(used_avail_subset_spatial) <- c("LONG", "LAT")
+proj4string(used_avail_subset_spatial) <- CRS("+proj=longlat +datum=WGS84")
+head(used_avail_subset)
+head(used_avail_subset_spatial)
+
+mdist <- list()
+
+for(i in 1:nrow(used_avail_subset)){
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- SpatialPointsDataFrame(
+    matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
   
   
+  bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
+  bear_long <- coordinates(used_avail_subset_spatial)[i,1]
+  xy_bear <- SpatialPointsDataFrame(
+    matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
   
+  mdist[[i]] <- data.frame(distance=geosphere::dist2Line(xy_bear, xy_water)[,1],
+                      lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
+                      lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
+}
+
+mdist_df <- bind_rows(mdist)
+bears_distwater <- cbind(used_avail_subset, mdist_df)
+head(bears_distwater)
+
+write.csv(bears_distwater, "data/bears_distwater.csv")
+
+
+
+# test plot 
+
+proj4string(raster_list$'19940404')
+proj4string(water_coordinates$'19940404')
+
+raster_19940404 <- raster_list$'19940404'
+water_19940404 <- water_coordinates$'19940404'
+raster_19940404_latlon <- projectRaster(raster_19940404, crs="+proj=longlat +datum=WGS84 +no_defs")
+
+plot(raster_19940404_latlon)
+points(water_19940404)
+
+summary(raster_19940404[])
+head(raster_19940404)
+
+
+values(raster_19940404_latlon) <- sort(runif(ncell(raster_19940404_latlon), 0, 1.0))
+plot(raster_19940404_latlon, col=c("blue","green","red"), breaks=c(0,0.5,1.0))
+text(r, digits=2)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
+
+raster_19940404_no100 = raster_19940404<=100
+raster_19940404_no100[]
+
+plot(raster_19940404_no100)
+
+
+
+
+
+

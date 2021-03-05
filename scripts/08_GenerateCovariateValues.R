@@ -504,7 +504,7 @@ raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/S
 
 
 # Step 1: make all NA values in raster_list = 100
-for(i in 1:length(raster_list)){
+for (i in 1:length(raster_list)){
   raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
 
@@ -522,13 +522,13 @@ water <- list()
 water_spatial <- list()
 water_coordinates <- list()
 for(i in 1:length(raster_list)){
-  # i = 1 this was in the loop, so the loop was only ever producing a list of "1"
+  # i = 1 # this was in the loop, so the loop was only ever producing a list of "1"
   water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
   water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
   lat <- coordinates(water_spatial[[i]])[,2] 
   long <-  coordinates(water_spatial[[i]])[,1]
   #water_coordinates[[i]] <- cbind(lat, long)
-  water_coordinates[[i]] <- SpatialPointsDataFrame(matrix(c(lat, long), ncol=2), data.frame(ID=seq(1:length(water[[i]]))), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+  water_coordinates[[i]] <- SpatialPointsDataFrame(matrix(c(long, lat), ncol=2), data.frame(ID=seq(1:length(water[[i]]))), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
 } 
 # this new water_coordinates line works in that it makes the SpatialPointsDataFrames we need (so we can skip the xy_water part)
 # but I'm not sure what the ID column is doing
@@ -589,14 +589,31 @@ for(i in 1:nrow(used_avail)){
 
 # this one is basically copied and pasted from section 5 and takes even longer to run
 # I let it run for over an hour and then just stopped it as I'm guessing there's something wrong with the code
+
+dim(used_avail)
+
 for(i in 1:nrow(used_avail)){
-  testbear <- used_avail[i,]
-  testbear_spatial <- testbear
-  coordinates(testbear_spatial) <- c("LONG", "LAT")
-  proj4string(testbear_spatial) <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
-  matching_raster <- water_coordinates[which(names(water_coordinates) == testbear$date_char)]
-  used_avail[i, "DIST_WATER"] <- geosphere::dist2Line(testbear_spatial, matching_raster[[1]])
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- SpatialPointsDataFrame(
+    matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+  
+  
+  bear_lat <- coordinates(used_avail_spatial)[i,2]
+  bear_long <- coordinates(used_avail_spatial)[i,1]
+  xy_bear <- SpatialPointsDataFrame(
+    matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+
+  
+  used_avail[i, "DIST_WATER"] <- geosphere::dist2Line(xy_bear, xy_water)
 }
 
 
 
+
+  
+  
+  

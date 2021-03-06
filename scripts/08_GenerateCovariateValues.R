@@ -113,15 +113,18 @@ saveRDS(object = raster_list, file = "/Volumes/Larissa G-drive/UAlberta MSc/Thes
 
 
 
-# 3. Load final datasets, format, check projections, and visualize (for section 8) -----
+# 3. Load final dataframes, format, check projections, and visualize (for section 8)  -----
 
 # using this: https://www.neonscience.org/resources/learning-hub/tutorials/extract-values-rasters-r
 
 # import used and available points
 # note that this was made in script #7 - all used land fixes have been removed, and we think we've dealt with on-land available too
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points.csv")
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv")
 head(used_avail)
-used_avail=subset(used_avail, select=-c(X)) # remove unneccessary columns
+used_avail=subset(used_avail, select=-c(field_1, DIST_LAND, BATH)) # remove unneccessary columns
+head(used_avail)
+names(used_avail)[23] <- "BATH"
+
 
 ggplot(data=used_avail) +
   geom_point(aes(x=LONG, y=LAT, colour=USED_AVAIL, alpha=USED_AVAIL)) +
@@ -141,8 +144,7 @@ plot(used_avail_spatial)
 
 ###
 # import cropped raster_list
-raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
-
+#raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
 
 # import cropped raster_list (it's fine that 2020 data isn't in here; we don't have bear data for 2020)
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
@@ -154,8 +156,7 @@ proj4string(raster_list$`19781026`) # check that it's in polar stereographic
 plot(raster_list$`19781026`)
 points(used_avail_spatial) # this works!
 
-
-
+###
 
 # 4. - SKIP - Extract sea ice concentration (test with one fix and one raster) ------
 
@@ -186,60 +187,78 @@ value <- raster::extract(raster_list$'19940404', testbear_spatial)
 # 5. Loop to extract all sea ice concentrations ----------
 
 # loop below to extract values
-# need a different loop to pull matching raster for each date? Or can this be a line?
-# also need the values to go into a dataframe; the test went into "Values"..?
 
+
+# need the uncropped version of raster_list
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
+plot(raster_list$`19781026`)
+proj4string(raster_list$`19781026`)
+
+
+# import point dataset and format
 used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv")
 head(used_avail)
-used_avail = subset(used_avail, select=-c(field_1, BATH))
-
-# let's make a column that matches the raster_list names
+used_avail=subset(used_avail, select=-c(field_1, DIST_LAND, BATH)) # remove unneccessary columns
+head(used_avail)
+names(used_avail)[23] <- "BATH"
 used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "")
-used_avail$ice_value <- as.numeric(rep(NA, nrow(used_avail)))
+#used_avail$ice_value <- as.numeric(rep(NA, nrow(used_avail)))
+head(used_avail)
+used_avail$date_char <- gsub("/", "", used_avail$date_char)
+head(used_avail)
 
+
+# make an ice list then run loop 
+
+ice <- list()
 
 for(i in 1:nrow(used_avail)){
   
   # uncomment, and run each line individually if you want to test this for i = 1...N
-    # i = 1
+     #i = 1
   
   # convert ith ROWID to spatial
-    testbear <- used_avail[i,]
+    testbear <- used_avail
     testbear_spatial <- testbear
     coordinates(testbear_spatial) <- c("LONG", "LAT")
     proj4string(testbear_spatial) <- CRS("+proj=longlat +datum=WGS84")
-    testbear_spatial <- spTransform(testbear_spatial, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs'))
+    testbear_spatial <- spTransform(testbear_spatial, crs("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs"))
   
   # extract matching raster using the date_char
-    matching_raster <- raster_list[which(names(raster_list) == testbear$date_char)]
-  
+   # matching_raster <- raster_list[which(names(raster_list) == testbear$date_char)] ------> this didn't work anymore
+    matching_raster <- raster_list[which(names(raster_list) == testbear[i, "date_char"])]
+    
   # uncomment if you're testing and want to see the ith raster/point
     # plot(matching_raster[[1]])
     # points(testbear_spatial, pch=20) 
   # extract value
-    used_avail[i, "ice_value"] <- raster::extract(matching_raster[[1]], testbear_spatial)
-
+    #used_avail[i, "ice_value"] <- raster::extract(matching_raster[[i]], testbear_spatial) -----> this didn't work anymore
+    ice[[i]] <- data.frame(raster::extract(matching_raster[[i]], testbear_spatial))
 }
 
 
+ice_df <- as.data.frame(ice) # 74,613 values which matches the used_avail
+summary(ice_df) # no NA values
+names(ice_df)[1] <- "CONC"
 
-hist(used_avail$ice_value)
-land <- used_avail %>% filter(used_avail$ice_value=="0") # there are 14198/74613 points (or 19%)
+ice_df_0 <- ice_df %>% filter(CONC=="0") #1,610/74,613 (~2%) are 0 values, which isn't bad!!
 
-land_used <- land %>% filter(USED_AVAIL=="used") # 295 used points
-land_avail <- land %>% filter(USED_AVAIL=="available") # 13903 available points
-# this will still show that bears are probably choosing NOT to use open-water
+used_avail_ice <- cbind(used_avail, ice_df)
+head(used_avail_ice)
+summary(used_avail_ice)
 
-no_values <- used_avail[is.na(used_avail$ice_value),] # at least there aren't any NAs now; i.e. none are outside the raster
+hist(used_avail_ice$CONC)
 
-land_avail_spatial <- land_avail
-coordinates(land_avail_spatial) <- c("LONG", "LAT")
-proj4string(land_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
-proj4string(land_avail_spatial)
+used_ice <- used_avail_ice %>% filter(USED_AVAIL=="used") # 1463 used points
+hist(used_ice$CONC)
+summary(used_ice) # mean=0.7367
 
-mapview(land_avail_spatial) # it looks like they're not on land!
+avail_ice <- used_avail_ice %>% filter(USED_AVAIL=="available") # 73150 available points
+hist(avail_ice$CONC)
+summary(avail_ice) # mean=0.8407
 
-write.csv(used_avail, "data/used_avail_withicevalues.csv")
+
+write.csv(used_avail_ice, "data/Oct2020work/FINAL DATASET/used_avail_points_withbath_andice_Mar2021.csv")
 
 
 
@@ -282,7 +301,9 @@ crs(land)
 extent(land)
 plot(land) # looks like mercader
 
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_ice_bath_distland.csv")
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_andice_Mar2021.csv")
+head(used_avail)
+
 used_avail_spatial <- used_avail
 coordinates(used_avail_spatial) <- c("LONG", "LAT")
 proj4string(used_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
@@ -290,25 +311,22 @@ proj4string(used_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
 plot(land)
 plot(used_avail_spatial, add=TRUE) # this works
 
-# gDistance(land2, used_avail_spatial) 
-# above only gives me one value, and it's saying we need to project both
 
+###
+
+# reproject both
 used_avail_spatial_proj <- spTransform(used_avail_spatial, crs("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"))
 land_proj <- spTransform(land, crs("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs"))
 
 plot(land_proj)
 plot(used_avail_spatial_proj, add=TRUE) # this works
 
------
-# looks like below works but I need it in a dataframe
-#distances = gDistance(land_proj, used_avail_spatial_proj, byid=TRUE)
-#distances2 <- as.data.frame(distances)
------
+
+####
+
   
 # attempting loop using https://stackoverflow.com/questions/39276754/finding-the-nearest-distances-between-a-vector-of-points-and-a-polygon-in-r
 # also used this to help put it into origial df: https://stackoverflow.com/questions/24619783/for-loop-r-create-and-populate-new-column-with-output
-
-head(used_avail_spatial_proj)
 
 used_avail$DIST_loop <- 0
 
@@ -319,11 +337,14 @@ for(i in 1:dim(used_avail_spatial_proj)[1]){
 }
 
 head(used_avail)
+names(used_avail)[27] <- "DIST_LAND"
+
 
 # make used_avail into new csv and bring into QGIS to test some of the distances
 # I randomly tested 5 bears comparing measurement tool to results from this, and it worked!
 # this new column is in meters
-write.csv(used_avail, "data/Oct2020work/FINAL DATASET/used_avail_ice_bath_distland_final.csv")
+
+write.csv(used_avail, "data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv")
 
 
 -----
@@ -468,10 +489,9 @@ summary(DIST_WATER_final)
 # 10. Loops to extract all distance to water values --------
 
 # import and format data
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points.csv")
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv")
 head(used_avail)
-used_avail=subset(used_avail, select=-c(X)) # remove unneccessary columns
-used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "") # make column to match raster names and empty column for distance to water values
+used_avail=subset(used_avail, select=-c(X, X.1)) # remove unneccessary columns
 used_avail$DIST_WATER <- as.numeric(rep(NA, nrow(used_avail)))
 head(used_avail)
 
@@ -482,9 +502,10 @@ proj4string(used_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
 head(used_avail_spatial) # lat and long are missing, which is good
 class(used_avail_spatial) # spatialpointsdataframe
 
+      # this covariate requires the cropped raster_list since shoreline pixels were being classified as 0, making distances much less than they should be
 #raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
-
+plot(raster_list$`19781026`)
 
 ###
 
@@ -549,22 +570,6 @@ proj4string(water_coordinates$`19781026`) # this looks right
 
 ###
 
-# I don't think this is necessary anymore
-
-# create matrix of bear/random points - I think I can just use used_avail_spatial here 
-#bear_lat <- coordinates(used_avail_spatial)[,2]
-#bear_long <- coordinates(used_avail_spatial)[,1]
-
-#xy_bear <- SpatialPointsDataFrame(
-  #matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
-  #proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
-
-#head(xy_bear)
-#class(xy_bear)
-
-
-###
-
 
 # at this point we have the bear points as a spatialpointsdataframe (xy_bear or used_avail_spatial)
 # we also have a list of the water pixels as spatialpointsdataframes (water_coordinates), with the dates as the names
@@ -575,20 +580,6 @@ proj4string(water_coordinates$`19781026`) # this looks right
 
 
 # Steps 7 and 8: pull distance to water values and add to used_avail dataframe
-
-# there are 2 different options here and they take a long time to load (20-30 min)
-# I based these off of the loops we made in section 5, but I cannot get them to work
-
-
-# this is what we had originally, but I don't think it's necessary to use xy_bear, as I'm not sure how it's different than used_avail_spatial
-# either way it's throwing an error: "in names(water_coordinates)==used_avail$date_char: longer object length is not a multiple of shorter object length"
-for(i in 1:nrow(used_avail)){ 
-  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail$date_char)] # extract matching raster using the date_char
-  used_avail[i, "DIST_WATER"] <- geosphere::dist2Line(xy_bear, water_coordinates[[i]]) # get distance and put into dataframe
-}
-
-# this one is basically copied and pasted from section 5 and takes even longer to run
-# I let it run for over an hour and then just stopped it as I'm guessing there's something wrong with the code
 
 dim(used_avail)
 
@@ -615,8 +606,13 @@ for(i in 1:nrow(used_avail)){
 
 warnings()
 
+head(used_avail) # this might not have worked
 
-# make subset
+
+###
+
+
+# make subset and try with that
 used_avail=subset(used_avail, select=-c(DIST_WATER))
 used_avail_subset <- used_avail %>% filter(date_char==19940404)
 unique(used_avail_subset$date_char)
@@ -653,9 +649,6 @@ mdist_df <- bind_rows(mdist)
 bears_distwater <- cbind(used_avail_subset, mdist_df)
 head(bears_distwater)
 
-write.csv(bears_distwater, "data/bears_distwater.csv")
-
-
 
 # test plot 
 
@@ -671,35 +664,5 @@ points(water_19940404)
 
 summary(raster_19940404[])
 head(raster_19940404)
-
-
-values(raster_19940404_latlon) <- sort(runif(ncell(raster_19940404_latlon), 0, 1.0))
-plot(raster_19940404_latlon, col=c("blue","green","red"), breaks=c(0,0.5,1.0))
-text(r, digits=2)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
-
-raster_19940404_no100 = raster_19940404<=100
-raster_19940404_no100[]
-
-plot(raster_19940404_no100)
-
-
-
-
 
 

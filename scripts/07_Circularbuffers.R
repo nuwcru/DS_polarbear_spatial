@@ -209,9 +209,10 @@ used_avail <- merge(available, used_oniceonly, all=TRUE) # this worked
 head(used_avail)
 ROWID_2 <- rownames(used_avail)
 used_avail <- cbind(ROWID_2=ROWID_2, used_avail)
+head(used_avail)
 
 # export
-write.csv(used_avail, "data/Oct2020work/FINAL DATASET/used_avail_points.csv")
+write.csv(used_avail, "data/Oct2020work/FINAL DATASET/used_avail_points_Mar2021.csv")
 
 
 

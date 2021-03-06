@@ -13,8 +13,6 @@ library(lme4) # for RSFs
 library(adehabitatHR) # for RSFs
 library(adehabitatHS) # for RSFs
 library(TMB)
-install.packages("glmmTMB", type="source")
-install.packages("TMB")
 library(glmmTMB) # RSFs according to Muff et al. (2019)
 
 theme_nuwcru <- function(){
@@ -44,22 +42,16 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 
 # 2. Load data and format------
 
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_ice_bath_distland_final.csv")
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv")
 head(used_avail)
 
 # drop unnecessary columns
-used_avail = subset(used_avail, select=-c(X, field_1, ZONE, EASTING, NORTHING, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S, DIST_LAND, join_Sourc, join_featu, join_scale, join_min_z, distance))
-head(used_avail)
-
-# rename some columns
-names(used_avail)[14] <- "CONC"
-names(used_avail)[15] <- "BATH"
-names(used_avail)[16] <- "DIST_LAND"
+used_avail = subset(used_avail, select=-c(X.1, X, ZONE, EASTING, NORTHING, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S))
 head(used_avail)
 
 # separate used from available for visualzing data
-used <- used_avail %>% filter(USED_AVAIL=="used")
-avail <- used_avail %>% filter(USED_AVAIL=="available")
+used <- used_avail %>% filter(USED_AVAIL=="used") # 1463
+avail <- used_avail %>% filter(USED_AVAIL=="available") # 73,150
 
 
 
@@ -75,10 +67,11 @@ str(used_avail)
 # test normality of each first
 
 # CONC
+summary(used_avail$CONC) # range from 0 to 1.0 (open water to 100% conc)
 hist(used_avail$CONC) # not normal
 hist(used$CONC)
 hist(avail$CONC)
-ggplot(data=used)+ geom_point(aes(x=ID, y=CONC))
+#ggplot(data=used) + geom_point(aes(x=ID, y=CONC)) # this is just weird
 
 shapiro.test(used_avail$CONC) # sample size too large
 shapiro.test(used$CONC) # p-value <0.05, therefore not normal
@@ -86,19 +79,19 @@ shapiro.test(used$CONC) # p-value <0.05, therefore not normal
 ggqqplot(used_avail$CONC, ylab="CONC") # not normal
 
 # BATH
-hist(used_avail$BATH) # normal
+summary(used_avail$BATH) # this is in m: range = 410.8 to -3495.3 
+hist(used_avail$BATH) # not normal
 hist(used$BATH)
 hist(avail$BATH)
-ggplot(data=used)+ geom_point(aes(x=ID, y=BATH))
 
 shapiro.test(used$BATH) # p-value <0.05, therefore not normal
 ggqqplot(used_avail$BATH, ylab="BATH") # not normal
 
 # DIST_LAND
+summary(used_avail$DIST_LAND) # this is in m; range = 5 to 421,587
 hist(used_avail$DIST_LAND) # not normal
 hist(used$DIST_LAND)
 hist(avail$DIST_LAND)
-ggplot(data=used)+ geom_point(aes(x=ID, y=DIST_LAND))
 
 shapiro.test(used$DIST_LAND) # p-value <0.05, therefore not normal
 ggqqplot(used_avail$DIST_LAND, ylab="DIST_LAND") # not normal
@@ -129,24 +122,24 @@ pairs(~BATH+CONC+DIST_LAND, data=used, panel=panel.smooth)
   
 # BATH versus CONC
       # all used and available values
-plot(used_avail$BATH, used_avail$CONC) # that's a mess
+plot(used_avail$BATH, used_avail$CONC) # that's a hot mess
 cor.test(used_avail$BATH, used_avail$CONC, method="kendall")
-      # p-value = 0.00497 = not correlated
-      # tau = -0.007 = very mild negative correlation
+      # p-value < 0.001 = not correlated
+      # tau = 0.1771989 = very mild positive correlation
 
       # used values only
 plot(used$BATH, used$CONC) # that's still a mess
-ggplot(data=used)+ geom_point(aes(x=BATH, y=CONC))
+ggplot(data=used) + geom_point(aes(x=BATH, y=CONC))
 cor.test(used$BATH, used$CONC, method="kendall")
-      # p-value = <0.001 = not correlated
-      # tau = -0.1634 = very mild negative correlation
+      # p-value = 0.003516 = not correlated
+      # tau = -0.05190126 = very mild negative correlation
 
 # BATH versus DIST_LAND 
       # all used and available values
 plot(used_avail$BATH, used_avail$DIST_LAND) # that's less of a mess
 cor.test(used_avail$BATH, used_avail$DIST_LAND, method="kendall")
       # p-value = <0.001 = not correlated
-      # tau = -0.522 = very mild negative correlation
+      # tau = -0.365865 = very mild negative correlation
 
       # used values only
 plot(used$BATH, used$DIST_LAND) # that's that's less of a mess
@@ -160,18 +153,121 @@ cor.test(used$BATH, used$DIST_LAND, method="kendall")
 plot(used_avail$CONC, used_avail$DIST_LAND) # that's a mess
 cor.test(used_avail$CONC, used_avail$DIST_LAND, method="kendall")
       # p-value = <0.001 = not correlated
-      # tau = 0.0521 = very mild positive correlation
+      # tau = -0.1619609 = very mild negative correlation
 
       # used values only
 plot(used$CONC, used$DIST_LAND) # that's still a mess
 ggplot(data=used)+ geom_point(aes(x=CONC, y=DIST_LAND))
 cor.test(used$CONC, used$DIST_LAND, method="kendall")
-      # p-value = <0.001 = not correlated
-      # tau = 0.17663 = very mild positive correlation
+      # p-value = 0.08044 = correlated
+      # tau = 0.03108569 = very mild positive correlation
 
 summary(used)
 
-# 4. Prepare dataframe for RSFs --------
+# 4. Transform data and test for colinearity again --------
+
+
+# 1. SCALE COVARIATES
+
+used_avail$BATH_SCALED <- scale(used_avail$BATH, scale=TRUE, center=TRUE)
+used_avail$DIST_SCALED <- scale(used_avail$DIST_LAND, scale=TRUE, center=TRUE)
+used_avail$CONC_SCALED <- scale(used_avail$CONC, scale=TRUE, center=TRUE)
+
+      # visualize
+hist(used_avail$BATH_SCALED) # not normal
+ggqqplot(used_avail$BATH_SCALED, ylab="BATH_SCALED") # not normal
+hist(used_avail$DIST_SCALED) # more normal
+ggqqplot(used_avail$DIST_SCALED, ylab="DIST_SCALED") # not normal
+hist(used_avail$CONC_SCALED) # not normal
+ggqqplot(used_avail$CONC_SCALED, ylab="CONC_SCALED") # not normal
+
+      # test correlation
+        # BATH versus CONC
+cor.test(used_avail$BATH_SCALED, used_avail$CONC_SCALED, method="kendall")
+              # p-value < 0.001 = not correlated
+              # tau = 0.1771989 = very mild positive correlation - these are the same values as above
+
+        # BATH versus DIST_LAND
+cor.test(used_avail$BATH_SCALED, used_avail$DIST_SCALED, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = -0.365865 = very mild negative correlation - these are the same values as above
+
+        # CONC versus DIST_LAND
+cor.test(used_avail$CONC_SCALED, used_avail$DIST_SCALED, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+
+###
+
+
+# 2. LOG TRANSFORM COVARIATES
+
+used_avail$BATH_LOG <- log(used_avail$BATH) # didn't work: "NaNs produced"
+used_avail$DIST_LOG <- log(used_avail$DIST_LAND)
+used_avail$CONC_LOG <- log(used_avail$CONC)
+
+hist(used_avail$DIST_LOG) # still not normal
+hist(used_avail$CONC_LOG) # still not normal
+
+      # test correlation
+        # BATH versus CONC
+cor.test(used_avail$BATH_LOG, used_avail$CONC_LOG, method="kendall")
+              # p-value < 0.001 = not correlated
+              # tau = -0.1972125 = very mild positive correlation - new values!
+
+        # BATH versus DIST_LAND
+cor.test(used_avail$BATH_LOG, used_avail$DIST_LOG, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = -0.3540895 = very mild negative correlation - new values!
+
+        # CONC versus DIST_LAND
+cor.test(used_avail$CONC_LOG, used_avail$DIST_LOG, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+
+###
+
+
+# 3. 10x LOG TRANSFORM COVARIATES
+
+# log10(Y+1) transform covariates: from Zuur et al. 2009
+used_avail$BATH_LOG10 <- log10(used_avail$BATH+1) # didn't work: NaNs produce
+used_avail$DIST_LOG10 <- log10(used_avail$DIST_LAND+1)
+used_avail$CONC_LOG10 <- log10(used_avail$CONC+1)
+
+hist(used_avail$DIST_LOG10) # starting to become normal
+hist(used_avail$CONC_LOG10) # still not normal
+
+      # test correlation
+          # BATH versus CONC
+cor.test(used_avail$BATH_LOG10, used_avail$CONC_LOG10, method="kendall")
+              # p-value < 0.001 = not correlated
+              # tau = -0.2079512 = very mild positive correlation - new values!
+
+          # BATH versus DIST_LAND
+cor.test(used_avail$BATH_LOG10, used_avail$DIST_LOG10, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = -0.3173102 = very mild negative correlation - new values!
+
+          # CONC versus DIST_LAND
+cor.test(used_avail$CONC_LOG10, used_avail$DIST_LOG10, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+
+
+# 5. Prepare data for RSFs --------
+# test linearity of use
+head(used_avail)
+CONC_lm = lm(USED_AVAIL ~ CONC, data=used_avail) # not linear
+plot(CONC_lm)
+
+BATH_lm = lm(USED_AVAIL ~ BATH, data=used_avail) # not linear
+plot(BATH_lm)
+
+DIST_lm = lm(USED_AVAIL ~ DIST_LAND, data=used_avail) # not linear
+plot(DIST_lm)
+
+
 
 head(avail) 
 avail$USED_AVAIL <- 0 # available is now classified as 0
@@ -183,55 +279,14 @@ used_avail_RSF <- rbind(avail, used)
 head(used_avail_RSF)
 str(used_avail_RSF)
 
+
 used_avail_RSF$ID <- as.integer(gsub('[a-zA-Z]', "", used_avail_RSF$ID)) # remove X from column
 used_avail_RSF$ID <- factor(used_avail_RSF$ID) # make it a factor
 used_avail_RSF$USED_AVAIL <- as.numeric(used_avail_RSF$USED_AVAIL) # make numeric
 used_avail_RSF$USE <- factor(used_avail_RSF$USED_AVAIL, levels=c(1,0), labels=c("used", "available")) # make use a factor also
 str(used_avail_RSF) # Now ID and USE are factors
 
-# scale covariates: BATH, DIST_LAND, CONC
-used_avail_RSF$BATH_SCALED <- scale(used_avail_RSF$BATH, scale=TRUE, center=TRUE)
-used_avail_RSF$DIST_SCALED <- scale(used_avail_RSF$DIST_LAND, scale=TRUE, center=TRUE)
-used_avail_RSF$CONC_SCALED <- scale(used_avail_RSF$CONC, scale=TRUE, center=TRUE)
 
-hist(used_avail_RSF$BATH_SCALED) # more normal
-ggqqplot(used_avail_RSF$BATH_SCALED, ylab="BATH_SCALED") # not normal
-hist(used_avail_RSF$DIST_SCALED) # not very normal
-ggqqplot(used_avail_RSF$DIST_SCALED, ylab="DIST_SCALED") # not normal
-hist(used_avail_RSF$CONC_SCALED) # not normal
-ggqqplot(used_avail_RSF$CONC_SCALED, ylab="CONC_SCALED") # not normal
-
-      # still good that I did kendall rather than pearson correlation test
-      # but this also means I can't use lme4
-
-# log transform covariates
-used_avail_RSF$BATH_LOG <- log(used_avail_RSF$BATH) # didn't work
-used_avail_RSF$DIST_LOG <- log(used_avail_RSF$DIST_LAND)
-used_avail_RSF$CONC_LOG <- log(used_avail_RSF$CONC)
-
-hist(used_avail_RSF$DIST_LOG) # still not normal
-hist(used_avail_RSF$CONC_LOG) # still not normal
-
-# test linearity of use
-CONC_lm = lm(USED_AVAIL ~ CONC, data=used_avail_RSF) # not linear
-plot(CONC_lm)
-
-BATH_lm = lm(USED_AVAIL ~ BATH, data=used_avail_RSF) # not linear
-plot(BATH_lm)
-
-DIST_lm = lm(USED_AVAIL ~ DIST_LAND, data=used_avail_RSF) # not linear
-plot(DIST_lm)
-
-
-
- # Erik - Skipping log transformation for now
-# log10(Y+1) transform covariates: from Zuur et al. 2009
-#used_avail_RSF$BATH_LOG10 <- log10(used_avail_RSF$BATH+1) # didn't work
-#used_avail_RSF$DIST_LOG10 <- log10(used_avail_RSF$DIST_LAND+1)
-#used_avail_RSF$CONC_LOG10 <- log10(used_avail_RSF$CONC+1)
-
-#hist(used_avail_RSF$DIST_LOG10) # starting to become normal
-#hist(used_avail_RSF$CONC_LOG10) # still not normal
 
 
 

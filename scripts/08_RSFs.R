@@ -14,6 +14,8 @@ library(adehabitatHR) # for RSFs
 library(adehabitatHS) # for RSFs
 library(TMB)
 library(glmmTMB) # RSFs according to Muff et al. (2019)
+library(data.table) # required for section 10
+library(gridExtra) # for grid.arrange() in section 10
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -312,6 +314,29 @@ used_avail_RSF[which(used_avail_RSF$USE == "available"), "W"]
 used_avail_RSF[which(used_avail_RSF$USE == "used"), "W"]
 
 
+###
+
+# Ignore below
+
+###
+
+# Get info on bears in each season
+
+freeze_used <- freezeup %>% filter(USE=="used") # separate the used points for each season
+break_used <- breakup %>% filter(USE=="used")
+icefree_used <- icefree %>% filter(USE=="used")
+winter_used <- winter %>% filter(USE=="used")
+
+length(unique(freeze_used[["ID"]])) # count number of bears in each dataset
+length(unique(break_used[["ID"]]))
+length(unique(icefree_used[["ID"]]))
+length(unique(winter_used[["ID"]]))
+
+summary(as.data.frame(table(freeze_used$ID))) # get mean number of fixes per dataset
+summary(as.data.frame(table(break_used$ID)))
+summary(as.data.frame(table(icefree_used$ID)))
+summary(as.data.frame(table(winter_used$ID)))
+summary(as.data.frame(table(used_avail_RSF$ID)))
 
 
 # 6. - SKIP - Creating basic (no seasons, no reproductive status) RSF models -----
@@ -1773,4 +1798,177 @@ summary(model11_freezeup)
 # fit model
 #model14_freezeup <- glmmTMB:::fitTMB(model14_tmp_freezeup) 
 #summary(model14_freezeup)
+
+
+# 10. Interpreting and visualizing top model results ---------
+
+
+summary(model11)
+summary(model11_winter)
+summary(model11_break)
+summary(model11_icefree)
+summary(model11_freezeup)
+
+summary(used)
+    # pooled mean bath: -351.31m
+    # pooled mean conc: 0.7367
+    # pooled mean dist_land: 72,160m
+
+summary(winter)
+    # winter mean bath: -533.9m
+    # winter mean conc: 0.7978
+    # winter mean dist_land: 98,117
+
+summary(breakup)
+    # breakup mean bath: -371.9m
+    # breakup mean conc: 0.8738
+    # breakup mean dist_land: 83,502.9
+
+summary(icefree)
+    # icefree mean bath: -304.1m
+    # icefree mean conc: 0.8698
+    # icefree mean dist_land: 55,246.83
+
+summary(freezeup)
+    # freezeup mean bath: -545.0m
+    # freezeup mean conc: 0.8183
+    # freezeup mean dist_land: 103,792.0
+
+
+
+
+RSF_summary <- data.frame(matrix(ncol=4, nrow=5))
+x <- c("RSF", "MEAN_BATH", "MEAN_CONC", "MEAN_DIST_LAND")
+colnames(RSF_summary) <- x
+head(RSF_summary)
+
+RSF_summary$RSF <- c("pooled", "winter", "breakup", "icefree", "freezeup")
+RSF_summary$MEAN_BATH <- c("-351.31","-533.9", "-371.9", "-304.1", "-545.0")
+RSF_summary$MEAN_CONC <- c("0.7367", "0.7978", "0.8738", "0.8698", "0.8183")
+RSF_summary$MEAN_DIST_LAND <- c("72160", "98117", "83502.9", "55246.83", "103792.0")
+
+summary(RSF_summary)
+
+RSF_summary$MEAN_BATH <- as.numeric(RSF_summary$MEAN_BATH) 
+RSF_summary$MEAN_CONC <- as.numeric(RSF_summary$MEAN_CONC) 
+RSF_summary$MEAN_DIST_LAND <- as.numeric(RSF_summary$MEAN_DIST_LAND) 
+
+x <- c("pooled", "winter", "breakup", "icefree", "freezeup")
+RSF_summary2 <- RSF_summary %>% mutate(RSF=factor(RSF, levels=x)) %>% arrange(RSF) # reordered
+
+bathplot <- ggplot(data=RSF_summary2) + geom_point(aes(x=RSF, y=MEAN_BATH)) + scale_y_continuous(limits=c(-600, -200), breaks=c(-600, -400, -200), labels=c("-600", "-400", "-200")) + theme_nuwcru()
+bathplot2 <- bathplot + theme(axis.title.x = element_blank()) + labs(y="Mean\nocean depth")
+bathplot2 
+concplot <- ggplot(data=RSF_summary2) + geom_point(aes(x=RSF, y=MEAN_CONC)) + scale_y_continuous(limits=c(0.7, 0.9), breaks=c(0.7, 0.8, 0.9), labels=c("70%", "80%", "90%")) + theme_nuwcru()
+concplot2 <- concplot + theme(axis.title.x = element_blank()) + labs(y="Mean\nsea ice concentration")
+concplot2 
+distplot <- ggplot(data=RSF_summary2) + geom_point(aes(x=RSF, y=MEAN_DIST_LAND)) + scale_y_continuous(limits=c(50000, 125000), breaks=c(50000, 75000, 100000, 125000), labels=c("50000", "75000", "100000", "125000")) + theme_nuwcru()
+distplot2 <- distplot + theme(axis.title.x = element_blank()) + labs(y="Mean\ndistance to land")
+distplot2 
+grid.arrange(bathplot2, distplot2, concplot2, ncol=1)
+
+
+### 
+# IGNORE BELOW FOR NOW
+###
+
+
+
+# based on new Fieberg et al. (2021) paper
+# top models for pooled and seasonal (without dist_water) = model 11
+
+# POOLED
+summary(model11) # remember that these are scaled; need to unscale to interpret correctly
+coef(model11) # for each individual
+summary(model11)$varcor # magnitude of individual variation; this is in the summary as well
+
+model11_coef <- coef(model11)
+m <- c(0, mean(used_avail_RSF$BATH))
+s <- c(1, sd(used_avail_RSF$BATH))
+model11_coef_unscale <- model11_coef*s+m
+
+
+
+# rescale coefficients to get correct units
+      # "multiply coefficient by the standard deviation of the covariate and add the mean": https://stackoverflow.com/questions/35209579/unscale-predictor-coefficients-lmer-model-fit-with-an-unscaled-response
+
+# using sd and means of original dataset
+mean(used_avail_RSF$BATH)
+sd(used_avail_RSF$BATH)
+(1.55799*514.8118)+(-451.84) # 350.2316
+(1.55799+-451.84)*(514.8118) # -231,810.5 - neither of these are correct; it should be negative but not that low
+
+
+# https://stackoverflow.com/questions/10287545/backtransform-scale-for-plotting
+
+y = 1.5579853*sqrt((sum((used_avail_RSF$BATH - mean(used_avail_RSF$BATH, na.rm=T))^2))/(length(used_avail_RSF$BATH)-1))
+y + mean(used_avail_RSF$BATH, na.rm=T) # = 350.2292 for the true BATH value
+
+
+
+
+# plot for visualization: https://terpconnect.umd.edu/~egurarie/research/NWT/Step08_RSF_PartIII.html#mixed_effects_model:_random_slope
+
+
+coefs.tmb <- summary(model11)$coef$cond %>% as.data.frame
+head(coefs.tmb)
+coefs.tmb2 <- setDT(coefs.tmb, keep.rownames = TRUE)[]
+head(coefs.tmb2)
+names(coefs.tmb2)[1] <- "COVARIATE"
+names(coefs.tmb2)[2] <- "ESTIMATE"
+names(coefs.tmb2)[3] <- "SE"
+names(coefs.tmb2)[4] <- "Z"
+names(coefs.tmb2)[5] <- "PVALUE"
+coefs.tmb3 = coefs.tmb2[-1,]
+head(coefs.tmb3)
+coefs.tmb3$LOW = coefs.tmb3$ESTIMATE-2*coefs.tmb3$SE
+coefs.tmb3$HIGH = coefs.tmb3$ESTIMATE+2*coefs.tmb3$SE
+
+
+ggplot(data=coefs.tmb3, aes(col=PVALUE<0.05)) +
+  geom_point(aes(x=ESTIMATE, y=COVARIATE)) +
+  geom_errorbar(aes(xmin=ESTIMATE-SE, xmax=ESTIMATE+SE, y=COVARIATE))
+
+
+ggplot(data=coefs.tmb3, aes(col=PVALUE<0.05)) +
+  geom_point(aes(x=ESTIMATE, y=COVARIATE)) +
+  geom_errorbar(aes(xmin=LOW, xmax=HIGH, y=COVARIATE))
+
+
+
+###
+
+
+
+# WINTER
+summary(model11_winter)
+
+# remake model with original data
+model11_tmp_winter2 <- glmmTMB(USED_AVAIL~BATH+CONC+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+CONC|ID)+(0+DIST_LAND|ID), family=binomial(), data=winter, doFit=F, weights=W)
+model11_tmp_winter2$parameters$theta[1] = log(1e3)
+model11_tmp_winter2$mapArg = list(theta = factor(c(NA, 1:3)))
+model11_winter2 <- glmmTMB:::fitTMB(model11_tmp_winter2) 
+summary(model11_winter2)
+
+      # this is still giving me incorrect values
+      # how can BATH be 0.003048? It should be negative
+
+
+
+
+
+
+# break-up
+summary(model11_break)
+
+# ice-free
+summary(model11_icefree)
+
+# freeze-up
+summary(model11_freezeup)
+
+
+
+
+
 

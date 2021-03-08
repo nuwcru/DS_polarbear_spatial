@@ -1846,26 +1846,38 @@ RSF_summary$RSF <- c("pooled", "winter", "breakup", "icefree", "freezeup")
 RSF_summary$MEAN_BATH <- c("-351.31","-533.9", "-371.9", "-304.1", "-545.0")
 RSF_summary$MEAN_CONC <- c("0.7367", "0.7978", "0.8738", "0.8698", "0.8183")
 RSF_summary$MEAN_DIST_LAND <- c("72160", "98117", "83502.9", "55246.83", "103792.0")
+sd(freezeup$DIST_LAND)
+RSF_summary$SD_BATH <- c("514.8118","665.8212", "309.5917", "183.9856", "620.8322")
+RSF_summary$SD_CONC <- c("0.1789752", "0.201994", "0.1321105", "0.1617892", "0.2047531")
+RSF_summary$SD_DIST_LAND <- c("67715.13", "75412.87", "53227.91", "33300.51", "81504.01")
 
 summary(RSF_summary)
 
 RSF_summary$MEAN_BATH <- as.numeric(RSF_summary$MEAN_BATH) 
 RSF_summary$MEAN_CONC <- as.numeric(RSF_summary$MEAN_CONC) 
 RSF_summary$MEAN_DIST_LAND <- as.numeric(RSF_summary$MEAN_DIST_LAND) 
+RSF_summary$SD_BATH <- as.numeric(RSF_summary$SD_BATH) 
+RSF_summary$SD_CONC <- as.numeric(RSF_summary$SD_CONC) 
+RSF_summary$SD_DIST_LAND <- as.numeric(RSF_summary$SD_DIST_LAND) 
 
 x <- c("pooled", "winter", "breakup", "icefree", "freezeup")
 RSF_summary2 <- RSF_summary %>% mutate(RSF=factor(RSF, levels=x)) %>% arrange(RSF) # reordered
 
-bathplot <- ggplot(data=RSF_summary2) + geom_point(aes(x=RSF, y=MEAN_BATH)) + scale_y_continuous(limits=c(-600, -200), breaks=c(-600, -400, -200), labels=c("-600", "-400", "-200")) + theme_nuwcru()
+bathplot <- ggplot(RSF_summary2, aes(x=RSF, y=MEAN_BATH)) + geom_pointrange(aes(ymin=MEAN_BATH-SD_BATH, ymax=MEAN_BATH+SD_BATH)) + theme_nuwcru()
 bathplot2 <- bathplot + theme(axis.title.x = element_blank()) + labs(y="Mean\nocean depth")
-bathplot2 
-concplot <- ggplot(data=RSF_summary2) + geom_point(aes(x=RSF, y=MEAN_CONC)) + scale_y_continuous(limits=c(0.7, 0.9), breaks=c(0.7, 0.8, 0.9), labels=c("70%", "80%", "90%")) + theme_nuwcru()
+bathplot2
+
+concplot <- ggplot(RSF_summary2, aes(x=RSF, y=MEAN_CONC)) + geom_pointrange(aes(ymin=MEAN_CONC-SD_CONC, ymax=MEAN_CONC+SD_CONC)) + theme_nuwcru()
 concplot2 <- concplot + theme(axis.title.x = element_blank()) + labs(y="Mean\nsea ice concentration")
-concplot2 
-distplot <- ggplot(data=RSF_summary2) + geom_point(aes(x=RSF, y=MEAN_DIST_LAND)) + scale_y_continuous(limits=c(50000, 125000), breaks=c(50000, 75000, 100000, 125000), labels=c("50000", "75000", "100000", "125000")) + theme_nuwcru()
+concplot2
+
+distplot <- ggplot(RSF_summary2, aes(x=RSF, y=MEAN_DIST_LAND)) + geom_pointrange(aes(ymin=MEAN_DIST_LAND-SD_DIST_LAND, ymax=MEAN_DIST_LAND+SD_DIST_LAND)) + theme_nuwcru()
 distplot2 <- distplot + theme(axis.title.x = element_blank()) + labs(y="Mean\ndistance to land")
-distplot2 
+distplot2
+
 grid.arrange(bathplot2, distplot2, concplot2, ncol=1)
+
+
 
 
 ### 

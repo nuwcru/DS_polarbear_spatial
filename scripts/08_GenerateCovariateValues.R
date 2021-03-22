@@ -17,6 +17,7 @@ library(sf) # for st_read function
 library(rgeos) # gDistance tool
 library(rgdal) # distance from points
 library(geosphere) # distance to water
+library(viridis) # for plotting (section 10)
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -353,7 +354,7 @@ write.csv(used_avail, "data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distla
 # 8. Get distance to water (test with one date) -------
 
 # separate one date for points (19940404) and make spatial
-bear19940404 <- filter(used_avail, DATE=="1994-04-04")
+bear19940404 <- filter(used_avail, DATE=="1994/04/04")
 bear19940404_spatial <- bear19940404
 coordinates(bear19940404_spatial) <- c("LONG", "LAT")
 proj4string(bear19940404_spatial) <- CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")
@@ -394,7 +395,7 @@ summary(raster_19940404[]) # this one matches line 312; i.e., they both have the
 raster_19940404[is.na(raster_19940404[])] <- 100 # replace all NA values with 100 
 raster_19940404[] # this worked
 raster_100 = as(raster_19940404, "SpatialPoints")[raster_19940404[]==100]  # pull all 100 values out to see where they are
-plot(raster_100) # this is everything outside of the water mask, and potentially in the open water area
+plot(raster_100) # this is everything on land, and potentially in the open water area
 
 water_19940404 = as(raster_19940404, "SpatialPoints")[raster_19940404[]==0]  # specify 0 for water
 crs(water_19940404) # polar stereographic
@@ -494,6 +495,7 @@ head(used_avail)
 used_avail=subset(used_avail, select=-c(X, X.1)) # remove unneccessary columns
 used_avail$DIST_WATER <- as.numeric(rep(NA, nrow(used_avail)))
 head(used_avail)
+str(used_avail)
 
 used_avail_spatial <- used_avail
 coordinates(used_avail_spatial) <- c("LONG", "LAT")
@@ -543,7 +545,7 @@ water <- list()
 water_spatial <- list()
 water_coordinates <- list()
 for(i in 1:length(raster_list)){
-  # i = 1 # this was in the loop, so the loop was only ever producing a list of "1"
+  #i = 1 # this was in the loop, so the loop was only ever producing a list of "1"
   water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
   water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
   lat <- coordinates(water_spatial[[i]])[,2] 
@@ -567,7 +569,8 @@ summary(coordinates(water_coordinates$`19781026`)) # coords.x1 = lat, coords.x2 
 proj4string(used_avail_spatial)
 proj4string(water_coordinates$`19781026`) # this looks right
 
-
+head(water_coordinates)
+str(water_coordinates)
 ###
 
 
@@ -604,26 +607,38 @@ for(i in 1:nrow(used_avail)){
 }
 
 
-warnings()
-
 head(used_avail) # this might not have worked
+summary(used_avail)
+names(used_avail)[27] <- "DIST_WATER"
+
+
 
 
 ###
 
+# TEST WITH A SUBSET
 
-# make subset and try with that
+###
+
+
 used_avail=subset(used_avail, select=-c(DIST_WATER))
 used_avail_subset <- used_avail %>% filter(date_char==19940404)
 unique(used_avail_subset$date_char)
-head(used_avail)
+used_avail_subset$date_char <- as.numeric(used_avail_subset$date_char)
+used_avail_subset$LAT <- as.numeric(as.character(used_avail_subset$LAT))
+used_avail_subset$LONG <- as.numeric(as.character(used_avail_subset$LONG))
+str(used_avail_subset)
 used_avail_subset_spatial <- used_avail_subset
-coordinates(used_avail_subset_spatial) <- c("LONG", "LAT")
+#coordinates(used_avail_subset_spatial) <- c("LONG", "LAT")
+str(used_avail_subset_spatial)
+coordinates(used_avail_subset_spatial) <- ~LONG + LAT
 proj4string(used_avail_subset_spatial) <- CRS("+proj=longlat +datum=WGS84")
 head(used_avail_subset)
 head(used_avail_subset_spatial)
+str(used_avail_subset_spatial)
 
 mdist <- list()
+
 
 for(i in 1:nrow(used_avail_subset)){
   matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
@@ -640,7 +655,7 @@ for(i in 1:nrow(used_avail_subset)){
     matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
     proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
   
-  mdist[[i]] <- data.frame(distance=geosphere::dist2Line(xy_bear, xy_water)[,1],
+  mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
                       lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
                       lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
 }
@@ -648,6 +663,7 @@ for(i in 1:nrow(used_avail_subset)){
 mdist_df <- bind_rows(mdist)
 bears_distwater <- cbind(used_avail_subset, mdist_df)
 head(bears_distwater)
+summary(bears_distwater)
 
 
 # test plot 
@@ -660,9 +676,27 @@ water_19940404 <- water_coordinates$'19940404'
 raster_19940404_latlon <- projectRaster(raster_19940404, crs="+proj=longlat +datum=WGS84 +no_defs")
 
 plot(raster_19940404_latlon)
-points(water_19940404)
+points(water_19940404) # looks good!
 
 summary(raster_19940404[])
 head(raster_19940404)
+
+
+
+# plot better
+
+head(bears_distwater)
+str(bears_distwater)
+bears_distwater_spatial <- bears_distwater
+coordinates(bears_distwater_spatial) <- ~lon + lat
+proj4string(bears_distwater_spatial) <- CRS("+proj=longlat +datum=WGS84")
+plot(bears_distwater_spatial)
+
+
+plot(raster_19940404_latlon, col=(viridis(5)), zlim=c(0, 1))
+plot(water_19940404, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
+points(bear19940404_spatial, col="red")
+plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
+
 
 

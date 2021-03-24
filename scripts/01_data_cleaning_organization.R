@@ -169,11 +169,14 @@ test4 <- duplicates[test3$Freq>1,] # this worked
 write.csv(bears2, "data/Oct2020work/bears2.csv")
 
 
-
 # SKIP - 4. Add land_ice column for analyzing later and create final dataframe ------------
 
 # import and format new csv file of land fixes that I made in QGIS
 bears_land <- read.csv("data/Oct2020work/bears_land.csv")
+bears2_land <- read.csv("data/bears2_landonly.csv")
+difference <- anti_join(bears_land, bears2_land) # these are the same
+
+
 str(bears_land)
 as.Date(bears_land$DATE, "%m-%d-%Y")
 head(bears_land) # already has ICE_LAND column
@@ -185,6 +188,7 @@ bears_land=subset(bears_land, select=-c(field_1))
 
 # use anti_join to create a bears_ice dataframe - these are all the fixes not on land
 bears_ice <- anti_join(bears2, bears_land)
+head(bears_ice)
 write.csv(bears_ice, "data/Oct2020work/bears_ice.csv") # made this for mapping in QGIS
 
 # create ICE_LAND column in bears_ice and fill

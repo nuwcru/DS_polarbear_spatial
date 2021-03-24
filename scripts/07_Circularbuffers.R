@@ -43,16 +43,14 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 # 2. Load data ------------
 
 bears <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020_UTM_LATLONG.csv")
-#ice_bears <- bears %>% filter(bears$ICE_LAND=="ice") # 1388/1850 points are on ice - use this below instead
-used_oniceonly <- read.csv("data/Oct2020work/FINAL DATASET/used_oniceonly.csv") #1388 points
+bears_final_Nov2020 <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
+bears_final_Nov2020_UTM <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020_UTM.csv")
+difference <- anti_join(bears, bears_final_Nov2020) # these are the same
+difference2 <- anti_join(bears, bears_final_Nov2020_UTM) # these seem different, but after looking at these 7 they're the same
 
-# use used_oniceonly instead of ice_bears
-# this new df was made in QGIS with the updated ocean mask Erik made
-# this way, the on-ice used points and their circular buffers are all created using the same shapefile
 
-head(used_oniceonly)
-      # drop unnecessary columns, like ICE_LAND which is now wrong
-used_oniceonly <- subset(used_oniceonly, select=-c(field_1, X.1, X, ICE_LAND, featurecla))
+# separate ice from land - we only need ice now
+bears_ice <- bears %>% filter(ICE_LAND=="ice")
 
 
 
@@ -64,7 +62,7 @@ used_oniceonly <- subset(used_oniceonly, select=-c(field_1, X.1, X, ICE_LAND, fe
 
   
       # create buffers using spatialEco package
-bears_spatial_latlong <- used_oniceonly
+bears_spatial_latlong <- bears_ice
 coordinates(bears_spatial_latlong) <- c("LONG", "LAT")
 proj4string(bears_spatial_latlong) <- CRS("+proj=longlat +datum=WGS84")
 proj4string(bears_spatial_latlong)
@@ -144,18 +142,22 @@ plot(sample, add=TRUE) # This works!
   
       # put random points back into the original data frame
 ran_points <- as.data.frame(sample)
-ran_points2 <- ran_points %>% mutate(ran_long = unlist(map(ran_points$geometry,1)), ran_lat = unlist(map(ran_points$geometry,2)))
+ran_points2 <- unlist(st_geometry(sample)) %>% matrix(ncol=2, byrow=TRUE) %>% as_tibble() %>% setNames(c("lon", "lat"))
 head(ran_points2)
+str(ran_points2)
+ran_points3 <- as.data.frame(ran_points2)
+head(ran_points3)
 
-      # because we have 73,150 points, we have to blow the original dataframe up to this size
+      # because we have 69,400 points, we have to blow the original dataframe up to this size
 dat_all <- clipped_buffers2 %>% slice(rep(1:n(), each=50))
-dat_all <- cbind(dat_all, ran_points2) 
+dat_all <- cbind(dat_all, ran_points3) 
+head(dat_all)
 
       # plot the first 5000 points / polygons
 dat_all %>% filter(row_number() %in% 1:5000) %>%
   ggplot() +
   geom_sf(aes()) +
-  geom_point(aes(x = ran_long, y = ran_lat)) +
+  geom_point(aes(x = lon, y = lat)) +
   theme_nuwcru()
 
 
@@ -186,24 +188,24 @@ mapview(clipped_buffers[1,]) + bears_spatial_latlong[1,]
 str(dat_all)
 available <- as.data.frame(dat_all)
 head(available)
-available=subset(available, select=-c(featurecla, scalerank, min_zoom, ZONE, EASTING, NORTHING, geometry, geometry.1, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S)) # drop unnessary columns including the polygon column
+available=subset(available, select=-c(featurecla, scalerank, min_zoom, X.2, X.1, ZONE, EASTING, NORTHING, geometry, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S)) # drop unnessary columns including the polygon column
 head(available)
 available$USED_AVAIL <- 'available' # add column for "available"
 head(available)
-names(available)[9] <- "LONG" # rename x and y columns
-names(available)[10] <- "LAT"
+names(available)[11] <- "LONG" # rename x and y columns
+names(available)[12] <- "LAT"
 head(available)
 
 # add "USED_AVAIL" column to used_oniceonly
-head(used_oniceonly)
-used_oniceonly$USED_AVAIL <- 'used'
-head(used_oniceonly)
+head(bears_ice)
+bears_ice$USED_AVAIL <- 'used'
+head(bears_ice)
 
 # combine together
-str(used_oniceonly) # 1463 rows
-str(available) # 73,150 rows
+str(bears_ice) # 1463 rows
+str(available) # 69,400 rows
       # final dataset should then have 74,613 rows
-used_avail <- merge(available, used_oniceonly, all=TRUE) # this worked
+used_avail <- merge(available, bears_ice, all=TRUE) # this worked
 
 # Make a better ROWID column
 head(used_avail)

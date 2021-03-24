@@ -55,11 +55,12 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 
 # SKIP - 2. Import and format data ---------------
 
-
 # import final bear dataset with UTM coordinates
 # Note that I imported the final dataset made in script 01 into QGIS and got the UTM zones using clip points to polygon tool
 
 bears_final_Nov2020_UTM <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020_UTMzones.csv")
+bears_final_Nov2020 <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
+difference <- anti_join(bears_final_Nov2020, bears_final_Nov2020_UTM) # these are the same, just one has the UTM
 
 # Some values that fell directly on the grid lines in QGIS were classified as the wrong zone
 # all ROWID #s on grid lines = 26, 142, 146, 512, 507, 67, 1777, 1132, 371, 447, 426, 649, 1277, 1342, 1298, 1233

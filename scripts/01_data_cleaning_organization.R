@@ -197,8 +197,8 @@ head(bears_ice) # this worked
 bears_final <- rbind(bears_land, bears_ice) # this works!
 
 write.csv(bears_final, "data/Oct2020work/bears_final.csv")
-
-
+bears_final <- read.csv("data/Oct2020work/bears_final.csv")
+unique(bears_final$ID)
 
 # Use bears_final from now on!
 
@@ -758,7 +758,8 @@ names(bears_final_Nov2020)[17] <- "KM_PER_HR"
 
 # make new csv file
 write.csv(bears_final_Nov2020, "data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
-
+bears_final_Nov2020 <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
+unique(bears_final_Nov2020$ID)
 
 -----
   
@@ -799,6 +800,19 @@ km_day_boxplot <- ggplot(bears_final_Nov2020, aes(y=KM_PER_DAY)) +
   theme_nuwcru()
 km_day_boxplot
 km_day_boxplot + theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+
+km_hr_boxplot <- ggplot(bears_final_Nov2020, aes(y=KM_PER_HR)) +
+  geom_boxplot(varwidth = T, alpha=0.2) +
+  #scale_y_continuous(limits=c(0, 5), breaks=c(0, 1, 2, 3, 4, 5), labels=c("0", "1", "2", "3", "4", "5")) +
+  ylab("Movement rate (Km/day)") +
+  scale_y_continuous(limits=c(0, 5), breaks=c(0, 1, 2, 3, 4, 5), labels=c("0", "1", "2", "3", "4", "5")) +
+  theme_nuwcru()
+km_hr_boxplot
+km_hr_boxplot + theme(axis.ticks.x = element_blank(), axis.text.x = element_blank())
+
+
+
+
 
 
 -----
@@ -851,6 +865,8 @@ bears_final_Nov2020 <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2
 
 # total fixes per ID
 bear_total <- as.data.frame(table(bears_final_Nov2020$ID))
+summary(bear_total)
+write.csv(bear_total, "/Volumes/Larissa G-drive/UAlberta MSc/Thesis/4. Manuscripts/1. Polar bear RSF/Figures/bear_total.csv")
 
 # total fixes per month
 month_total <- bears_final_Nov2020 %>%
@@ -1066,3 +1082,154 @@ print(bears_data_years_plot2)
 
 
 
+
+# SKIP - 9. Counting fixes and collars for final dataset (with no land-fixes!) -----------------
+
+
+bears_final_Nov2020 <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
+head(bears_final_Nov2020)
+unique(bears_final_Nov2020$ID)
+
+bears_ice <- bears_final_Nov2020 %>% filter(ICE_LAND=="ice")
+head(bears_ice)
+unique(bears_ice$ID)
+unique(bears_ice$YEAR)
+
+# bear X12083 is missing from bears_ice
+bear_X12083 <- bears_final_Nov2020 %>% filter(ID=="X12083")
+unique(bear_X12083$ICE_LAND) # only on-land and only 5 fixes
+
+
+# total fixes per ID
+bear_total <- as.data.frame(table(bears_ice$ID))
+summary(bear_total)
+write.csv(bear_total, "/Volumes/Larissa G-drive/UAlberta MSc/Thesis/4. Manuscripts/1. Polar bear RSF/Figures/bear_total_iceonly.csv")
+
+# total fixes per month
+month_total <- bears_ice %>% group_by(MONTH) %>% summarize(n())
+ungroup(bears_ice)
+
+# total fixes per year
+year_total <- bears_ice %>% group_by(YEAR) %>% summarize(n())
+ungroup(bears_ice)
+
+# total monthly fixes per bear 
+month_bear_total <- bears_ice %>% group_by(MONTH, ID) %>% summarize(n())
+ungroup(bears_ice)
+
+Jan_bear_total <- month_bear_total %>% group_by(ID) %>% summarize(n())
+ungroup(month_bear_total) # stopped here; unnecessary to look at per monthly totals
+
+# total monthly fixes per bear separated by year
+month_year_bear_total <- bears_ice %>% group_by(YEAR, MONTH, ID) %>% summarize(n())
+ungroup(bears_ice)
+write.csv(month_year_bear_total, "/Volumes/Larissa G-drive/UAlberta MSc/Thesis/4. Manuscripts/1. Polar bear RSF/Figures/month_year_bear_total.csv")
+
+# total annual fixes per bear
+bear_year_total <- bears_ice %>% group_by(YEAR, ID) %>% summarize(n())
+colnames(bear_year_total) = c("YEAR", "ID", "COUNT")
+bear_year_total2 <- bear_year_total %>% group_by(YEAR) %>% summarize(count=sum(COUNT), numBears=n())
+ungroup(bears_ice)
+
+
+# analyzing bear_year_total 
+
+unique(bear_year_total$ID)
+
+X10695_counts <- bear_year_total %>% filter(ID=="X10695")
+X10700_counts <- bear_year_total %>% filter(ID=="X10700")
+X10703_counts <- bear_year_total %>% filter(ID=="X10703")
+X10707_counts <- bear_year_total %>% filter(ID=="X10707")
+X10709_counts <- bear_year_total %>% filter(ID=="X10709")
+X13284_counts <- bear_year_total %>% filter(ID=="X13284")
+X13289_counts <- bear_year_total %>% filter(ID=="X13289")
+X13292_counts <- bear_year_total %>% filter(ID=="X13292")
+X11974_counts <- bear_year_total %>% filter(ID=="X11974")
+X11975_counts <- bear_year_total %>% filter(ID=="X11975")
+X13428_counts <- bear_year_total %>% filter(ID=="X13428")
+X13437_counts <- bear_year_total %>% filter(ID=="X13437")
+X03956_counts <- bear_year_total %>% filter(ID=="X03956")
+X10374_counts <- bear_year_total %>% filter(ID=="X10374")
+X10393_counts <- bear_year_total %>% filter(ID=="X10393")
+X12078_counts <- bear_year_total %>% filter(ID=="X12078")
+X12080_counts <- bear_year_total %>% filter(ID=="X12080")
+X12081_counts <- bear_year_total %>% filter(ID=="X12081")
+X12082_counts <- bear_year_total %>% filter(ID=="X12082")
+X12083_counts <- bear_year_total %>% filter(ID=="X12083")
+X12086_counts <- bear_year_total %>% filter(ID=="X12086")
+X12092_counts <- bear_year_total %>% filter(ID=="X12092")
+X13746_counts <- bear_year_total %>% filter(ID=="X13746")
+X30126_counts <- bear_year_total %>% filter(ID=="X30126") # 1 more fix in 1998 (n=39) than the last time I did this (i.e. with this final dataset)
+X30129_counts <- bear_year_total %>% filter(ID=="X30129")
+X30131_counts <- bear_year_total %>% filter(ID=="X30131")
+X30135_counts <- bear_year_total %>% filter(ID=="X30135")
+X30140_counts <- bear_year_total %>% filter(ID=="X30140")
+
+# find yearly start and end dates for each bear
+X10695_total <- bears_ice %>% filter(ID=="X10695")
+X10700_total <- bears_ice %>% filter(ID=="X10700")
+X10703_total <- bears_ice %>% filter(ID=="X10703")
+X10707_total <- bears_ice %>% filter(ID=="X10707")
+X10709_total <- bears_ice %>% filter(ID=="X10709")
+X13284_total <- bears_ice %>% filter(ID=="X13284")
+X13289_total <- bears_ice %>% filter(ID=="X13289")
+X13292_total <- bears_ice %>% filter(ID=="X13292")
+X11974_total <- bears_ice %>% filter(ID=="X11974")
+X11975_total <- bears_ice %>% filter(ID=="X11975")
+X13428_total <- bears_ice %>% filter(ID=="X13428")
+X13437_total <- bears_ice %>% filter(ID=="X13437")
+X03956_total <- bears_ice %>% filter(ID=="X03956")
+X10374_total <- bears_ice %>% filter(ID=="X10374")
+X10393_total <- bears_ice %>% filter(ID=="X10393")
+X12078_total <- bears_ice %>% filter(ID=="X12078")
+X12080_total <- bears_ice %>% filter(ID=="X12080")
+X12081_total <- bears_ice %>% filter(ID=="X12081")
+X12082_total <- bears_ice %>% filter(ID=="X12082")
+X12086_total <- bears_ice %>% filter(ID=="X12086")
+X12092_total <- bears_ice %>% filter(ID=="X12092")
+X13746_total <- bears_ice %>% filter(ID=="X13746")
+X30126_total <- bears_ice %>% filter(ID=="X30126")
+X30129_total <- bears_ice %>% filter(ID=="X30129")
+X30131_total <- bears_ice %>% filter(ID=="X30131")
+X30135_total <- bears_ice %>% filter(ID=="X30135")
+X30140_total <- bears_ice %>% filter(ID=="X30140")
+
+unique(X30135_total$YEAR)
+
+# plot above info
+
+# Make dataframe
+k <- c(10695, 10695, 10703, 10703, 10703, 10709, 10709, 10709, 10707, 10707, 10700, 10700, 10700, 13284, 13284, 13284, 13292, 13292, 13292, 13292, 13289, 13289, 13289, 13289, 11974, 11974, 11974, 11975, 11975, 11975, 13428, 13428, 13437, 13437, 13437, 10393, 12080, 12080, 12078, 12081, 12082, 12086, 12086, 3956, 10374, 10374, 12092, 12092, 13746, 13746, 30129, 30129, 30129, 30126, 30126, 30126, 30131, 30131, 30131, 30140, 30140, 30140, 30140, 30140, 30135, 30135, 30135) # ID
+k <- factor(k)
+l <- c(1991, 1992, 1992, 1993, 1994, 1992, 1993, 1994, 1992, 1993, 1992, 1993, 1994, 1992, 1993, 1994, 1992, 1993, 1994, 1995, 1992, 1993, 1994, 1995, 1993, 1994, 1995, 1993, 1994, 1995, 1993, 1994, 1993, 1994, 1995, 1994, 1994, 1995, 1994, 1994, 1994, 1994, 1995, 1994, 1994, 1995, 1994, 1995, 1994, 1995, 1997, 1998, 1999, 1997, 1998, 1999, 1997, 1998, 1999, 1997, 1998, 1999, 2000, 2001, 1997, 1998, 1999) # Years
+
+bears_data_years_ice <- data.frame(k, l)
+names(bears_data_years_ice) <- c('ID', 'YEAR' )
+str(bears_data_years_ice)
+
+# Plot it
+bears_data_years_plot <- ggplot(bears_data_years_ice, aes(x=YEAR, y=ID)) +
+  geom_point() +
+  geom_line() +
+  ylab("Bear identification number") +
+  xlab("Year of data") +
+  theme(panel.grid.minor.x=element_blank()) +
+  scale_y_discrete(breaks=c(10695, 10707, 10700, 10703, 10709, 13284, 13289, 13292, 13437, 13428, 11974, 11975, 12078, 12081, 12082, 12083, 10393, 3956, 10374, 12080, 12086, 12092, 13746, 30126, 30129, 30131, 30135, 30140)) +
+  scale_x_continuous(breaks=c(1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001))
+
+print(bears_data_years_plot)
+
+# Reorder IDs so that the plot looks better
+bears_data_years2 <- bears_data_years_ice %>%
+  mutate(ID2=factor(ID, levels=c("10695", "10707", "10700", "10703", "10709", "13284", "13289", "13292", "13437", "13428", "11974", "11975", "12078", "12081", "12082", "10393", "3956", "10374", "12080", "12086", "12092", "13746", "30126", "30129", "30131", "30135", "30140")))
+
+bears_data_years_plot2 <- ggplot(bears_data_years2, aes(x=YEAR, y=ID2)) +
+  geom_point() +
+  geom_line() +
+  ylab("Bear identification number") +
+  xlab("Year of data") +
+  theme(panel.grid.minor.x=element_blank()) +
+  scale_y_discrete(breaks=c(10695, 10707, 10700, 10703, 10709, 13284, 13289, 13292, 13437, 13428, 11974, 11975, 12078, 12081, 12082, 12083, 10393, 3956, 10374, 12080, 12086, 12092, 13746, 30126, 30129, 30131, 30135, 30140)) +
+  scale_x_continuous(breaks=c(1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001))
+
+print(bears_data_years_plot2)

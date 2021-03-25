@@ -119,17 +119,18 @@ saveRDS(object = raster_list, file = "/Volumes/Larissa G-drive/UAlberta MSc/Thes
 # using this: https://www.neonscience.org/resources/learning-hub/tutorials/extract-values-rasters-r
 
 # import used and available points
-# note that this was made in script #7 - all used land fixes have been removed, and we think we've dealt with on-land available too
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv")
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv") # this is the correct one
 head(used_avail)
-used_avail=subset(used_avail, select=-c(field_1, DIST_LAND, BATH)) # remove unneccessary columns
-head(used_avail)
-names(used_avail)[23] <- "BATH"
+unique(used_avail$ICE_LAND) # these are all ice only (i.e., land fixes have been removed)
 
+used_avail=subset(used_avail, select=-c(field_1, X, X.2, X.1, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S)) # remove unneccessary columns
+head(used_avail)
+names(used_avail)[17] <- "BATH"
+summary(used_avail)
 
 ggplot(data=used_avail) +
   geom_point(aes(x=LONG, y=LAT, colour=USED_AVAIL, alpha=USED_AVAIL)) +
-  scale_x_continuous(limits=c(-90, -40), breaks=c(-90, -80, -70, -60, -50, -40), labels=c("-90", "-80", "-70", "-60", "-50", "-40")) +
+  scale_x_continuous(limits=c(-90, -50), breaks=c(-90, -80, -70, -60, -50), labels=c("-90", "-80", "-70", "-60", "-50")) +
   scale_y_continuous(limits=c(50, 70), breaks=c(50, 55, 60, 65, 70), labels=c("50", "55", "60", "65", "70")) +
   xlab("Longitude") +
   ylab("Latitude") +
@@ -198,14 +199,10 @@ proj4string(raster_list$`19781026`)
 
 # import point dataset and format
 used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_Mar2021.csv")
+used_avail=subset(used_avail, select=-c(field_1, X, X.2, X.1, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S)) # remove unneccessary columns
 head(used_avail)
-used_avail=subset(used_avail, select=-c(field_1, DIST_LAND, BATH)) # remove unneccessary columns
-head(used_avail)
-names(used_avail)[23] <- "BATH"
-used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "-", "")
-#used_avail$ice_value <- as.numeric(rep(NA, nrow(used_avail)))
-head(used_avail)
-used_avail$date_char <- gsub("/", "", used_avail$date_char)
+names(used_avail)[17] <- "BATH"
+used_avail$date_char <- stringr::str_replace_all(used_avail$DATE, "/", "")
 head(used_avail)
 
 
@@ -242,7 +239,7 @@ ice_df <- as.data.frame(ice) # 74,613 values which matches the used_avail
 summary(ice_df) # no NA values
 names(ice_df)[1] <- "CONC"
 
-ice_df_0 <- ice_df %>% filter(CONC=="0") #1,610/74,613 (~2%) are 0 values, which isn't bad!!
+ice_df_0 <- ice_df %>% filter(CONC=="0") #1,466/70,788 (~2%) are 0 values, which isn't bad!!
 
 used_avail_ice <- cbind(used_avail, ice_df)
 head(used_avail_ice)
@@ -252,11 +249,11 @@ hist(used_avail_ice$CONC)
 
 used_ice <- used_avail_ice %>% filter(USED_AVAIL=="used") # 1463 used points
 hist(used_ice$CONC)
-summary(used_ice) # mean=0.7367
+summary(used_ice) # mean=0.760
 
 avail_ice <- used_avail_ice %>% filter(USED_AVAIL=="available") # 73150 available points
 hist(avail_ice$CONC)
-summary(avail_ice) # mean=0.8407
+summary(avail_ice) # mean=0.8416
 
 
 write.csv(used_avail_ice, "data/Oct2020work/FINAL DATASET/used_avail_points_withbath_andice_Mar2021.csv")
@@ -300,7 +297,7 @@ land = readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/RSFs_Dec
 class(land)
 crs(land)
 extent(land)
-plot(land) # looks like mercader
+plot(land) 
 
 used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_points_withbath_andice_Mar2021.csv")
 head(used_avail)
@@ -338,8 +335,9 @@ for(i in 1:dim(used_avail_spatial_proj)[1]){
 }
 
 head(used_avail)
-names(used_avail)[27] <- "DIST_LAND"
+names(used_avail)[21] <- "DIST_LAND"
 
+summary(used_avail)
 
 # make used_avail into new csv and bring into QGIS to test some of the distances
 # I randomly tested 5 bears comparing measurement tool to results from this, and it worked!
@@ -620,7 +618,6 @@ names(used_avail)[27] <- "DIST_WATER"
 
 ###
 
-
 used_avail=subset(used_avail, select=-c(DIST_WATER))
 used_avail_subset <- used_avail %>% filter(date_char==19940404)
 unique(used_avail_subset$date_char)
@@ -638,7 +635,6 @@ head(used_avail_subset_spatial)
 str(used_avail_subset_spatial)
 
 mdist <- list()
-
 
 for(i in 1:nrow(used_avail_subset)){
   matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
@@ -665,7 +661,6 @@ bears_distwater <- cbind(used_avail_subset, mdist_df)
 head(bears_distwater)
 summary(bears_distwater)
 
-
 # test plot 
 
 proj4string(raster_list$'19940404')
@@ -681,7 +676,81 @@ points(water_19940404) # looks good!
 summary(raster_19940404[])
 head(raster_19940404)
 
+# plot better
 
+head(bears_distwater)
+str(bears_distwater)
+bears_distwater_spatial <- bears_distwater
+coordinates(bears_distwater_spatial) <- ~lon + lat
+proj4string(bears_distwater_spatial) <- CRS("+proj=longlat +datum=WGS84")
+plot(bears_distwater_spatial)
+
+plot(raster_19940404_latlon, col=(viridis(5)), zlim=c(0, 1))
+plot(water_19940404, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
+points(bear19940404_spatial, col="red")
+plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
+
+
+
+
+
+###
+
+# TEST WITH A DIFFERNT SUBSET
+
+###
+
+used_avail_subset <- used_avail %>% filter(date_char==20010311)
+unique(used_avail_subset$date_char)
+used_avail_subset$date_char <- as.numeric(used_avail_subset$date_char)
+used_avail_subset$LAT <- as.numeric(as.character(used_avail_subset$LAT))
+used_avail_subset$LONG <- as.numeric(as.character(used_avail_subset$LONG))
+str(used_avail_subset)
+used_avail_subset_spatial <- used_avail_subset
+#coordinates(used_avail_subset_spatial) <- c("LONG", "LAT")
+str(used_avail_subset_spatial)
+coordinates(used_avail_subset_spatial) <- ~LONG + LAT
+proj4string(used_avail_subset_spatial) <- CRS("+proj=longlat +datum=WGS84")
+head(used_avail_subset)
+head(used_avail_subset_spatial)
+str(used_avail_subset_spatial)
+
+mdist <- list()
+
+
+for(i in 1:nrow(used_avail_subset)){
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- SpatialPointsDataFrame(
+    matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+  bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
+  bear_long <- coordinates(used_avail_subset_spatial)[i,1]
+  xy_bear <- SpatialPointsDataFrame(
+    matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+  mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
+                           lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
+                           lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
+}
+
+mdist_df <- bind_rows(mdist)
+bears_distwater <- cbind(used_avail_subset, mdist_df)
+head(bears_distwater)
+summary(bears_distwater)
+
+# test plot 
+
+proj4string(raster_list$'20010311')
+proj4string(water_coordinates$'20010311')
+
+raster_20010311 <- raster_list$'20010311'
+water_20010311 <- water_coordinates$'20010311'
+raster_20010311_latlon <- projectRaster(raster_20010311, crs="+proj=longlat +datum=WGS84 +no_defs")
+
+plot(raster_20010311_latlon)
+points(water_20010311) # looks good!
 
 # plot better
 
@@ -692,11 +761,87 @@ coordinates(bears_distwater_spatial) <- ~lon + lat
 proj4string(bears_distwater_spatial) <- CRS("+proj=longlat +datum=WGS84")
 plot(bears_distwater_spatial)
 
-
-plot(raster_19940404_latlon, col=(viridis(5)), zlim=c(0, 1))
-plot(water_19940404, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
-points(bear19940404_spatial, col="red")
+plot(raster_20010311_latlon, col=(viridis(5)), zlim=c(0, 1))
+plot(water_20010311, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
+points(used_avail_subset_spatial, col="pink")
 plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
+
+# this one looked like it worked!
+
+
+
+###
+
+# TEST WITH ANOTHER DIFFERNT SUBSET
+
+###
+used_avail_subset <- used_avail %>% filter(date_char==19980319)
+unique(used_avail_subset$date_char)
+used_avail_subset$date_char <- as.numeric(used_avail_subset$date_char)
+used_avail_subset$LAT <- as.numeric(as.character(used_avail_subset$LAT))
+used_avail_subset$LONG <- as.numeric(as.character(used_avail_subset$LONG))
+str(used_avail_subset)
+used_avail_subset_spatial <- used_avail_subset
+#coordinates(used_avail_subset_spatial) <- c("LONG", "LAT")
+str(used_avail_subset_spatial)
+coordinates(used_avail_subset_spatial) <- ~LONG + LAT
+proj4string(used_avail_subset_spatial) <- CRS("+proj=longlat +datum=WGS84")
+head(used_avail_subset)
+head(used_avail_subset_spatial)
+str(used_avail_subset_spatial)
+
+mdist <- list()
+
+
+for(i in 1:nrow(used_avail_subset)){
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- SpatialPointsDataFrame(
+    matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+  bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
+  bear_long <- coordinates(used_avail_subset_spatial)[i,1]
+  xy_bear <- SpatialPointsDataFrame(
+    matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
+    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+  mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
+                           lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
+                           lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
+}
+
+mdist_df <- bind_rows(mdist)
+bears_distwater <- cbind(used_avail_subset, mdist_df)
+head(bears_distwater)
+summary(bears_distwater)
+
+# test plot 
+
+proj4string(raster_list$'19980319')
+proj4string(water_coordinates$'19980319')
+
+raster_19980319 <- raster_list$'19980319'
+water_19980319 <- water_coordinates$'19980319'
+raster_19980319_latlon <- projectRaster(raster_19980319, crs="+proj=longlat +datum=WGS84 +no_defs")
+
+plot(raster_19980319_latlon)
+points(water_19980319) # looks good!
+
+# plot better
+
+head(bears_distwater)
+str(bears_distwater)
+bears_distwater_spatial <- bears_distwater
+coordinates(bears_distwater_spatial) <- ~lon + lat
+proj4string(bears_distwater_spatial) <- CRS("+proj=longlat +datum=WGS84")
+plot(bears_distwater_spatial)
+
+plot(raster_19980319_latlon, col=(viridis(5)), zlim=c(0, 1))
+plot(water_19980319, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
+points(used_avail_subset_spatial, col="pink")
+plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
+
+# this one looked like it worked!
 
 
 

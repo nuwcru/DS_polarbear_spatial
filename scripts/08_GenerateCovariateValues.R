@@ -643,14 +643,11 @@ for(i in 1:nrow(used_avail_subset)){
   xy_water <- SpatialPointsDataFrame(
     matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
     proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
-  
-  
   bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
   bear_long <- coordinates(used_avail_subset_spatial)[i,1]
   xy_bear <- SpatialPointsDataFrame(
     matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
     proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
-  
   mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
                       lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
                       lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
@@ -689,6 +686,46 @@ plot(raster_19940404_latlon, col=(viridis(5)), zlim=c(0, 1))
 plot(water_19940404, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
 points(bear19940404_spatial, col="red")
 plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
+
+
+# figure out what is going on
+
+str(xy_water) 
+xy_water_df <- as.data.frame(xy_water)
+head(xy_water_df)
+plot(xy_water_df$coords.x1, xy_water_df$coords.x2, panel.first=grid()) # these are all the water points for raster 19940404
+points(mdist_df$lon, mdist_df$lat, col="red") # these are the closest points to the bears; see that the southern line do not align with the black points (even though they should)
+points(bear19940404$LONG, bear19940404$LAT, col="blue") # these are the bears
+
+wrong_water <- mdist_df %>% filter(lat<=53) # there are 24
+points(wrong_water$lon, wrong_water$lat, col="purple") # these are correct
+head(wrong_water)
+summary(wrong_water)
+
+wrong_water_spatial <- wrong_water
+coordinates(wrong_water_spatial) <- ~lon + lat
+duplicates <- zerodist(wrong_water_spatial) # 0 = they're all unique points
+
+
+head(xy_water_df)
+head(mdist_df)
+names(xy_water_df)[2] <- "lon"
+names(xy_water_df)[3] <- "lat"
+difference <- anti_join(xy_water_df, mdist_df)
+
+points(difference$lon, difference$lat, col="pink") # IT DOESN'T EVEN PLOT THE WRONG ONES
+
+
+
+# I DON'T GET IT
+
+
+
+
+
+
+
+
 
 
 

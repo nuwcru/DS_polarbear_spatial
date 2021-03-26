@@ -634,7 +634,8 @@ head(used_avail_subset)
 head(used_avail_subset_spatial)
 str(used_avail_subset_spatial)
 
-mdist <- list()
+mdist <- list() # dist2Line: original option
+mdist2 <- list() # gDistance: new option that doesn't work
 
 for(i in 1:nrow(used_avail_subset)){
   matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
@@ -642,21 +643,27 @@ for(i in 1:nrow(used_avail_subset)){
   water_long <- coordinates(matching_raster)[,2]
   xy_water <- SpatialPointsDataFrame(
     matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
-    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+    #proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
+    proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # gDistance needs projected coordinates
   bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
   bear_long <- coordinates(used_avail_subset_spatial)[i,1]
   xy_bear <- SpatialPointsDataFrame(
     matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
-    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
-  mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
-                      lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
-                      lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
+    #proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
+    proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # use for gDistance
+  mdist2[[i]] <- as.data.frame(apply(gDistance(xy_bear, xy_water, byid=TRUE),2,min))
+  #mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
+                      #lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
+                      #lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
 }
 
 mdist_df <- bind_rows(mdist)
 bears_distwater <- cbind(used_avail_subset, mdist_df)
 head(bears_distwater)
 summary(bears_distwater)
+
+mdist2_df <- bind_rows(mdist2) # nope
+
 
 # test plot 
 
@@ -666,14 +673,6 @@ proj4string(water_coordinates$'19940404')
 raster_19940404 <- raster_list$'19940404'
 water_19940404 <- water_coordinates$'19940404'
 raster_19940404_latlon <- projectRaster(raster_19940404, crs="+proj=longlat +datum=WGS84 +no_defs")
-
-plot(raster_19940404_latlon)
-points(water_19940404) # looks good!
-
-summary(raster_19940404[])
-head(raster_19940404)
-
-# plot better
 
 head(bears_distwater)
 str(bears_distwater)

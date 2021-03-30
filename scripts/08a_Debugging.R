@@ -17,6 +17,8 @@ library(rgeos) # gDistance tool
 library(rgdal) # distance from points
 library(geosphere) # distance to water
 library(viridis) # for plotting (section 10)
+library(FNN) # for get.fnnx() - this doesn't work
+library(RANN) # for nn2() 
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -127,8 +129,10 @@ str(used_avail_subset_spatial)
 # Use mdist (not mdist2), I just wanted to keep it in here so that I remember that I tried it!
 # Also, if you try mdist2, you need to use the polar projection, rather than lat/long
 
-mdist <- list() # dist2Line: original option
+#mdist <- list() # dist2Line: original option
 #mdist2 <- list() # gDistance: new option that doesn't work
+#mdist3 <- list()
+mdist4 <- list()
 
 for(i in 1:nrow(used_avail_subset)){
   matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
@@ -136,19 +140,23 @@ for(i in 1:nrow(used_avail_subset)){
   water_long <- coordinates(matching_raster)[,2]
   xy_water <- SpatialPointsDataFrame(
     matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
-    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
-  # proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # gDistance needs projected coordinates
+  # proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
+    proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # gDistance needs projected coordinates
   bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
   bear_long <- coordinates(used_avail_subset_spatial)[i,1]
   xy_bear <- SpatialPointsDataFrame(
     matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
-    proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
-    #proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # use for gDistance
+    #proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
+    proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # use for gDistance
   #mdist2[[i]] <- as.data.frame(apply(gDistance(xy_bear, xy_water, byid=TRUE),2,min))
-  mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
-  lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
-  lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
+  #mdist3[[i]] <- as.data.frame(get.knnx(coordinates(xy_water), coordinates(xy_bear), k=1))
+  mdist4[[i]] <- as.data.frame(spDists(xy_water, xy_bear), longlat=TRUE)
+  #mdist[[i]] <- data.frame(DIST_WATER=geosphere::dist2Line(xy_bear, xy_water)[,1],
+  #lon=geosphere::dist2Line(xy_bear, xy_water)[,2],
+  #lat=geosphere::dist2Line(xy_bear, xy_water)[,3])
 }
+
+
 
 mdist_df <- bind_rows(mdist)
 bears_distwater <- cbind(used_avail_subset, mdist_df)
@@ -156,6 +164,96 @@ head(bears_distwater)
 summary(bears_distwater)
 
 #mdist2_df <- bind_rows(mdist2) # nope
+
+
+###
+
+
+# VISUALIZING MDIST3 - this doesn't work
+
+# mdist3 using FNN from here: https://stackoverflow.com/questions/27782488/r-calculating-the-shortest-distance-between-two-point-layers
+summary(mdist3) # there are 153 points, which is right
+str(mdist3)
+class(mdist3) # list
+mdist3_df <- bind_rows(mdist3)
+head(mdist3_df)
+unique(mdist3_df$nn.index) # apparently these are the IDs of the nearest water pixels: 247, 274, 838, 864, 910
+unique(used_avail_subset$ROWID_2) # the numbers above don't match these, so I think they're linked to the water pixels (I was worried I had the bear and water datasets backwards in the function)
+
+water_19940404$ID # So we could try to separate those matching ID values and plot them?
+str(water_19940404)
+
+water_19940404_247 <- water_19940404[247,] # separate them
+water_19940404_274 <- water_19940404[274,]
+water_19940404_838 <- water_19940404[838,]
+water_19940404_864 <- water_19940404[864,]
+water_19940404_910 <- water_19940404[910,]
+
+plot(used_avail_subset_spatial, pch=20)
+plot(water_19940404, col="red", pch=20, add=TRUE)
+plot(water_19940404_247, col="black", pch=8, add=TRUE) # nothing plots
+plot(water_19940404_274, col="green", pch=8, add=TRUE) # see top left corner of red dots!
+plot(water_19940404_838, col="purple", pch=8, add=TRUE) # see middle of red dots - this one makes no sense
+plot(water_19940404_838, col="pink", pch=8, add=TRUE) # this plots over the last one
+plot(water_19940404_910, col="blue", pch=8, add=TRUE) # this plots a little south - again, this makes no sense
+
+
+plot(gNearestPoints(used_avail_subset_spatial, water_19940404), col="cyan", pch=17, add=TRUE) # this just plots 2 points, not all of them - the same 2 plot when you switch the order of the points
+# the above just shows you which points from each subset are the closest 
+
+
+###
+
+
+# VISUALIZING MDIST4 
+
+# mdist3 using FNN from here: https://stackoverflow.com/questions/27782488/r-calculating-the-shortest-distance-between-two-point-layers
+summary(mdist4) # there are 153 points, which is right
+mdist4_df <- bind_rows(mdist4)
+head(mdist4_df)
+
+# this is an easy way to get the closest points, but I can't identify them
+
+
+
+###
+
+mdist5 <- list()
+mdist6 <- list()
+
+for(i in 1:nrow(used_avail_subset)){
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail_subset[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- SpatialPointsDataFrame(
+    matrix(c(water_long, water_lat), ncol=2), data.frame(ID=seq(1:length(water_long))),
+    # proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
+    proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # gDistance needs projected coordinates
+  bear_lat <- coordinates(used_avail_subset_spatial)[i,2]
+  bear_long <- coordinates(used_avail_subset_spatial)[i,1]
+  xy_bear <- SpatialPointsDataFrame(
+    matrix(c(bear_long, bear_lat), ncol=2), data.frame(ID=seq(1:length(bear_long))),
+    #proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # use for dist2Line
+    proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m +no_defs")) # use for gDistance
+  mdist5[[i]] <- as.data.frame(gDistance(xy_water, xy_bear, byid=TRUE))
+  mdist6[[i]] <- unlist(mdist5[which(mdist5==min(mdist5[[i]]))]) # this line gives me this error: "'list' object cannot be coerced to type 'double'"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
+
+
 
 
 # test plot 
@@ -178,6 +276,13 @@ plot(raster_19940404_latlon, col=(viridis(5)), zlim=c(0, 1))
 plot(water_19940404, pch=20, col=rgb(1, 0, 0, 0.2), add=TRUE)
 points(bear19940404_spatial, col="pink")
 plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
+
+
+
+
+
+
+
 
 
 # figure out what is going on

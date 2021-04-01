@@ -2,45 +2,13 @@
 # 1. Load libraries ------
 
 library(ggplot2)
-library(dplyr)
 library(tidyverse)
-library(ggplot2)
-library(lubridate)
 library(raster)
 library(sp)
-library(rgdal)
-library(maptools)
-library(mapview)
-library(rgeos)
 library(sf) # for st_read function
-library(rgeos) # gDistance tool
-library(rgdal) # distance from points
-library(geosphere) # distance to water
 library(viridis) # for plotting (section 10)
-library(FNN) # for get.fnnx() - this doesn't work
-library(RANN) # for nn2() in section 6
-
-theme_nuwcru <- function(){
-  theme_bw() +
-    theme(axis.text = element_text(size = 10),
-          axis.title = element_text(size = 14),
-          axis.text.x = element_text(angle = -45, hjust = -0.05),
-          axis.line.x = element_line(color = "black"),
-          axis.line.y = element_line(color = "black"),
-          panel.grid.major.x = element_blank(),
-          panel.grid.minor.x = element_blank(),
-          panel.grid.minor.y = element_blank(),
-          panel.grid.major.y = element_blank(),
-          plot.title = element_text(size = 15, vjust = 1, hjust = 0.5),
-          legend.text = element_text(size = 10),
-          legend.title = element_blank(),
-          #legend.position = c(0.9, 0.9),
-          legend.key = element_rect(colour = NA, fill = NA),
-          legend.background = element_rect(color = "black",
-                                           fill = "transparent",
-                                           size = 4, linetype = "blank"))
-}
-
+library(dplyr)
+library(RANN)
 setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/DS_polarbear_spatial/")
 
 
@@ -49,12 +17,11 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 
 # BEAR DATA
 
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv")
-head(used_avail)
-used_avail=subset(used_avail, select=-c(X, X.1)) # remove unneccessary columns
-used_avail$DIST_WATER <- as.numeric(rep(NA, nrow(used_avail)))
-head(used_avail)
-str(used_avail)
+used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv") %>%
+  mutate(DIST_WATER = as.numeric(rep(NA))) %>%
+  select(-X,-X1)
+
+
 
 used_avail_spatial <- used_avail
 coordinates(used_avail_spatial) <- c("LONG", "LAT")
@@ -68,19 +35,23 @@ proj4string(used_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
 
 
 # this covariate requires the cropped raster_list since shoreline pixels were being classified as 0, making distances much less than they should be
+
+# Larissa's
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
-plot(raster_list$`19781026`)
+
+# Erik's
+raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
+
 
 # make all NA values in raster_list = 100
 for (i in 1:length(raster_list)){
   raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
 
-raster_list$`19781026`[] # this worked
+
 
 
 # get water points
-
 water <- list() 
 water_spatial <- list()
 water_coordinates <- list()
@@ -93,18 +64,82 @@ for(i in 1:length(raster_list)){
   water_coordinates[[i]] <- SpatialPointsDataFrame(matrix(c(long, lat), ncol=2), data.frame(ID=seq(1:length(water[[i]]))), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
 } 
 
-# match names/projections
-names(water_coordinates) 
-names(water_coordinates) <- names(raster_list) # can I just do that?
-head(water_coordinates$`19781026`) # the ID column is just a list of numbers
-tail(water_coordinates$`19781026`) # it must be counting the # of water pixels for each dataframe in the list
-class(water_coordinates$`19781026`) # but they're the right class now
-summary(coordinates(water_coordinates$`19781026`)) # coords.x1 = lat, coords.x2 = long
-proj4string(used_avail_spatial)
-proj4string(water_coordinates$`19781026`) # this looks right
 
-head(water_coordinates)
-str(water_coordinates)
+# match names/projections
+names(water_coordinates) <- names(raster_list) # can I just do that?
+
+
+# New Methods
+
+# Build new way to determine minimum distance to open water
+
+
+
+
+# Pull out the lame raster and bear points
+bear_df <- used_avail %>%
+  filter(date_char==19940404) %>%
+  dplyr::select(LONG, LAT, -DIST_WATER)
+
+water_df <- as_tibble(water_coordinates$'19940404')
+
+# spatial dfs
+bear_spatial <- used_avail %>%
+  filter(date_char==19940404) %>%
+  dplyr::select(LONG, LAT, -DIST_WATER) %>%
+  sf::st_as_sf(coords = c("LONG", "LAT"), crs = 4326)
+
+water_spatial <- st_as_sf(water_coordinates$'19940404', crs = 4326)
+
+
+# package coordinates
+bear_coords <- do.call(rbind, st_geometry(bear_spatial))
+water_coords <- do.call(rbind, st_geometry(water_spatial))
+
+
+closest <- nn2(water_coords, 
+               bear_coords,
+                k = 1) # find single closest point
+
+# clean closest point info, and bind with bear points
+bear_water <- sapply(closest, cbind) %>% 
+  as_tibble() %>%
+  bind_cols(bear_df)
+
+
+# Plot water
+plot(x = water_df$coords.x1, y = water_df$coords.x2, col = "#AFC0C9", pch = 16,  axes = F, ann = FALSE)
+
+# plot paths from bears to closest water
+for (i in 1:nrow(bear_water)){
+  water_index <- as.numeric(bear_water[i,1])
+  
+  water_x <- as.numeric(water_df[water_index,2])
+  water_y <- as.numeric(water_df[water_index,3])
+  
+  bear_x <- as.numeric(bear_water[i,"LONG"])
+  bear_y <- as.numeric(bear_water[i, "LAT"])
+  
+  points(x = water_x, y = water_y, col = "#AD1520", pch = 16)
+  segments(x0 = bear_x, y0 = bear_y, 
+           x1 = water_x, y1 = water_y,
+           col = nuwcru::grey8)
+}
+
+# plot bear points
+points(y = bear_water$LAT, x = bear_water$LONG, col = "#5E5E5E", pch = 16)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 3. Loop #1 with problem subset (using: dist2Line, gDistance, get.knnx, or spDists) ---------------

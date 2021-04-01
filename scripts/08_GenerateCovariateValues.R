@@ -18,6 +18,7 @@ library(rgeos) # gDistance tool
 library(rgdal) # distance from points
 library(geosphere) # distance to water
 library(viridis) # for plotting (section 10)
+library(RANN) # for section 12
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -878,6 +879,181 @@ points(used_avail_subset_spatial, col="pink")
 plot(bears_distwater_spatial, col="black", pch=20, add=TRUE)
 
 # this one looked like it worked!
+
+
+
+
+# 11. Import and format data for section 12 below ---------
+
+
+# BEAR DATA
+
+used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv") 
+head(used_avail)
+used_avail <- used_avail %>%
+  mutate(DIST_WATER = as.numeric(rep(NA))) %>%
+  select(-X,-X1)
+head(used_avail)
+
+
+used_avail_spatial <- used_avail
+coordinates(used_avail_spatial) <- c("LONG", "LAT")
+proj4string(used_avail_spatial) <- CRS("+proj=longlat +datum=WGS84")
+
+
+###
+
+
+# SEA ICE DATA (this section takes a little while)
+
+
+# this covariate requires the cropped raster_list since shoreline pixels were being classified as 0, making distances much less than they should be
+
+# Larissa's
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
+
+# Erik's
+raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
+
+# make all NA values in raster_list = 100
+for (i in 1:length(raster_list)){
+  raster_list[[i]][is.na(raster_list[[i]][])] <- 100
+}
+
+
+# get water points
+water <- list() 
+water_spatial <- list()
+water_coordinates <- list()
+for(i in 1:length(raster_list)){
+  #i = 1 # this was in the loop, so the loop was only ever producing a list of "1"
+  water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
+  water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
+  lat <- coordinates(water_spatial[[i]])[,2] 
+  long <-  coordinates(water_spatial[[i]])[,1]
+  water_coordinates[[i]] <- SpatialPointsDataFrame(matrix(c(long, lat), ncol=2), data.frame(ID=seq(1:length(water[[i]]))), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+} 
+
+
+# match names/projections
+names(water_coordinates) <- names(raster_list) # can I just do that?
+
+
+# ERIK:
+# I wonder if that second loop should be changed so that water_coordinates
+# comes out as an sf object rather than the SpatialPointsDataFrames?
+# The st_as_sf function is where I'm stuck at in the next section.
+
+
+
+# 12. Loop to extract all dist_water using FNN package ------
+
+
+# OPTION 1: doesn't work
+# st_as_sf error: cannot derive coordinates from non-numeric matrix
+
+for(i in 1:nrow(used_avail)){
+  i=1
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- st_as_sf( 
+    coords=c(water_long, water_lat), crs=4326)
+  bear_lat <- coordinates(used_avail_spatial)[i,2]
+  bear_long <- coordinates(used_avail_spatial)[i,1]
+  xy_bear <- st_as_sf(coords=c(bear_long, bear_lat), crs=4326)
+  used_avail[i, "DIST_WATER"] <- RANN::n22(xy_water, xy_bear, k=1)
+}
+
+
+# OPTION 2: doesn't work 
+# st_as_sf error: "trying ot get slot 'coords' from an object of basic class 'list' with no slots"
+
+for(i in 1:nrow(used_avail)){
+  i=1
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail[i,"date_char"])]
+  xy_water <- st_as_sf(coords=c(matching_raster@coords$coords.x2, matching_raster@coords$coords.x1), crs=4326)
+  xy_bear <- st_as_sf(coords=c(used_avail$LONG, used_avail$LAT), crs=4326)
+  used_avail[i, "DIST_WATER"] <- RANN::n22(xy_water, xy_bear, k=1)
+}
+
+
+# OPTION 3: doesn't work
+# error in water_lat and water_long lines: "incorrect number of dimensions"
+
+for(i in 1:nrow(used_avail)){ 
+  i=1
+  matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail[i,"date_char"])]
+  water_lat <- coordinates(matching_raster)[,3]
+  water_long <- coordinates(matching_raster)[,2]
+  xy_water <- st_as_sf(coords=c(water_long, water_lat), crs=4326)
+  xy_bear <- st_as_sf(coords=c(used_avail$LONG, used_avail$LAT), crs=4326)
+  used_avail[i, "DIST_WATER"] <- RANN::n22(xy_water, xy_bear, k=1)
+} 
+
+
+
+  
+
+
+
+
+
+
+
+  
+  
+  
+  
+  
+
+###
+
+# Ignore below
+
+
+# package coordinates
+bear_coords2 <- do.call(rbind, st_geometry(bear_spatial2))
+water_coords2 <- do.call(rbind, st_geometry(water_spatial2))
+
+
+closest2 <- nn2(water_coords2, 
+                bear_coords2,
+                k = 1) # find single closest point
+
+# clean closest point info, and bind with bear points
+bear_water2 <- sapply(closest2, cbind) %>% 
+  as_tibble() %>%
+  bind_cols(bear_df2)
+
+
+# Plot water
+plot(x = water_df2$coords.x1, y = water_df2$coords.x2, col = "#AFC0C9", pch = 16,  axes = F, ann = FALSE)
+
+# plot paths from bears to closest water
+for (i in 1:nrow(bear_water2)){
+  water_index <- as.numeric(bear_water2[i,1])
+  
+  water_x2 <- as.numeric(water_df2[water_index,2])
+  water_y2 <- as.numeric(water_df2[water_index,3])
+  
+  bear_x2 <- as.numeric(bear_water2[i,"LONG"])
+  bear_y2 <- as.numeric(bear_water2[i, "LAT"])
+  
+  points(x = water_x2, y = water_y2, col = "#AD1520", pch = 16)
+  segments(x0 = bear_x2, y0 = bear_y2, 
+           x1 = water_x2, y1 = water_y2,
+           col = "pink")
+}
+
+# plot bear points
+points(y = bear_water2$LAT, x = bear_water2$LONG, col = "#5E5E5E", pch = 16)
+
+
+
+
+
+
 
 
 

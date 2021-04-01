@@ -20,7 +20,7 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv") %>%
   mutate(DIST_WATER = as.numeric(rep(NA))) %>%
   select(-X,-X1)
-
+head(used_avail)
 
 
 used_avail_spatial <- used_avail
@@ -77,19 +77,33 @@ names(water_coordinates) <- names(raster_list) # can I just do that?
 # Build new way to determine minimum distance to open water
 
 
-
+head(used_avail)
 
 # Pull out the lame raster and bear points
+
+# Erik
+#bear_df <- used_avail %>%
+  #filter(date_char==19940404) %>%
+  #dplyr::select(LONG, LAT, -DIST_WATER) # I got an error saying that the DIST_WATER didn't exist
+
+# Larissa
 bear_df <- used_avail %>%
   filter(date_char==19940404) %>%
-  dplyr::select(LONG, LAT, -DIST_WATER)
+  dplyr::select(LONG, LAT)
 
 water_df <- as_tibble(water_coordinates$'19940404')
 
 # spatial dfs
+# Erik
+#bear_spatial <- used_avail %>%
+  #filter(date_char==19940404) %>%
+  #dplyr::select(LONG, LAT, -DIST_WATER) %>%
+  #sf::st_as_sf(coords = c("LONG", "LAT"), crs = 4326) # same error here
+
+# Larissa
 bear_spatial <- used_avail %>%
   filter(date_char==19940404) %>%
-  dplyr::select(LONG, LAT, -DIST_WATER) %>%
+  dplyr::select(LONG, LAT) %>%
   sf::st_as_sf(coords = c("LONG", "LAT"), crs = 4326)
 
 water_spatial <- st_as_sf(water_coordinates$'19940404', crs = 4326)
@@ -126,7 +140,7 @@ for (i in 1:nrow(bear_water)){
   points(x = water_x, y = water_y, col = "#AD1520", pch = 16)
   segments(x0 = bear_x, y0 = bear_y, 
            x1 = water_x, y1 = water_y,
-           col = nuwcru::grey8)
+           col = "pink")
 }
 
 # plot bear points
@@ -138,6 +152,74 @@ points(y = bear_water$LAT, x = bear_water$LONG, col = "#5E5E5E", pch = 16)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
+
+# New method using a different raster --------------------------------------------------------------
+
+# Erik
+#bear_df <- used_avail %>%
+#filter(date_char==19940404) %>%
+#dplyr::select(LONG, LAT, -DIST_WATER) # I got an error saying that the DIST_WATER didn't exist
+
+# Larissa
+bear_df2 <- used_avail %>%
+  filter(date_char==20010311) %>%
+  dplyr::select(LONG, LAT)
+
+water_df2 <- as_tibble(water_coordinates$'20010311')
+
+# spatial dfs
+
+# Erik
+#bear_spatial <- used_avail %>%
+#filter(date_char==19940404) %>%
+#dplyr::select(LONG, LAT, -DIST_WATER) %>%
+#sf::st_as_sf(coords = c("LONG", "LAT"), crs = 4326) # same error here
+
+# Larissa
+bear_spatial2 <- used_avail %>%
+  filter(date_char==20010311) %>%
+  dplyr::select(LONG, LAT) %>%
+  sf::st_as_sf(coords = c("LONG", "LAT"), crs = 4326)
+
+water_spatial2 <- st_as_sf(water_coordinates$'20010311', crs = 4326)
+
+
+# package coordinates
+bear_coords2 <- do.call(rbind, st_geometry(bear_spatial2))
+water_coords2 <- do.call(rbind, st_geometry(water_spatial2))
+
+
+closest2 <- nn2(water_coords2, 
+               bear_coords2,
+               k = 1) # find single closest point
+
+# clean closest point info, and bind with bear points
+bear_water2 <- sapply(closest2, cbind) %>% 
+  as_tibble() %>%
+  bind_cols(bear_df2)
+
+
+# Plot water
+plot(x = water_df2$coords.x1, y = water_df2$coords.x2, col = "#AFC0C9", pch = 16,  axes = F, ann = FALSE)
+
+# plot paths from bears to closest water
+for (i in 1:nrow(bear_water2)){
+  water_index <- as.numeric(bear_water2[i,1])
+  
+  water_x2 <- as.numeric(water_df2[water_index,2])
+  water_y2 <- as.numeric(water_df2[water_index,3])
+  
+  bear_x2 <- as.numeric(bear_water2[i,"LONG"])
+  bear_y2 <- as.numeric(bear_water2[i, "LAT"])
+  
+  points(x = water_x2, y = water_y2, col = "#AD1520", pch = 16)
+  segments(x0 = bear_x2, y0 = bear_y2, 
+           x1 = water_x2, y1 = water_y2,
+           col = "pink")
+}
+
+# plot bear points
+points(y = bear_water2$LAT, x = bear_water2$LONG, col = "#5E5E5E", pch = 16)
 
 
 

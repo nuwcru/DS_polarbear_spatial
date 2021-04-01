@@ -69,7 +69,10 @@ for(i in 1:length(raster_list)){
 names(water_coordinates) <- names(raster_list) # can I just do that?
 
 
-# New Methods
+
+# New method --------------------------------------------------------------
+
+
 
 # Build new way to determine minimum distance to open water
 
@@ -131,8 +134,8 @@ points(y = bear_water$LAT, x = bear_water$LONG, col = "#5E5E5E", pch = 16)
 
 
 
-
-
+# end of new code. Next step is to apply this to all rasters
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 

@@ -946,6 +946,9 @@ names(water_coordinates) <- names(raster_list) # can I just do that?
 
 
 
+
+
+
 # 12. Loop to extract all dist_water using FNN package ------
 
 

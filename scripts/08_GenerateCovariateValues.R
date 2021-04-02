@@ -3,7 +3,6 @@
 # 1. Load libraries ------
 
 library(ggplot2)
-library(dplyr)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
@@ -19,6 +18,7 @@ library(rgdal) # distance from points
 library(geosphere) # distance to water
 library(viridis) # for plotting (section 10)
 library(RANN) # for section 12
+library(dplyr)
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -956,6 +956,7 @@ names(water_coordinates) <- names(raster_list) # can I just do that?
 # st_as_sf error: cannot derive coordinates from non-numeric matrix
 
 for(i in 1:nrow(used_avail)){
+  
   i=1
   matching_raster <- water_coordinates[which(names(water_coordinates) == used_avail[i,"date_char"])]
   water_lat <- coordinates(matching_raster)[,3]
@@ -996,6 +997,144 @@ for(i in 1:nrow(used_avail)){
 
 
 
+
+# 12A. Erik's code -------------------------------------------------------------
+
+
+
+
+
+# Load data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv") %>%
+  mutate(DIST_WATER = as.numeric(rep(NA))) %>%
+  dplyr::select(-X,-X1)
+
+
+# Larissa's
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
+
+# Erik's
+# raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
+
+
+
+# make all NA values in raster_list = 100
+for (i in 1:length(raster_list)){
+  raster_list[[i]][is.na(raster_list[[i]][])] <- 100
+}
+
+
+# get water points
+water <- list() 
+water_spatial <- list()
+water_coordinates <- list()
+for(i in 1:length(raster_list)){
+  #i = 1 # this was in the loop, so the loop was only ever producing a list of "1"
+  water[[i]] = as(raster_list[[i]], "SpatialPoints")[raster_list[[i]][]==0]  # pull out the water pixels
+  water_spatial[[i]] <-  spTransform(water[[i]], CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0")) # set the projection
+  lat <- coordinates(water_spatial[[i]])[,2] 
+  long <-  coordinates(water_spatial[[i]])[,1]
+  water_coordinates[[i]] <- SpatialPointsDataFrame(matrix(c(long, lat), ncol=2), data.frame(ID=seq(1:length(water[[i]]))), proj4string=CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0"))
+} 
+
+
+# match names/projections
+names(water_coordinates) <- names(raster_list) # can I just do that?
+
+# Finish loading data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
+
+
+
+
+
+
+# let's shave down raster/water_coordinates lists to match the used_avail df
+dates <- unique(used_avail$date_char)
+
+# don't think we're even using the raster_list here, but this is how you'd do it
+water_coords_subset <- water_coordinates[paste0(dates)]
+
+
+
+# loop is very quick now, 
+bears_water <- list()
+
+for (i in 1:length(water_coords_subset)){
+  print(i)
+  id <- names(water_coords_subset[i])
+  
+  bear_df <- used_avail %>%
+    filter(date_char == id) 
+  
+  water_df <- as.data.frame(water_coords_subset[paste0(id)])
+  water_df <- as_tibble(water_df) %>%
+    rename(id = 1, long = 2, lat = 3, misc = 4)
+  
+  bear_spatial <- bear_df %>%
+    sf::st_as_sf(coords = c("LONG", "LAT"), crs = 4326)
+  water_spatial <- water_df %>%
+    sf::st_as_sf(coords = c("long", "lat"), crs = 4326)
+  
+  # package coordinates
+  bear_coords <- do.call(rbind, st_geometry(bear_spatial))
+  water_coords <- do.call(rbind, st_geometry(water_spatial))
+  
+  # calculate closest open water point to each bear point
+  closest <- nn2(water_coords, 
+                 bear_coords,
+                 k = 1) # find single closest point
+  
+  # clean closest point info, and bind with bear points
+  bears_water[[i]] <- sapply(closest, cbind) %>%
+    as_tibble() %>%
+    dplyr::select(id = 1, dist = 2) %>%
+    left_join(dplyr::select(water_df, id, water_long = long, water_lat = lat), by = "id") %>%
+    bind_cols(bear_df)
+  
+}
+
+# flatten list
+# and this is your data. I think we should check to make sure that the distances (dist2water$dist) are accurate.
+dist2water <- bind_rows(bears_water) 
+
+
+
+## Visualize ~~~~~~~~~~~~~~~~~~~~~~
+
+# "dates" is a vector of all the unique dates in our data, we made it above. 
+# let's pull the first date out of the vector and see what the distances to water look like
+# if this looks ok, you can randomly pull dates out by changing "1" to whatever number you like
+
+
+date <- dates[1]
+
+
+water_df <- as.data.frame(water_coords_subset[paste0(date)]) %>%
+  as_tibble() %>%
+  dplyr::select(id = 1, x = 2, y = 3)
+bear_df <- dist2water %>%
+  filter(date_char == date) %>%
+  dplyr::select(bear_x = LONG, bear_y = LAT,water_x = water_long, water_y = water_lat)
+
+
+
+
+# Plot
+plot(x = water_df$x, y = water_df$y, col = "#D0E0E8", pch = 16,  axes = F, ann = FALSE)
+within(bear_df,{
+     segments(x0 = bear_x, y0 = bear_y, x1 = water_x, y1 = water_y, col = "#CCCCCC")
+     points(x = bear_x, y = bear_y, col = "#7F7F7F", pch = 16)
+     points(x = water_x, y = water_y, col = "#004366", pch = 16)
+     })
+
+
+
+# End of Erik's section ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
   
 
 
@@ -1004,8 +1143,23 @@ for(i in 1:nrow(used_avail)){
 
 
 
-  
-  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
   
   

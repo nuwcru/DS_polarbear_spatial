@@ -1,4 +1,4 @@
-# SKIP - 1. load libraries ---------------------
+# 1. load libraries ---------------------
 
 library(ggplot2)
 library(dplyr)
@@ -1134,6 +1134,45 @@ bear_year_total <- bears_ice %>% group_by(YEAR, ID) %>% summarize(n())
 colnames(bear_year_total) = c("YEAR", "ID", "COUNT")
 bear_year_total2 <- bear_year_total %>% group_by(YEAR) %>% summarize(count=sum(COUNT), numBears=n())
 ungroup(bears_ice)
+
+# total fixes per season
+season_total <- bears_ice %>% group_by(SEASON) %>% summarize(n())
+
+# total seasonal fixes per bear
+bear_season_total <- bears_ice %>% group_by(SEASON, ID) %>% summarize(n())
+colnames(bear_season_total) = c("SEASON", "ID", "COUNT")
+bear_season_total2 <- bear_season_total %>% group_by(SEASON) %>% summarize(count=sum(COUNT), numBears=n())
+ungroup(bears_ice)
+
+
+X03956 <- bear_season_total %>% filter(ID=="X03956")
+X10374 <- bear_season_total %>% filter(ID=="X10374")
+X10393 <- bear_season_total %>% filter(ID=="X10393")
+X10695 <- bear_season_total %>% filter(ID=="X10695")
+X10700 <- bear_season_total %>% filter(ID=="X10700")
+X10703 <- bear_season_total %>% filter(ID=="X10703")
+X10707 <- bear_season_total %>% filter(ID=="X10707")
+X10709 <- bear_season_total %>% filter(ID=="X10709")
+X11974 <- bear_season_total %>% filter(ID=="X11974")
+X11975 <- bear_season_total %>% filter(ID=="X11975")
+X12078 <- bear_season_total %>% filter(ID=="X12078")
+X12080 <- bear_season_total %>% filter(ID=="X12080")
+X12081 <- bear_season_total %>% filter(ID=="X12081")
+X12082 <- bear_season_total %>% filter(ID=="X12082")
+X12086 <- bear_season_total %>% filter(ID=="X12086")
+X12092 <- bear_season_total %>% filter(ID=="X12092")
+X13284 <- bear_season_total %>% filter(ID=="X13284")
+X13289 <- bear_season_total %>% filter(ID=="X13289")
+X13292 <- bear_season_total %>% filter(ID=="X13292")
+X13428 <- bear_season_total %>% filter(ID=="X13428")
+X13437 <- bear_season_total %>% filter(ID=="X13437")
+X13746 <- bear_season_total %>% filter(ID=="X13746")
+X30126 <- bear_season_total %>% filter(ID=="X30126")
+X30129 <- bear_season_total %>% filter(ID=="X30129")
+X30131 <- bear_season_total %>% filter(ID=="X30131")
+X30135 <- bear_season_total %>% filter(ID=="X30135")
+X30140 <- bear_season_total %>% filter(ID=="X30140")
+
 
 
 # analyzing bear_year_total 

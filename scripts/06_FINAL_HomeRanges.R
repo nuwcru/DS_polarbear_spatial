@@ -1072,11 +1072,125 @@ plot(x=annualHPI$SCALE_AREA, y=annualHREF$SCALE_AREA)
       # note that I can't compare MCP to kernels because they have different # of records
 
 
+# 13. Analyzing changes in HR size over time --------------
+
+# import data and create scaled area
+annual_homerange_areas <- read.csv("data/Oct2020work/annual_homerange_areas.csv")
+head(annual_homerange_areas)
+
+# review data
+head(annual_homerange_areas)
+unique(annual_homerange_areas$YEAR) # 1991-1999 (no 1996)
+
+MCP <- annual_homerange_areas %>% filter(METHOD=="MCP") # 31 bear years
+MCP_year_mean <- MCP %>% group_by(YEAR) %>% summarize(MCP_MEAN=mean(AREA))
+head(MCP_year_mean)
+
+HREF <- annual_homerange_areas %>% filter(METHOD=="HREF") # 31 bear years
+HREF_year_mean  <- HREF %>% group_by(YEAR) %>% summarize(HREF_MEAN=mean(AREA))
+head(HREF_year_mean)
+
+HPI <- annual_homerange_areas %>% filter(METHOD=="HPI") # 7 bear years
+HPI_year_mean  <- HPI %>% group_by(YEAR) %>% summarize(HPI_MEAN=mean(AREA))
+head(HPI_year_mean)
+
+unique(MCP$ID) # 6 individuals
+unique(HREF$ID) # 19 individuals
+unique(HPI$ID) # 19 individuals
+
+MCP_year_total <- MCP %>% group_by(YEAR) %>% summarize(n())
+# years(n bears): 1991(1), 1993(1), 1994(4), 1995(1)
+
+HREF_year_total <- HREF %>% group_by(YEAR) %>% summarize(n())
+# 1991(1), 1992(2), 1993(7), 1994(9), 1995(5), 1998(3), 1999(4)
+# HPI will be the same as HREF
+
+# visualize data
+hist(MCP$AREA)
+plot(MCP_year_mean$YEAR, MCP_year_mean$MCP_MEAN)
+
+hist(HREF$AREA)
+plot(HREF_year_mean$YEAR, HREF_year_mean$HREF_MEAN)
+
+hist(HPI$AREA)
+plot(MCP_year_mean$YEAR, MCP_year_mean$HPI_MEAN)
+
+
+###
+
+# MCPs over time
+MCP_model <- lm(MCP_year_mean$MCP_MEAN ~ MCP_year_mean$YEAR)
+summary(MCP_model) # p-value=0.4264
+MCP_year_mean$MCP_PREDICT <- predict(MCP_model)
+
+ggplot(data=MCP_year_mean) +
+  geom_point(color="grey21", pch=19, aes(x=YEAR, y=MCP_MEAN)) +
+  geom_line(stat="smooth", method="lm", alpha=0.5, color="darkred", size=1.0, aes(x=YEAR, y=MCP_PREDICT)) +
+  labs(x="Year", y="Mean area") +
+  scale_x_continuous(breaks=c(1990, 1992, 1994, 1996, 1998, 2000, 2002), labels=c("1990", "1992", "1994", "1996", "1998", "2000", "2002")) +
+  theme_nuwcru()
+
+###
+
+# HREF over time
+HREF_model <- lm(HREF_year_mean$HREF_MEAN ~ HREF_year_mean$YEAR)
+summary(HREF_model) # p-value=0.2891
+HREF_year_mean$HREF_PREDICT <- predict(HREF_model)
+
+ggplot(data=HREF_year_mean) +
+  geom_point(color="grey21", pch=19, aes(x=YEAR, y=HREF_MEAN)) +
+  geom_line(stat="smooth", method="lm", alpha=0.5, color="darkred", size=1.0, aes(x=YEAR, y=HREF_PREDICT)) +
+  labs(x="Year", y="Mean area") +
+  scale_x_continuous(breaks=c(1990, 1992, 1994, 1996, 1998, 2000, 2002), labels=c("1990", "1992", "1994", "1996", "1998", "2000", "2002")) +
+  theme_nuwcru()
+
+###
+
+# HPI over time
+HPI_model <- lm(HPI_year_mean$HPI_MEAN ~ HPI_year_mean$YEAR)
+summary(HPI_model) # p-value=0.1157
+HPI_year_mean$HPI_PREDICT <- predict(HPI_model)
+
+ggplot(data=HPI_year_mean) +
+  geom_point(color="grey21", pch=19, aes(x=YEAR, y=HPI_MEAN)) +
+  geom_line(stat="smooth", method="lm", alpha=0.5, color="darkred", size=1.0, aes(x=YEAR, y=HPI_PREDICT)) +
+  labs(x="Year", y="Mean area") +
+  scale_x_continuous(breaks=c(1990, 1992, 1994, 1996, 1998, 2000, 2002), labels=c("1990", "1992", "1994", "1996", "1998", "2000", "2002")) +
+  theme_nuwcru()
+
+###
+
+# Plotting all together
+
+# first combine the datsets back together
+head(MCP_year_mean)
+head(HREF_year_mean)
+head(HPI_year_mean)
+HR_models <- merge(MCP_year_mean, HREF_year_mean, by="YEAR")
+HR_models2 <- merge(HR_models, HPI_year_mean, by="YEAR")
+head(HR_models2)
+
+summary(HR_models2) # mean areas range from 53,517 to 513,922
+
+ggplot(data=HR_models2) +
+  geom_point(pch=19, aes(x=YEAR, y=MCP_MEAN, colour="MCP")) +
+  geom_point(pch=19, aes(x=YEAR, y=HREF_MEAN, colour="HREF")) +
+  geom_point(pch=19, aes(x=YEAR, y=HPI_MEAN, colour="HPI")) +
+  scale_colour_manual(values=c("darkgreen", "darkblue", "darkred")) +
+  geom_line(stat="smooth", method="lm", alpha=0.5, color="darkred", size=1.0, aes(x=YEAR, y=MCP_PREDICT)) +
+  geom_line(stat="smooth", method="lm", alpha=0.5, color="darkblue", size=1.0, aes(x=YEAR, y=HREF_PREDICT)) +
+  geom_line(stat="smooth", method="lm", alpha=0.5, color="darkgreen", size=1.0, aes(x=YEAR, y=HPI_PREDICT)) +
+  labs(x="Year", y="Mean home range size") +
+  scale_y_continuous(breaks=c(50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000, 550000), labels=c("50000", "100000", "150000", "200000", "250000", "300000", "350000", "400000", "450000", "500000", "550000")) +
+  theme_nuwcru()
 
 
 
 
-# comparing HR methods using sjstats package with Kylee ----------
+#
+
+
+# SKIP - comparing HR methods using sjstats package with Kylee ----------
 
 
 performance::icc(pooled_model_scale)

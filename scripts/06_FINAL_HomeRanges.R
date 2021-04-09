@@ -1166,11 +1166,11 @@ ggplot(data=HPI_year_mean) +
 head(MCP_year_mean)
 head(HREF_year_mean)
 head(HPI_year_mean)
-HR_models <- merge(MCP_year_mean, HREF_year_mean, by="YEAR")
-HR_models2 <- merge(HR_models, HPI_year_mean, by="YEAR")
+HR_models <- merge(MCP_year_mean, HREF_year_mean, by="YEAR", all=TRUE)
+HR_models2 <- merge(HR_models, HPI_year_mean, by="YEAR", all=TRUE)
 head(HR_models2)
 
-summary(HR_models2) # mean areas range from 53,517 to 513,922
+summary(HR_models2) # mean areas range from 32,801 to 513,922
 
 ggplot(data=HR_models2) +
   geom_point(pch=19, aes(x=YEAR, y=MCP_MEAN, colour="MCP")) +
@@ -1181,9 +1181,9 @@ ggplot(data=HR_models2) +
   geom_line(stat="smooth", method="lm", alpha=0.5, color="darkblue", size=1.0, aes(x=YEAR, y=HREF_PREDICT)) +
   geom_line(stat="smooth", method="lm", alpha=0.5, color="darkgreen", size=1.0, aes(x=YEAR, y=HPI_PREDICT)) +
   labs(x="Year", y="Mean home range size") +
-  scale_y_continuous(breaks=c(50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000, 550000), labels=c("50000", "100000", "150000", "200000", "250000", "300000", "350000", "400000", "450000", "500000", "550000")) +
+  scale_y_continuous(breaks=c(0, 50000, 100000, 150000, 200000, 250000, 300000, 350000, 400000, 450000, 500000, 550000), labels=c("0", "50000", "100000", "150000", "200000", "250000", "300000", "350000", "400000", "450000", "500000", "550000")) +
+  scale_x_continuous(breaks=c(1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000), labels=c("1990", "1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999", "2000")) +
   theme_nuwcru()
-
 
 
 

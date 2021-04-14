@@ -998,7 +998,7 @@ for(i in 1:nrow(used_avail)){
 
 
 
-# 12A. Erik's code -------------------------------------------------------------
+# 12A. Erik's code (distance to water) -------------------------------------------------------------
 
 
 
@@ -1007,7 +1007,6 @@ for(i in 1:nrow(used_avail)){
 # Load data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_Mar2021.csv") %>%
-  mutate(DIST_WATER = as.numeric(rep(NA))) %>%
   dplyr::select(-X,-X1)
 
 
@@ -1018,12 +1017,10 @@ raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/S
 # raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
 
 
-
 # make all NA values in raster_list = 100
 for (i in 1:length(raster_list)){
   raster_list[[i]][is.na(raster_list[[i]][])] <- 100
 }
-
 
 # get water points
 water <- list() 
@@ -1040,24 +1037,17 @@ for(i in 1:length(raster_list)){
 
 
 # match names/projections
-names(water_coordinates) <- names(raster_list) # can I just do that?
+names(water_coordinates) <- names(raster_list) 
+
+
 
 # Finish loading data ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-
-
-
-
-
-
 
 # let's shave down raster/water_coordinates lists to match the used_avail df
 dates <- unique(used_avail$date_char)
 
 # don't think we're even using the raster_list here, but this is how you'd do it
 water_coords_subset <- water_coordinates[paste0(dates)]
-
 
 
 # loop is very quick now, 
@@ -1101,6 +1091,14 @@ for (i in 1:length(water_coords_subset)){
 # and this is your data. I think we should check to make sure that the distances (dist2water$dist) are accurate.
 dist2water <- bind_rows(bears_water) 
 
+head(dist2water)
+names(dist2water)[1] <- "WATER_ID"
+names(dist2water)[2] <- "DIST_WATER"
+names(dist2water)[3] <- "WATER_LONG"
+names(dist2water)[4] <- "WATER_LAT"
+
+# export final dataframe
+write.csv(dist2water, "data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_distwater_seasons_Apr2021.csv")
 
 
 ## Visualize ~~~~~~~~~~~~~~~~~~~~~~
@@ -1119,7 +1117,7 @@ water_df <- as.data.frame(water_coords_subset[paste0(date)]) %>%
 bear_df <- dist2water %>%
   filter(date_char == date) %>%
   dplyr::select(bear_x = LONG, bear_y = LAT,water_x = water_long, water_y = water_lat)
-
+head(bear_df)
 
 
 

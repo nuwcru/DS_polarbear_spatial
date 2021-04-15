@@ -44,17 +44,19 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 
 # 2. Load data and format------
 
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_seasons_Mar2021.csv")
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distland_distwater_seasons_Apr2021.csv")
 head(used_avail)
 
 # drop unnecessary columns
-used_avail = subset(used_avail, select=-c(X.1, X, ZONE, EASTING, NORTHING, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S))
+used_avail = subset(used_avail, select=-c(X, WATER_ID, WATER_LONG, WATER_LAT, ROWID, ICE_LAND, ZONE, EASTING, NORTHING))
 head(used_avail)
+
+# create new DIST_WATER column that's in meters (to match BATH and DIST_LAND)
+used_avail$DIST_WATER_M <- used_avail$DIST_WATER*111*1000
 
 # separate used from available for visualzing data
 used <- used_avail %>% filter(USED_AVAIL=="used") # 1463
 avail <- used_avail %>% filter(USED_AVAIL=="available") # 73,150
-
 
 
 # 3. - SKIP - Testing normality and correlations between covariates------------
@@ -69,13 +71,13 @@ str(used_avail)
 # test normality of each first
 
 # CONC
-summary(used_avail$CONC) # range from 0 to 1.0 (open water to 100% conc)
+summary(used_avail$CONC) # range from 0 (open water) to 1.0 (100% conc)
 hist(used_avail$CONC) # not normal
-hist(used$CONC)
+hist(used$CONC) # weird amount of 0 values..
 hist(avail$CONC)
 #ggplot(data=used) + geom_point(aes(x=ID, y=CONC)) # this is just weird
 
-shapiro.test(used_avail$CONC) # sample size too large
+shapiro.test(used_avail$CONC) # error: sample size too large
 shapiro.test(used$CONC) # p-value <0.05, therefore not normal
 
 ggqqplot(used_avail$CONC, ylab="CONC") # not normal
@@ -98,7 +100,17 @@ hist(avail$DIST_LAND)
 shapiro.test(used$DIST_LAND) # p-value <0.05, therefore not normal
 ggqqplot(used_avail$DIST_LAND, ylab="DIST_LAND") # not normal
 
+# DIST_WATER_M
+summary(used_avail$DIST_WATER_M) # this is in m; range = 242.1 to 1,456,269.0
+hist(used_avail$DIST_WATER_M) # not normal
+hist(used$DIST_WATER_M)
+hist(avail$DIST_WATER_M)
 
+shapiro.test(used$DIST_WATER_M) # p-value <0.05, therefore not normal
+ggqqplot(used_avail$DIST_WATER_M, ylab="DIST_WATER_M") # not normal
+
+
+####
 
 
 # From 371 RSF lab: "As a rule of thumb if a Pearson correlation coefficient of >0.6 is
@@ -110,17 +122,17 @@ ggqqplot(used_avail$DIST_LAND, ylab="DIST_LAND") # not normal
   # if p-value >0.05 = significantly correlated
 # if correlation coefficient (tau) is 0 = no association
       # 1 = strong positive correlation; -1 = strong negative correlation
+# another source: https://bookdown.org/ndphillips/YaRrr/correlation-cor-test.html
 
 
-# visualize correlation
-  
-pairs(~BATH+CONC+DIST_LAND, data=used_avail, panel=panel.smooth) 
-pairs(~BATH+CONC+DIST_LAND, data=used, panel=panel.smooth) 
+# visualize correlation (the first line takes awhile to plot)
+pairs(~BATH+CONC+DIST_LAND+DIST_WATER_M, data=used_avail, panel=panel.smooth) # all data
+pairs(~BATH+CONC+DIST_LAND+DIST_WATER_M, data=used, panel=panel.smooth) # used points only
       # potential negative correlation between BATH and DIST_LAND (to be expected)
 
 
   
-# test correlation
+# test correlation between each pair
   
 # BATH versus CONC
       # all used and available values
@@ -144,11 +156,27 @@ cor.test(used_avail$BATH, used_avail$DIST_LAND, method="kendall")
       # tau = -0.365865 = very mild negative correlation
 
       # used values only
-plot(used$BATH, used$DIST_LAND) # that's that's less of a mess
+plot(used$BATH, used$DIST_LAND) # that's less of a mess
 ggplot(data=used)+ geom_point(aes(x=BATH, y=DIST_LAND))
 cor.test(used$BATH, used$DIST_LAND, method="kendall")
       # p-value = <0.001 = not correlated
       # tau = -0.6253 = very mild negative correlation
+
+# BATH versus DIST_WATER
+      # all used and available values
+plot(used_avail$BATH, used_avail$DIST_WATER_M)
+cor.test(used_avail$BATH, used_avail$DIST_WATER_M, method="kendall")
+      # p-value = <0.001 = not correlated
+      # tau = 0.08772621 = very mild positive correlation
+
+      # used values only
+plot(used$BATH, used$DIST_WATER_M) 
+ggplot(data=used)+ geom_point(aes(x=BATH, y=DIST_WATER_M))
+cor.test(used$BATH, used$DIST_WATER_M, method="kendall")
+      # p-value = 0.07838 = correlated
+      # tau = 0.03153957 = very mild positive correlation
+     #### very weird that these are correlated
+
 
 # CONC versus DIST_LAND 
       # all used and available values
@@ -164,7 +192,38 @@ cor.test(used$CONC, used$DIST_LAND, method="kendall")
       # p-value = 0.08044 = correlated
       # tau = 0.03108569 = very mild positive correlation
 
-summary(used)
+
+# CONC versus DIST_WATER_M
+      # all used and available values
+plot(used_avail$CONC, used_avail$DIST_WATER_M) 
+cor.test(used_avail$CONC, used_avail$DIST_WATER_M, method="kendall")
+      # p-value = <0.001 = not correlated
+      # tau = 0.09508064 = mild positive correlation
+
+      # used values only
+plot(used$CONC, used$DIST_WATER_M) # that's still a mess
+ggplot(data=used)+ geom_point(aes(x=CONC, y=DIST_WATER_M))
+cor.test(used$CONC, used$DIST_WATER_M, method="kendall")
+      # p-value < 0.001 = not correlated
+      # tau = 0.07522532 = very mild positive correlation
+
+
+# DIST_LAND versus DIST_WATER_M
+      # all used and available values
+plot(used_avail$DIST_LAND, used_avail$DIST_WATER_M) 
+cor.test(used_avail$DIST_LAND, used_avail$DIST_WATER_M, method="kendall")
+      # p-value = <0.001 = not correlated
+      # tau = -0.1592215 = very mild negative correlation
+
+      # used values only
+plot(used$DIST_LAND, used$DIST_WATER_M) # that's still a mess
+ggplot(data=used)+ geom_point(aes(x=DIST_LAND, y=DIST_WATER_M))
+cor.test(used$DIST_LAND, used$DIST_WATER_M, method="kendall")
+      # p-value = <0.001 = correlated
+      # tau = -0.09576605 = very mild negative correlation
+
+
+
 
 # 4. Transform data and test for colinearity again --------
 
@@ -174,6 +233,7 @@ summary(used)
 used_avail$BATH_SCALED <- scale(used_avail$BATH, scale=TRUE, center=TRUE)
 used_avail$DIST_SCALED <- scale(used_avail$DIST_LAND, scale=TRUE, center=TRUE)
 used_avail$CONC_SCALED <- scale(used_avail$CONC, scale=TRUE, center=TRUE)
+used_avail$DIST_WATER_SCALED <- scale(used_avail$DIST_WATER_M, scale=TRUE, center=TRUE)
 
       # visualize
 hist(used_avail$BATH_SCALED) # not normal
@@ -181,7 +241,9 @@ ggqqplot(used_avail$BATH_SCALED, ylab="BATH_SCALED") # not normal
 hist(used_avail$DIST_SCALED) # more normal
 ggqqplot(used_avail$DIST_SCALED, ylab="DIST_SCALED") # not normal
 hist(used_avail$CONC_SCALED) # not normal
-ggqqplot(used_avail$CONC_SCALED, ylab="CONC_SCALED") # not normal
+ggqqplot(used_avail$DIST_WATER_SCALED, ylab="CONC_SCALED") # not normal
+hist(used_avail$CONC_SCALED) # not normal
+ggqqplot(used_avail$DIST_WATER_SCALED, ylab="DIST_WATER_SCALED") # not normal
 
       # test correlation
         # BATH versus CONC
@@ -194,12 +256,32 @@ cor.test(used_avail$BATH_SCALED, used_avail$DIST_SCALED, method="kendall")
               # p-value = <0.001 = not correlated
               # tau = -0.365865 = very mild negative correlation - these are the same values as above
 
+        # BATH versus DIST_WATER
+cor.test(used_avail$BATH_SCALED, used_avail$DIST_WATER_SCALED, method="kendall")
+              # p-value = <0.001 = not correlated
+              # tau = 0.08772621 = very mild positive correlation
+
         # CONC versus DIST_LAND
 cor.test(used_avail$CONC_SCALED, used_avail$DIST_SCALED, method="kendall")
               # p-value = <0.001 = not correlated
               # tau = -0.1619609 = very mild negative correlation - these are the same values as above
 
-###
+        # CONC versus DIST_WATER
+cor.test(used_avail$CONC_SCALED, used_avail$DIST_WATER_SCALED, method="kendall")
+            # p-value = <0.001 = not correlated
+            # tau = 0.09508064 = very mild positive correlation 
+
+        # DIST_LAND versus DIST_WATER
+cor.test(used_avail$DIST_SCALED, used_avail$DIST_WATER_SCALED, method="kendall")
+            # p-value = <0.001 = not correlated
+            # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+
+
+
+####
+
+
+### Ignore below
 
 
 # 2. LOG TRANSFORM COVARIATES
@@ -225,7 +307,7 @@ cor.test(used_avail$BATH_LOG, used_avail$DIST_LOG, method="kendall")
         # CONC versus DIST_LAND
 cor.test(used_avail$CONC_LOG, used_avail$DIST_LOG, method="kendall")
               # p-value = <0.001 = not correlated
-              # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+              # tau = -0.1592215 = very mild negative correlation
 
 ###
 
@@ -292,26 +374,190 @@ used_avail_RSF <- rbind(avail, used)
 head(used_avail_RSF)
 str(used_avail_RSF)
 
-used_avail_RSF$ID <- as.integer(gsub('[a-zA-Z]', "", used_avail_RSF$ID)) # remove X from column
-used_avail_RSF$ID <- factor(used_avail_RSF$ID) # make it a factor
-used_avail_RSF$USED_AVAIL <- as.numeric(used_avail_RSF$USED_AVAIL) # make numeric
-used_avail_RSF$USE <- factor(used_avail_RSF$USED_AVAIL, levels=c(1,0), labels=c("used", "available")) # make use a factor also
-str(used_avail_RSF) # Now ID and USE are factors
+
+###
 
 
-used_avail_RSF$BATH_SCALED <- scale(used_avail_RSF$BATH, scale=TRUE, center=TRUE)
-used_avail_RSF$DIST_SCALED <- scale(used_avail_RSF$DIST_LAND, scale=TRUE, center=TRUE)
-used_avail_RSF$CONC_SCALED <- scale(used_avail_RSF$CONC, scale=TRUE, center=TRUE)
+# make 2 separate dataframes (one for pooled and one for seasonal RSFs) that only have bears with >20 fixes
+# these were determined back in script #1 (data_cleaning_organization)
+
+      # pooled
+      # remove: X12078, X12081, X10393, X12082, X03956, X10374, X11974
+
+head(used_avail_RSF)
+X12078_pooled <- used_avail_RSF %>% filter(ID=="X12078")
+X12081_pooled <- used_avail_RSF %>% filter(ID=="X12081")
+X10393_pooled <- used_avail_RSF %>% filter(ID=="X10393")
+X12082_pooled <- used_avail_RSF %>% filter(ID=="X12082")
+X03956_pooled <- used_avail_RSF %>% filter(ID=="X03956")
+
+used_avail_RSF_pooled1 <- anti_join(used_avail_RSF, X12078_pooled, by="ID")
+used_avail_RSF_pooled2 <- anti_join(used_avail_RSF_pooled1, X12081_pooled, by="ID")      
+used_avail_RSF_pooled3 <- anti_join(used_avail_RSF_pooled2, X10393_pooled, by="ID")
+used_avail_RSF_pooled4 <- anti_join(used_avail_RSF_pooled3, X12082_pooled, by="ID")
+used_avail_RSF_pooled_FINAL <- anti_join(used_avail_RSF_pooled4, X03956_pooled, by="ID")
+unique(used_avail_RSF_pooled_FINAL$ID)
+X12078 <- used_avail_RSF_pooled_FINAL %>% filter(ID=="X12078") # this worked
+
+    # seasonal
+unique(used_avail_RSF$SEASON)
+      # winter: remove X03956, X10374, X10393, X10695, X10700, X10707, X10709, X11974, X12078, X12081, 
+          # X12082, X12086, X12092, X13428, X13746, X30126, X30129, X30140
+winter <- used_avail_RSF %>% filter(SEASON=="winter")
+X03956_winter <- winter %>% filter(ID=="X03956")
+X10374_winter <- winter %>% filter(ID=="X10374")
+X10393_winter <- winter %>% filter(ID=="X10393")
+X10695_winter <- winter %>% filter(ID=="X10695")
+X10700_winter <- winter %>% filter(ID=="X10700")
+X10707_winter <- winter %>% filter(ID=="X10707")
+X10709_winter <- winter %>% filter(ID=="X10709")
+X11974_winter <- winter %>% filter(ID=="X11974")
+X12078_winter <- winter %>% filter(ID=="X12078")
+X12081_winter <- winter %>% filter(ID=="X12081")
+X12082_winter <- winter %>% filter(ID=="X12082")
+X12086_winter <- winter %>% filter(ID=="X12086")
+X12092_winter <- winter %>% filter(ID=="X12092")
+X13428_winter <- winter %>% filter(ID=="X13428")
+X13746_winter <- winter %>% filter(ID=="X13746")
+X30126_winter <- winter %>% filter(ID=="X30126")
+X30129_winter <- winter %>% filter(ID=="X30129")
+X30140_winter <- winter %>% filter(ID=="X30140")
+
+used_avail_RSF_winter1 <- anti_join(winter, X03956_winter, by="ID")
+used_avail_RSF_winter2 <- anti_join(used_avail_RSF_winter1, X10374_winter, by="ID")      
+used_avail_RSF_winter3 <- anti_join(used_avail_RSF_winter2, X10393_winter, by="ID")
+used_avail_RSF_winter4 <- anti_join(used_avail_RSF_winter3, X10695_winter, by="ID")
+used_avail_RSF_winter5 <- anti_join(used_avail_RSF_winter4, X10700_winter, by="ID")
+used_avail_RSF_winter6 <- anti_join(used_avail_RSF_winter5, X10707_winter, by="ID")
+used_avail_RSF_winter7 <- anti_join(used_avail_RSF_winter6, X10709_winter, by="ID")
+used_avail_RSF_winter8 <- anti_join(used_avail_RSF_winter7, X11974_winter, by="ID")
+used_avail_RSF_winter9 <- anti_join(used_avail_RSF_winter8, X12078_winter, by="ID")
+used_avail_RSF_winter10 <- anti_join(used_avail_RSF_winter9, X12081_winter, by="ID")
+used_avail_RSF_winter11 <- anti_join(used_avail_RSF_winter10, X12082_winter, by="ID")
+used_avail_RSF_winter12 <- anti_join(used_avail_RSF_winter11, X12082_winter, by="ID")
+used_avail_RSF_winter13 <- anti_join(used_avail_RSF_winter12, X12086_winter, by="ID")
+used_avail_RSF_winter14 <- anti_join(used_avail_RSF_winter13, X12092_winter, by="ID")
+used_avail_RSF_winter15 <- anti_join(used_avail_RSF_winter14, X13428_winter, by="ID")
+used_avail_RSF_winter16 <- anti_join(used_avail_RSF_winter15, X13746_winter, by="ID")
+used_avail_RSF_winter17 <- anti_join(used_avail_RSF_winter16, X30126_winter, by="ID")
+used_avail_RSF_winter18 <- anti_join(used_avail_RSF_winter17, X30129_winter, by="ID")
+used_avail_RSF_winter_FINAL <- anti_join(used_avail_RSF_winter18, X30140_winter, by="ID")
+unique(used_avail_RSF_winter_FINAL$ID)
+X03956 <- used_avail_RSF_winter_FINAL %>% filter(ID=="X03956") # this worked
+
+      # breakup: remove X03956, X10374, X10393, X11974, X12078, X12081, X12082, X12086, X12092, X13428, 
+          # X13437, X13746, X30126, X30129, X30131, X30135, X30140
+
+breakup <- used_avail_RSF %>% filter(SEASON=="break")
+X03956_breakup <- breakup %>% filter(ID=="X03956")
+X10374_breakup <- breakup %>% filter(ID=="X10374")
+X10393_breakup <- breakup %>% filter(ID=="X10393")
+X11974_breakup <- breakup %>% filter(ID=="X11974")
+X12078_breakup <- breakup %>% filter(ID=="X12078")
+X12081_breakup <- breakup %>% filter(ID=="X12081")
+X12082_breakup <- breakup %>% filter(ID=="X12082")
+X12086_breakup <- breakup %>% filter(ID=="X12086")
+X12092_breakup <- breakup %>% filter(ID=="X12092")
+X13428_breakup <- breakup %>% filter(ID=="X13428")
+X13437_breakup <- breakup %>% filter(ID=="X13437")
+X13746_breakup <- breakup %>% filter(ID=="X13746")
+X30126_breakup <- breakup %>% filter(ID=="X30126")
+X30129_breakup <- breakup %>% filter(ID=="X30129")
+X30131_breakup <- breakup %>% filter(ID=="X30131")
+X30135_breakup <- breakup %>% filter(ID=="X30135")
+X30140_breakup <- breakup %>% filter(ID=="X30140")
+
+used_avail_RSF_breakup1 <- anti_join(breakup, X03956_breakup, by="ID")
+used_avail_RSF_breakup2 <- anti_join(used_avail_RSF_breakup1, X10374_breakup, by="ID")   
+used_avail_RSF_breakup3 <- anti_join(used_avail_RSF_breakup2, X10393_breakup, by="ID")   
+used_avail_RSF_breakup4 <- anti_join(used_avail_RSF_breakup3, X11974_breakup, by="ID")   
+used_avail_RSF_breakup5 <- anti_join(used_avail_RSF_breakup4, X12078_breakup, by="ID")   
+used_avail_RSF_breakup6 <- anti_join(used_avail_RSF_breakup5, X12081_breakup, by="ID")   
+used_avail_RSF_breakup7 <- anti_join(used_avail_RSF_breakup6, X12082_breakup, by="ID")   
+used_avail_RSF_breakup8 <- anti_join(used_avail_RSF_breakup7, X12086_breakup, by="ID")   
+used_avail_RSF_breakup9 <- anti_join(used_avail_RSF_breakup8, X12092_breakup, by="ID")   
+used_avail_RSF_breakup10 <- anti_join(used_avail_RSF_breakup9, X13428_breakup, by="ID")   
+used_avail_RSF_breakup11 <- anti_join(used_avail_RSF_breakup10, X13437_breakup, by="ID")   
+used_avail_RSF_breakup12 <- anti_join(used_avail_RSF_breakup11, X13746_breakup, by="ID")   
+used_avail_RSF_breakup13 <- anti_join(used_avail_RSF_breakup12, X30126_breakup, by="ID")   
+used_avail_RSF_breakup14 <- anti_join(used_avail_RSF_breakup13, X30129_breakup, by="ID")   
+used_avail_RSF_breakup15 <- anti_join(used_avail_RSF_breakup14, X30131_breakup, by="ID")   
+used_avail_RSF_breakup16 <- anti_join(used_avail_RSF_breakup15, X30135_breakup, by="ID")   
+used_avail_RSF_breakup_FINAL <- anti_join(used_avail_RSF_breakup16, X30140_breakup, by="ID")   
+X10374 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="X10374")
+
+        # freezeup (so few it's easier to keep and merge), so keep: X10695, X13284, X13289, X13292, X30135
+freezeup <- used_avail_RSF %>% filter(SEASON=="freeze")
+X10695_freezeup <- freezeup %>% filter(ID=="X10695")
+X13284_freezeup <- freezeup %>% filter(ID=="X13284")
+X13289_freezeup <- freezeup %>% filter(ID=="X13289")
+X13292_freezeup <- freezeup %>% filter(ID=="X13292")
+X30135_freezeup <- freezeup %>% filter(ID=="X30135")
+
+used_avail_RSF_freezeup_FINAL <- rbind(X10695_freezeup, X13284_freezeup, X13289_freezeup, X13292_freezeup, X30135_freezeup)
+
+
+
+###
+
+
+# final dataframes: used_avail_RSF_pooled_FINAL, used_avail_RSF_winter_FINAL, used_avail_RSF_breakup_FINAL, used_avail_RSF_freezeup_FINAL
+# format columns
+
+used_avail_RSF_pooled_FINAL$ID <- as.integer(gsub('[a-zA-Z]', "", used_avail_RSF_pooled_FINAL$ID)) # remove X from column
+used_avail_RSF_pooled_FINAL$ID <- factor(used_avail_RSF_pooled_FINAL$ID) # make it a factor
+
+used_avail_RSF_winter_FINAL$ID <- as.integer(gsub('[a-zA-Z]', "", used_avail_RSF_winter_FINAL$ID)) # winter
+used_avail_RSF_winter_FINAL$ID <- factor(used_avail_RSF_winter_FINAL$ID) 
+
+used_avail_RSF_breakup_FINAL$ID <- as.integer(gsub('[a-zA-Z]', "", used_avail_RSF_breakup_FINAL$ID)) # breakup
+used_avail_RSF_breakup_FINAL$ID <- factor(used_avail_RSF_breakup_FINAL$ID)
+
+used_avail_RSF_freezeup_FINAL$ID <- as.integer(gsub('[a-zA-Z]', "", used_avail_RSF_freezeup_FINAL$ID)) # freezeup
+used_avail_RSF_freezeup_FINAL$ID <- factor(used_avail_RSF_freezeup_FINAL$ID) 
+
+used_avail_RSF_pooled_FINAL$USED_AVAIL <- as.numeric(used_avail_RSF_pooled_FINAL$USED_AVAIL) # make numeric
+used_avail_RSF_winter_FINAL$USED_AVAIL <- as.numeric(used_avail_RSF_winter_FINAL$USED_AVAIL)
+used_avail_RSF_breakup_FINAL$USED_AVAIL <- as.numeric(used_avail_RSF_breakup_FINAL$USED_AVAIL) 
+used_avail_RSF_freezeup_FINAL$USED_AVAIL <- as.numeric(used_avail_RSF_freezeup_FINAL$USED_AVAIL) 
+
+used_avail_RSF_pooled_FINAL$USE <- factor(used_avail_RSF_pooled_FINAL$USED_AVAIL, levels=c(1,0), labels=c("used", "available")) # make use a factor also
+used_avail_RSF_winter_FINAL$USE <- factor(used_avail_RSF_winter_FINAL$USED_AVAIL, levels=c(1,0), labels=c("used", "available"))  
+used_avail_RSF_breakup_FINAL$USE <- factor(used_avail_RSF_breakup_FINAL$USED_AVAIL, levels=c(1,0), labels=c("used", "available"))
+used_avail_RSF_freezeup_FINAL$USE <- factor(used_avail_RSF_freezeup_FINAL$USED_AVAIL, levels=c(1,0), labels=c("used", "available")) 
+
+used_avail_RSF_pooled_FINAL$BATH_SCALED <- scale(used_avail_RSF_pooled_FINAL$BATH, scale=TRUE, center=TRUE) # scale values
+used_avail_RSF_winter_FINAL$BATH_SCALED <- scale(used_avail_RSF_winter_FINAL$BATH, scale=TRUE, center=TRUE) 
+used_avail_RSF_breakup_FINAL$BATH_SCALED <- scale(used_avail_RSF_breakup_FINAL$BATH, scale=TRUE, center=TRUE) 
+used_avail_RSF_freezeup_FINAL$BATH_SCALED <- scale(used_avail_RSF_freezeup_FINAL$BATH, scale=TRUE, center=TRUE) 
+
+used_avail_RSF_pooled_FINAL$DIST_SCALED <- scale(used_avail_RSF_pooled_FINAL$DIST_LAND, scale=TRUE, center=TRUE)
+used_avail_RSF_winter_FINAL$DIST_SCALED <- scale(used_avail_RSF_winter_FINAL$DIST_LAND, scale=TRUE, center=TRUE)
+used_avail_RSF_breakup_FINAL$DIST_SCALED <- scale(used_avail_RSF_breakup_FINAL$DIST_LAND, scale=TRUE, center=TRUE)
+used_avail_RSF_freezeup_FINAL$DIST_SCALED <- scale(used_avail_RSF_freezeup_FINAL$DIST_LAND, scale=TRUE, center=TRUE)
+
+used_avail_RSF_pooled_FINAL$CONC_SCALED <- scale(used_avail_RSF_pooled_FINAL$CONC, scale=TRUE, center=TRUE)
+used_avail_RSF_winter_FINAL$CONC_SCALED <- scale(used_avail_RSF_winter_FINAL$CONC, scale=TRUE, center=TRUE)
+used_avail_RSF_breakup_FINAL$CONC_SCALED <- scale(used_avail_RSF_breakup_FINAL$CONC, scale=TRUE, center=TRUE)
+used_avail_RSF_freezeup_FINAL$CONC_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC, scale=TRUE, center=TRUE)
+
+used_avail_RSF_pooled_FINAL$DIST_WATER_SCALED <- scale(used_avail_RSF_pooled_FINAL$DIST_WATER_M, scale=TRUE, center=TRUE)
+used_avail_RSF_winter_FINAL$DIST_WATER_SCALED <- scale(used_avail_RSF_winter_FINAL$DIST_WATER_M, scale=TRUE, center=TRUE)
+used_avail_RSF_breakup_FINAL$DIST_WATER_SCALED <- scale(used_avail_RSF_breakup_FINAL$DIST_WATER_M, scale=TRUE, center=TRUE)
+used_avail_RSF_freezeup_FINAL$DIST_WATER_SCALED <- scale(used_avail_RSF_freezeup_FINAL$DIST_WATER_M, scale=TRUE, center=TRUE)
 
 
 # Model 4 (Muff et al., 2019) requres that used/avail points are weighted differently
       # set used=1 and avail=1000
-head(used_avail_RSF)
-used_avail_RSF$W <- ifelse(used_avail_RSF$USE == "used", 1, 1000)
+used_avail_RSF_pooled_FINAL$W <- ifelse(used_avail_RSF_pooled_FINAL$USE == "used", 1, 1000)
+used_avail_RSF_winter_FINAL$W <- ifelse(used_avail_RSF_winter_FINAL$USE == "used", 1, 1000)
+used_avail_RSF_breakup_FINAL$W <- ifelse(used_avail_RSF_breakup_FINAL$USE == "used", 1, 1000)
+used_avail_RSF_freezeup_FINAL$W <- ifelse(used_avail_RSF_freezeup_FINAL$USE == "used", 1, 1000)
 
-# check to make sure weights are assigned appropriately
-used_avail_RSF[which(used_avail_RSF$USE == "available"), "W"]
-used_avail_RSF[which(used_avail_RSF$USE == "used"), "W"]
+
+
+
+
 
 
 ###
@@ -488,41 +734,39 @@ ranef(m4)
 
 # 8. Pooled RSFs using Model #4 from Muff et al. (2019)  -------------------------------------------------
 
+###
+# Use this dataframe: used_avail_RSF_pooled_FINAL
+# Need to run through section 4 to get it!!
+###
+
+
 # Redo M4 with all different models
 
 -----
   
-# NULL MODEL - note: we cannot create a null M4 (no intercepts/slopes?) - skip lines 393-403
-
+# NULL MODEL - note: we cannot create a null M4 (no intercepts/slopes?)
       # create temporary model first
 #null_tmp <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF, doFit=F, weights=W)
-
       # fix standard deviation
 #null_tmp$parameters$theta[1] = log(1e3)
-
       # alter variances
 #null_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-
       # fit model
 #null <- glmmTMB:::fitTMB(null_tmp) # error: "a map factor length must equal parameter length"
 
       # use M2 for a null model instead
-null <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF)
+null <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL)
 summary(null)
 
 -----
   
 # BATH ONLY (Model 1)
-  
       # create temporary model first
-model1_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=used_avail_RSF, doFit=F, weights=W)
-
+model1_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
       # fix standard deviation
 model1_tmp$parameters$theta[1] = log(1e3)
-  
       # alter variances
 model1_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-
       # fit model
 model1 <- glmmTMB:::fitTMB(model1_tmp) 
 summary(model1)
@@ -530,16 +774,12 @@ summary(model1)
 -----
   
 # CONC ONLY (Model 2)
-  
       # create temporary model first
-model2_tmp <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF, doFit=F, weights=W)
-
+model2_tmp <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
       # fix standard deviation
 model2_tmp$parameters$theta[1] = log(1e3)
-
       # alter variances
 model2_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-
       # fit model
 model2 <- glmmTMB:::fitTMB(model2_tmp) 
 summary(model2)
@@ -547,53 +787,45 @@ summary(model2)
 -----
   
 # DIST_LAND ONLY (Model 3)
-  
       # create temporary model first
-model3_tmp <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF, doFit=F, weights=W)
-
+model3_tmp <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
       # fix standard deviation
 model3_tmp$parameters$theta[1] = log(1e3)
-
       # alter variances
 model3_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-
       # fit model
 model3 <- glmmTMB:::fitTMB(model3_tmp) 
 summary(model3)
 
-
 -----
   
-# DIST_WATER ONLY (Model 4) - COMPLETE ONCE THESE VALUES ARE PULLED
-  
-# create temporary model first
-#model4_tmp <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF, doFit=F, weights=W)
-
-# fix standard deviation
-#model4_tmp$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model4_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-#model4 <- glmmTMB:::fitTMB(model4_tmp) 
-#summary(model4)
-
+# DIST_WATER ONLY (Model 4) 
+# 2 models here: #4 is using the scaled column, #4a uses the original (in m) and it takes forever to run
+# both give me NAs for AIC, BIC, LogLik, and deviance
+      # create temporary model first
+model4_tmp <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
+model4a_tmp <- glmmTMB(USED_AVAIL~DIST_WATER_M+(1|ID)+(0+DIST_WATER_M|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
+      # fix standard deviation
+model4_tmp$parameters$theta[1] = log(1e3)
+model4a_tmp$parameters$theta[1] = log(1e3)
+      # alter variances
+model4_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
+model4a_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
+      # fit model
+model4 <- glmmTMB:::fitTMB(model4_tmp) 
+model4a <- glmmTMB:::fitTMB(model4a_tmp) 
+summary(model4a)
 
 -----
   
 # BATH + CONC (Model 5)
-  
-# create temporary model first
-model5_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF, doFit=F, weights=W)
-
-# fix standard deviation
+      # create temporary model first
+model5_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
+      # fix standard deviation
 model5_tmp$parameters$theta[1] = log(1e3)
-
-# alter variances
+      # alter variances
 model5_tmp$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
+      # fit model
 model5 <- glmmTMB:::fitTMB(model5_tmp) 
 summary(model5)
 

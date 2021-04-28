@@ -20,7 +20,7 @@ used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distl
          USED_AVAIL = as.numeric(case_when(
            USED_AVAIL == "available" ~ "0",
            USED_AVAIL == "used" ~ "1"))) %>%
-  dplyr::select(-c(X1, WATER_ID, WATER_LONG, WATER_LAT, ROWID, ICE_LAND, ZONE, EASTING, NORTHING)) %>%
+  dplyr::select(-c(X.1, WATER_ID, WATER_LONG, WATER_LAT, ROWID, ICE_LAND, ZONE, EASTING, NORTHING)) %>% # note, you might have to remove X.1
    # Scale covariates
   mutate(BATH_SCALED = scale_var(BATH),
          DIST_SCALED = scale_var(DIST_LAND),
@@ -62,11 +62,10 @@ fewer_20 <- used_avail %>%
 
  
  
-null <- glmmTMB(USED_AVAIL ~ 1 + (1|ID), 
-                family=binomial(), 
-                data = used_avail)
- summary(null)
+null <- glmmTMB(USED_AVAIL ~ 1 + (1|ID), family=binomial(), data = used_avail)
+summary(null)
  
+
 
 ### * Bath --------------------------------------------------------------------
  

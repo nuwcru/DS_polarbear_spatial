@@ -799,18 +799,17 @@ summary(model3)
 ###
   
 # Model 4: DIST_WATER ONLY 
-# 2 models here: #4 is using the scaled column, #4a uses the original (in m) and it takes forever to run (it also doens't change anything, so ignore it)
-# both give me NAs for AIC, BIC, LogLik, and deviance
-# there's also a series of errors for the second last line (line 811 with fitTMB)
-model4_tmp <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
-#model4a_tmp <- glmmTMB(USED_AVAIL~DIST_WATER_M+(1|ID)+(0+DIST_WATER_M|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
-model4_tmp$parameters$theta[1] = log(1e3)
-#model4a_tmp$parameters$theta[1] = log(1e3)
-model4_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-#model4a_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
-model4 <- glmmTMB:::fitTMB(model4_tmp) 
-#model4a <- glmmTMB:::fitTMB(model4a_tmp) 
-summary(model4)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model4_tmp <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
+#model4_tmp$parameters$theta[1] = log(1e3)
+#model4_tmp$mapArg = list(theta = factor(c(NA, 1:1)))
+#model4 <- glmmTMB:::fitTMB(model4_tmp) 
+#summary(model4)
+
+# Instead, don't fix intercept variance, but  estimate it from the data
+model4_free_var <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=TRUE, weights=W)
+summary(model4_free_var)
+
 
 ###
   
@@ -833,13 +832,17 @@ summary(model6)
 ###
   
 # Model 7: BATH + DIST_WATER 
-# Getting NA values here as well!
-head(used_avail_RSF_pooled_FINAL)
-model7_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
-model7_tmp$parameters$theta[1] = log(1e3)
-model7_tmp$mapArg = list(theta = factor(c(NA, 1:2)))
-model7 <- glmmTMB:::fitTMB(model7_tmp) 
-summary(model7)
+# Ingnore first attempt, we were getting errors here as well
+#head(used_avail_RSF_pooled_FINAL)
+#model7_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
+#model7_tmp$parameters$theta[1] = log(1e3)
+#model7_tmp$mapArg = list(theta = factor(c(NA, 1:2)))
+#model7 <- glmmTMB:::fitTMB(model7_tmp) 
+#summary(model7)
+
+model7_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=TRUE, weights=W)
+summary(model7_free_var)
+
 
 ###
   
@@ -853,7 +856,6 @@ summary(model8)
 ###
   
 # Model 9: CONC + DIST_WATER 
-# THIS WORKS FOR SOME REASON
 model9_tmp <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
 model9_tmp$parameters$theta[1] = log(1e3)
 model9_tmp$mapArg = list(theta = factor(c(NA, 1:2)))
@@ -863,7 +865,6 @@ summary(model9)
 ###
   
 # Model 10: DIST_LAND + DIST_WATER 
-# THIS WORKS ALSO
 model10_tmp <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
 model10_tmp$parameters$theta[1] = log(1e3)
 model10_tmp$mapArg = list(theta = factor(c(NA, 1:2)))
@@ -882,12 +883,16 @@ summary(model11)
 ###
   
 # Model 12: BATH + CONC + DIST_WATER 
-# NA VALUES HERE TOO
-model12_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
-model12_tmp$parameters$theta[1] = log(1e3)
-model12_tmp$mapArg = list(theta = factor(c(NA, 1:3)))
-model12 <- glmmTMB:::fitTMB(model12_tmp) # throws errors
-summary(model12)
+# NA values here too; ignore first attempt and don't estimate variance
+#model12_tmp <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=F, weights=W)
+#model12_tmp$parameters$theta[1] = log(1e3)
+#model12_tmp$mapArg = list(theta = factor(c(NA, 1:3)))
+#model12 <- glmmTMB:::fitTMB(model12_tmp) # throws errors
+#summary(model12)
+
+model12_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_pooled_FINAL, doFit=TRUE, weights=W)
+summary(model12_free_var)
+
 
 ###
 
@@ -908,44 +913,35 @@ model14 <- glmmTMB:::fitTMB(model14_tmp)
 summary(model14)
 
 
-# 9.0. Seasonal RSFs using Model #4 again (see sections 9.1, 9.2, 9.3, 9.4)-------
+# 9.0. Notes on Seasonal RSFs using Model #4  (see sections 9.1, 9.2, 9.3)-------
 
-# separate dataframe into seasons
+# need to run through section 5 first
+# use the dataframes below for the next sections
 
-head(used_avail_RSF)
-unique(used_avail_RSF$SEASON)
+head(used_avail_RSF_breakup_FINAL)
+head(used_avail_RSF_freezeup_FINAL)
+head(used_avail_RSF_winter_FINAL)
 
-freezeup <- used_avail_RSF %>% filter(SEASON=="freeze")
-winter <- used_avail_RSF %>% filter(SEASON=="winter")
-breakup <- used_avail_RSF %>% filter(SEASON=="break")
-icefree <- used_avail_RSF %>% filter(SEASON=="summer")
-
-unique(icefree$SEASON) # test all
-
-summary(icefree) # just 163 used points
-unique(icefree$ID)
+# there are no bears with >20 fixes in the ice-free season
+# part of this is becuase we removed land-based fixes
+# don't do ice-free seasonal RSFs
 
 
 # 9.1. WINTER ------------
 
-
 # use M2 for a null model instead
-null_winter <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=winter)
+null_winter <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
 summary(null_winter)
 
 ###
   
 # BATH ONLY (Model 1)
-  
 # create temporary model first
-model1_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-
+model1_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 # fix standard deviation
 model1_tmp_winter$parameters$theta[1] = log(1e3)
-
 # alter variances
 model1_tmp_winter$mapArg = list(theta = factor(c(NA, 1:1)))
-
 # fit model
 model1_winter <- glmmTMB:::fitTMB(model1_tmp_winter) 
 summary(model1_winter)
@@ -954,17 +950,9 @@ summary(model1_winter)
 ###
 
 # CONC ONLY (Model 2)
-  
-# create temporary model first
-model2_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-
-# fix standard deviation
+model2_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 model2_tmp_winter$parameters$theta[1] = log(1e3)
-
-# alter variances
 model2_tmp_winter$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
 model2_winter <- glmmTMB:::fitTMB(model2_tmp_winter) 
 summary(model2_winter)
 
@@ -972,237 +960,168 @@ summary(model2_winter)
 ###
   
 # DIST_LAND ONLY (Model 3)
-  
-# create temporary model first
-model3_tmp_winter <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-
-# fix standard deviation
+model3_tmp_winter <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 model3_tmp_winter$parameters$theta[1] = log(1e3)
-
-# alter variances
 model3_tmp_winter$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
 model3_winter <- glmmTMB:::fitTMB(model3_tmp_winter) 
 summary(model3_winter)
 
 
 ###
   
-# DIST_WATER ONLY (Model 4) - COMPLETE ONCE THESE VALUES ARE PULLED
-  
-# create temporary model first
-#model4_tmp_winter <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
+# DIST_WATER ONLY (Model 4)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model4_tmp_winter <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 #model4_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
 #model4_tmp_winter$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
 #model4_winter <- glmmTMB:::fitTMB(model4_tmp_winter) 
 #summary(model4_winter)
+
+# Instead, don't fix intercept variance, but  estimate it from the data
+model4_winter_free_var <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model4_winter_free_var)
 
 
 ###
   
 # BATH + CONC (Model 5)
-  
-# create temporary model first
-model5_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model5_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
+#model5_tmp_winter$parameters$theta[1] = log(1e3)
+#model5_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
+#model5_winter <- glmmTMB:::fitTMB(model5_tmp_winter) 
+#summary(model5_winter)
 
-# fix standard deviation
-model5_tmp_winter$parameters$theta[1] = log(1e3)
-
-# alter variances
-model5_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model5_winter <- glmmTMB:::fitTMB(model5_tmp_winter) 
-summary(model5_winter)
+# Instead, don't fix intercept variance, but estimate it from the data
+model5_winter_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model5_winter_free_var)
 
 
 ###
   
 # BATH + DIST_LAND (Model 6)
-  
-# create temporary model first
-model6_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-
-# fix standard deviation
+model6_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 model6_tmp_winter$parameters$theta[1] = log(1e3)
-
-# alter variances
 model6_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
 model6_winter <- glmmTMB:::fitTMB(model6_tmp_winter) 
 summary(model6_winter)
 
 
 ###
   
-# BATH + DIST_WATER (Model 7) - WAITING ON THIS FINAL COVARIATE
-  
-# create temporary model first
-#model7_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
-#model7_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
-#model7_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model7_winter <- glmmTMB:::fitTMB(model7_tmp_winter) 
-#summary(model7_winter)
+# BATH + DIST_WATER (Model 7)
+model7_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
+model7_tmp_winter$parameters$theta[1] = log(1e3)
+model7_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
+model7_winter <- glmmTMB:::fitTMB(model7_tmp_winter) 
+summary(model7_winter)
 
 
 ###
   
 # CONC + DIST_LAND (Model 8)
-  
-# create temporary model first
-model8_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model8_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
+#model8_tmp_winter$parameters$theta[1] = log(1e3)
+#model8_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
+#model8_winter <- glmmTMB:::fitTMB(model8_tmp_winter) 
+#summary(model8_winter)
 
-# fix standard deviation
-model8_tmp_winter$parameters$theta[1] = log(1e3)
-
-# alter variances
-model8_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model8_winter <- glmmTMB:::fitTMB(model8_tmp_winter) 
-summary(model8_winter)
+# Instead, don't fix intercept variance, but estimate it from the data
+model8_winter_free_var <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model8_winter_free_var)
 
 
 ###
   
-# CONC + DIST_WATER (Model 9) - SKIP FOR NOW
-  
-# create temporary model first
-#model9_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
+# CONC + DIST_WATER (Model 9) 
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model9_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 #model9_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
 #model9_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
 #model9_winter <- glmmTMB:::fitTMB(model9_tmp_winter) 
 #summary(model9_winter)
 
------
+# Instead, don't fix intercept variance, but estimate it from the data
+model9_winter_free_var <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model9_winter_free_var)
+
+
+###
   
 # DIST_LAND + DIST_WATER (Model 10)
-  
-# create temporary model first
-#model10_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
-# model10_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
-# model10_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model10_tmp_winter <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
+#model10_tmp_winter$parameters$theta[1] = log(1e3)
+#model10_tmp_winter$mapArg = list(theta = factor(c(NA, 1:2)))
 #model10_winter <- glmmTMB:::fitTMB(model10_tmp_winter) 
 #summary(model10_winter)
+
+# Instead, don't fix intercept variance, but estimate it from the data
+model10_winter_free_var <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model10_winter_free_var)
 
 
 ###
   
 # BATH + CONC + DIST_LAND (Model 11)
-  
-# create temporary model first
-model11_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-
-# fix standard deviation
+model11_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 model11_tmp_winter$parameters$theta[1] = log(1e3)
-
-# alter variances
 model11_tmp_winter$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
 model11_winter <- glmmTMB:::fitTMB(model11_tmp_winter) 
 summary(model11_winter)
 
 
 ###
   
-# BATH + CONC + DIST_WATER (Model 12) - SKIP FOR NOW
-  
-# create temporary model first
-#model12_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
+# BATH + CONC + DIST_WATER (Model 12)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model12_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
 #model12_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
 #model12_tmp_winter$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
 #model12_winter <- glmmTMB:::fitTMB(model12_tmp_winter) 
 #summary(model12_winter)
 
+# Instead, don't fix intercept variance, but estimate it from the data
+model12_winter_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model12_winter_free_var)
+
 
 ###
 
-# CONC + DIST_LAND + DIST_WATER (Model 13) - SKIP FOR NOW
-  
-# create temporary model first
-#model13_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
-#model13_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
-#model13_tmp_winter$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-#model13_winter <- glmmTMB:::fitTMB(model13_tmp_winter) 
-#summary(model13_winter)
+# CONC + DIST_LAND + DIST_WATER (Model 13)
+model13_tmp_winter <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
+model13_tmp_winter$parameters$theta[1] = log(1e3)
+model13_tmp_winter$mapArg = list(theta = factor(c(NA, 1:3)))
+model13_winter <- glmmTMB:::fitTMB(model13_tmp_winter) 
+summary(model13_winter)
 
 
 ###
   
-# BATH + CONC + DIST_LAND + DIST_WATER (Model 14) - SKIP FOR NOW
-  
-# create temporary model first
-#model14_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_LAND_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_LAND_SCALED|ID), family=binomial(), data=winter, doFit=F, weights=W)
-  
-# fix standard deviation
-#model14_tmp_winter$parameters$theta[1] = log(1e3)
-  
-# alter variances
-#model14_tmp_winter$mapArg = list(theta = factor(c(NA, 1:4)))
-
-# fit model
-#model14_winter <- glmmTMB:::fitTMB(model14_tmp_winter) 
-#summary(model14_winter)
+# BATH + CONC + DIST_LAND + DIST_WATER (Model 14)
+model14_tmp_winter <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=F, weights=W)
+model14_tmp_winter$parameters$theta[1] = log(1e3)
+model14_tmp_winter$mapArg = list(theta = factor(c(NA, 1:4)))
+model14_winter <- glmmTMB:::fitTMB(model14_tmp_winter) 
+summary(model14_winter)
 
 
 # 9.2. BREAK-UP ---------
 
 # use M2 for a null model instead
-null_break <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=breakup)
+null_break <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
 summary(null_break)
 
 ###
 
 # BATH ONLY (Model 1)
-
 # create temporary model first
-model1_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
+model1_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 # fix standard deviation
 model1_tmp_break$parameters$theta[1] = log(1e3)
-
 # alter variances
 model1_tmp_break$mapArg = list(theta = factor(c(NA, 1:1)))
-
 # fit model
 model1_break <- glmmTMB:::fitTMB(model1_tmp_break) 
 summary(model1_break)
@@ -1211,17 +1130,9 @@ summary(model1_break)
 ###
 
 # CONC ONLY (Model 2)
-
-# create temporary model first
-model2_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+model2_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model2_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 model2_tmp_break$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
 model2_break <- glmmTMB:::fitTMB(model2_tmp_break) 
 summary(model2_break)
 
@@ -1229,732 +1140,297 @@ summary(model2_break)
 ###
 
 # DIST_LAND ONLY (Model 3)
-
-# create temporary model first
-model3_tmp_break <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+model3_tmp_break<- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model3_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 model3_tmp_break$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
 model3_break <- glmmTMB:::fitTMB(model3_tmp_break) 
 summary(model3_break)
 
 
 ###
 
-# DIST_WATER ONLY (Model 4) - COMPLETE ONCE THESE VALUES ARE PULLED
+# DIST_WATER ONLY (Model 4)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+model4_tmp_break <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+model4_tmp_break$parameters$theta[1] = log(1e3)
+model4_tmp_break$mapArg = list(theta = factor(c(NA, 1:1)))
+model4_break <- glmmTMB:::fitTMB(model4_tmp_break) 
+summary(model4_break)
 
-# create temporary model first
-#model4_tmp_break <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
-#model4_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model4_tmp_breakr$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-#model4_break <- glmmTMB:::fitTMB(model4_tmp_break) 
-#summary(model4_break)
+# Instead, don't fix intercept variance, but estimate it from the data
+# Error here too: "Model convergence problem; non-positive-definite Hessian matrix"
+model4_break_free_var <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=TRUE, weights=W)
+summary(model4_break_free_var)
 
 
 ###
 
 # BATH + CONC (Model 5)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model5_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+#model5_tmp_break$parameters$theta[1] = log(1e3)
+#model5_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
+#model5_break <- glmmTMB:::fitTMB(model5_tmp_break) 
+#summary(model5_break)
 
-# create temporary model first
-model5_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
-model5_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
-model5_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model5_break<- glmmTMB:::fitTMB(model5_tmp_break) 
-summary(model5_break)
+# Instead, don't fix intercept variance, but estimate it from the data
+model5_break_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=TRUE, weights=W)
+summary(model5_break_free_var)
 
 
 ###
 
 # BATH + DIST_LAND (Model 6)
-
-# create temporary model first
-model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model6_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
 model6_break <- glmmTMB:::fitTMB(model6_tmp_break) 
 summary(model6_break)
 
 
 ###
 
-# BATH + DIST_WATER (Model 7) - WAITING ON THIS FINAL COVARIATE
-
-# create temporary model first
-#model7_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+# BATH + DIST_WATER (Model 7)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model7_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 #model7_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 #model7_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
 #model7_break <- glmmTMB:::fitTMB(model7_tmp_break) 
 #summary(model7_break)
+
+# Instead, don't fix intercept variance, but estimate it from the data
+model7_break_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=TRUE, weights=W)
+summary(model7_break_free_var)
 
 
 ###
 
 # CONC + DIST_LAND (Model 8)
-
-# create temporary model first
-model8_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+model8_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model8_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 model8_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
 model8_break <- glmmTMB:::fitTMB(model8_tmp_break) 
 summary(model8_break)
 
 
 ###
 
-# CONC + DIST_WATER (Model 9) - SKIP FOR NOW
-
-# create temporary model first
-#model9_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+# CONC + DIST_WATER (Model 9) 
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model9_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 #model9_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 #model9_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
 #model9_break <- glmmTMB:::fitTMB(model9_tmp_break) 
 #summary(model9_break)
 
+# Instead, don't fix intercept variance, but estimate it from the data
+model9_break_free_var <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=TRUE, weights=W)
+summary(model9_break_free_var)
+
 
 ###
-  
-# DIST_LAND + DIST_WATER (Model 10)
-  
-# create temporary model first
-#model10_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-  
-# fix standard deviation
-# model10_tmp_break$parameters$theta[1] = log(1e3)
-  
-# alter variances
-# model10_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
 
-# fit model
-#model10_break <- glmmTMB:::fitTMB(model10_tmp_break) 
-#summary(model10_break)
+# DIST_LAND + DIST_WATER (Model 10)
+model10_tmp_break <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+model10_tmp_break$parameters$theta[1] = log(1e3)
+model10_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
+model10_break <- glmmTMB:::fitTMB(model10_tmp_break) 
+summary(model10_break)
 
 
 ###
 
 # BATH + CONC + DIST_LAND (Model 11)
-
-# create temporary model first
-model11_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+model11_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model11_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 model11_tmp_break$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
 model11_break <- glmmTMB:::fitTMB(model11_tmp_break) 
 summary(model11_break)
 
 
 ###
 
-# BATH + CONC + DIST_WATER (Model 12) - SKIP FOR NOW
-
-# create temporary model first
-#model12_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
+# BATH + CONC + DIST_WATER (Model 12)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model12_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 #model12_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
 #model12_tmp_break$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
 #model12_break <- glmmTMB:::fitTMB(model12_tmp_break) 
 #summary(model12_break)
 
-
-###
-
-# CONC + DIST_LAND + DIST_WATER (Model 13) - SKIP FOR NOW
-
-# create temporary model first
-#model13_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
-
-# fix standard deviation
-#model13_tmp_break$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model13_tmp_break$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-#model13_break <- glmmTMB:::fitTMB(model13_tmp_break) 
-#summary(model13_break)
+# Instead, don't fix intercept variance, but estimate it from the data
+model12_break_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=TRUE, weights=W)
+summary(model12_break_free_var)
 
 
 ###
 
-# BATH + CONC + DIST_LAND + DIST_WATER (Model 14) - SKIP FOR NOW
+# CONC + DIST_LAND + DIST_WATER (Model 13)
+model13_tmp_break <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+model13_tmp_break$parameters$theta[1] = log(1e3)
+model13_tmp_break$mapArg = list(theta = factor(c(NA, 1:3)))
+model13_break <- glmmTMB:::fitTMB(model13_tmp_break) 
+summary(model13_break)
 
-# create temporary model first
-#model14_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_LAND_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_LAND_SCALED|ID), family=binomial(), data=breakup, doFit=F, weights=W)
 
-# fix standard deviation
-#model14_tmp_break$parameters$theta[1] = log(1e3)
+###
 
-# alter variances
-#model14_tmp_break$mapArg = list(theta = factor(c(NA, 1:4)))
+# BATH + CONC + DIST_LAND + DIST_WATER (Model 14)
+model14_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+model14_tmp_break$parameters$theta[1] = log(1e3)
+model14_tmp_break$mapArg = list(theta = factor(c(NA, 1:4)))
+model14_break <- glmmTMB:::fitTMB(model14_tmp_break) 
+summary(model14_break)
 
-# fit model
-#model14_break <- glmmTMB:::fitTMB(model14_tmp_break) 
-#summary(model14_break)
-
-# 9.3. ICE-FREE ---------
+# 9.3. FREEZE-UP -------
 
 # use M2 for a null model instead
-null_icefree <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=icefree)
-summary(null_icefree)
+null_freeze <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+summary(null_freeze)
 
 ###
 
 # BATH ONLY (Model 1)
-
-# create temporary model first
-model1_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model1_tmp_icefreer$parameters$theta[1] = log(1e3)
-
-# alter variances
-model1_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-model1_icefree <- glmmTMB:::fitTMB(model1_tmp_icefree) 
-summary(model1_icefree)
+model1_tmp_freeze<- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model1_tmp_freeze$parameters$theta[1] = log(1e3)
+model1_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:1)))
+model1_freeze <- glmmTMB:::fitTMB(model1_tmp_freeze) 
+summary(model1_freeze)
 
 
 ###
 
 # CONC ONLY (Model 2)
-
-# create temporary model first
-model2_tmp_icefree <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model2_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-model2_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-model2_icefree <- glmmTMB:::fitTMB(model2_tmp_icefree) 
-summary(model2_icefree)
+model2_tmp_freeze <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model2_tmp_freeze$parameters$theta[1] = log(1e3)
+model2_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:1)))
+model2_freeze <- glmmTMB:::fitTMB(model2_tmp_freeze) 
+summary(model2_freeze)
 
 
 ###
 
 # DIST_LAND ONLY (Model 3)
-
-# create temporary model first
-model3_tmp_icefree <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model3_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-model3_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-model3_icefree <- glmmTMB:::fitTMB(model3_tmp_icefree) 
-summary(model3_icefree)
+model3_tmp_freeze<- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model3_tmp_freeze$parameters$theta[1] = log(1e3)
+model3_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:1)))
+model3_freeze <- glmmTMB:::fitTMB(model3_tmp_freeze) 
+summary(model3_freeze)
 
 
 ###
 
-# DIST_WATER ONLY (Model 4) - COMPLETE ONCE THESE VALUES ARE PULLED
-
-# create temporary model first
-#model4_tmp_icefree <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-#model4_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model4_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-#model4_icefree <- glmmTMB:::fitTMB(model4_tmp_icefree) 
-#summary(model4_icefree)
+# DIST_WATER ONLY (Model 4)
+model4_tmp_freeze <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model4_tmp_freeze$parameters$theta[1] = log(1e3)
+model4_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:1)))
+model4_freeze <- glmmTMB:::fitTMB(model4_tmp_freeze) 
+summary(model4_freeze)
 
 
 ###
 
 # BATH + CONC (Model 5)
-
-# create temporary model first
-model5_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model5_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-model5_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model5_icefree <- glmmTMB:::fitTMB(model5_tmp_icefree) 
-summary(model5_icefree)
+model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model5_tmp_freeze$parameters$theta[1] = log(1e3)
+model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
+summary(model5_freeze)
 
 
 ###
 
 # BATH + DIST_LAND (Model 6)
-
-# create temporary model first
-model6_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model6_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-model6_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model6_icefree <- glmmTMB:::fitTMB(model6_tmp_icefree) 
-summary(model6_icefree)
+model6_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model6_tmp_freeze$parameters$theta[1] = log(1e3)
+model6_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model6_freeze <- glmmTMB:::fitTMB(model6_tmp_freeze) 
+summary(model6_freeze)
 
 
 ###
 
-# BATH + DIST_WATER (Model 7) - WAITING ON THIS FINAL COVARIATE
+# BATH + DIST_WATER (Model 7)
+# ignore the first attempt, we get errors and  NAs for AIC, BIC, LogLik, and deviance
+#model7_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+#model7_tmp_freeze$parameters$theta[1] = log(1e3)
+#model7_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+#model7_freeze <- glmmTMB:::fitTMB(model7_tmp_freeze) 
+#summary(model7_freeze)
 
-# create temporary model first
-#model7_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-#model7_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model7_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model7_icefree <- glmmTMB:::fitTMB(model7_tmp_icefree) 
-#summary(model7_icefree)
+# Instead, don't fix intercept variance, but estimate it from the data
+model7_freeze_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=TRUE, weights=W)
+summary(model7_freeze_free_var)
 
 
 ###
 
 # CONC + DIST_LAND (Model 8)
-
-# create temporary model first
-model8_tmp_icefree <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model8_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-model8_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model8_icefree <- glmmTMB:::fitTMB(model8_tmp_icefree) 
-summary(model8_icefree)
+model8_tmp_freeze <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model8_tmp_freeze$parameters$theta[1] = log(1e3)
+model8_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model8_freeze <- glmmTMB:::fitTMB(model8_tmp_freeze) 
+summary(model8_freeze)
 
 
 ###
 
-# CONC + DIST_WATER (Model 9) - SKIP FOR NOW
-
-# create temporary model first
-#model9_tmp_icefree <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-#model9_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model9_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model9_icefree <- glmmTMB:::fitTMB(model9_tmp_icefree) 
-#summary(model9_icefree)
+# CONC + DIST_WATER (Model 9) 
+model9_tmp_freeze <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model9_tmp_freeze$parameters$theta[1] = log(1e3)
+model9_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model9_freeze <- glmmTMB:::fitTMB(model9_tmp_freeze) 
+summary(model9_freeze)
 
 
 ###
 
-  
 # DIST_LAND + DIST_WATER (Model 10)
-  
-# create temporary model first
-#model10_tmp_icefree <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-  
-# fix standard deviation
-# model10_tmp_icefree$parameters$theta[1] = log(1e3)
-  
-# alter variances
-# model10_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model10_icefree<- glmmTMB:::fitTMB(model10_tmp_icefree) 
-#summary(model10_icefree)
+model10_tmp_freeze <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model10_tmp_freeze$parameters$theta[1] = log(1e3)
+model10_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model10_freeze <- glmmTMB:::fitTMB(model10_tmp_freeze) 
+summary(model10_freeze)
 
 
 ###
 
 # BATH + CONC + DIST_LAND (Model 11)
-
-# create temporary model first
-model11_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-model11_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-model11_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-model11_icefree <- glmmTMB:::fitTMB(model11_tmp_icefree) 
-summary(model11_icefree)
+model11_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model11_tmp_freeze$parameters$theta[1] = log(1e3)
+model11_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:3)))
+model11_freeze <- glmmTMB:::fitTMB(model11_tmp_freeze) 
+summary(model11_freeze)
 
 
 ###
 
-# BATH + CONC + DIST_WATER (Model 12) - SKIP FOR NOW
-
-# create temporary model first
-#model12_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-#model12_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model12_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-#model12_icefree <- glmmTMB:::fitTMB(model12_tmp_icefree) 
-#summary(model12_icefree)
+# BATH + CONC + DIST_WATER (Model 12)
+model12_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model12_tmp_freeze$parameters$theta[1] = log(1e3)
+model12_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:3)))
+model12_freeze <- glmmTMB:::fitTMB(model12_tmp_freeze) 
+summary(model12_freeze)
 
 
 ###
 
-# CONC + DIST_LAND + DIST_WATER (Model 13) - SKIP FOR NOW
-
-# create temporary model first
-#model13_tmp_icefree <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-#model13_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model13_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-#model13_icefree <- glmmTMB:::fitTMB(model13_tmp_icefree) 
-#summary(model13_icefree)
+# CONC + DIST_LAND + DIST_WATER (Model 13)
+model13_tmp_freeze <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model13_tmp_freeze$parameters$theta[1] = log(1e3)
+model13_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:3)))
+model13_freeze <- glmmTMB:::fitTMB(model13_tmp_freeze) 
+summary(model13_freeze)
 
 
 ###
 
-# BATH + CONC + DIST_LAND + DIST_WATER (Model 14) - SKIP FOR NOW
-
-# create temporary model first
-#model14_tmp_icefree <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_LAND_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_LAND_SCALED|ID), family=binomial(), data=icefree, doFit=F, weights=W)
-
-# fix standard deviation
-#model14_tmp_icefree$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model14_tmp_icefree$mapArg = list(theta = factor(c(NA, 1:4)))
-
-# fit model
-#model14_icefree <- glmmTMB:::fitTMB(model14_tmp_icefree) 
-#summary(model14_icefree)
-
-# 9.4. FREEZE-UP -------
-
-# use M2 for a null model instead
-null_freezeup <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=freezeup)
-summary(null_freezeup)
-
-###
-
-# BATH ONLY (Model 1)
-
-# create temporary model first
-model1_tmp_freezeup <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID)+(0+BATH_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model1_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model1_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-model1_freezeup <- glmmTMB:::fitTMB(model1_tmp_freezeup) 
-summary(model1_freezeup)
-
-
-###
-
-# CONC ONLY (Model 2)
-
-# create temporary model first
-model2_tmp_freezeup <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID)+(0+CONC_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model2_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model2_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-model2_freezeup <- glmmTMB:::fitTMB(model2_tmp_freezeup) 
-summary(model2_freezeup)
-
-
-###
-
-# DIST_LAND ONLY (Model 3)
-
-# create temporary model first
-model3_tmp_freezeup <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model3_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model3_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-model3_freezeup <- glmmTMB:::fitTMB(model3_tmp_freezeup) 
-summary(model3_freezeup)
-
-
-###
-
-# DIST_WATER ONLY (Model 4) - COMPLETE ONCE THESE VALUES ARE PULLED
-
-# create temporary model first
-#model4_tmp_freezeup <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-#model4_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model4_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:1)))
-
-# fit model
-#model4_freezeup <- glmmTMB:::fitTMB(model4_tmp_freezeup) 
-#summary(model4_freezeup)
-
-
-###
-
-# BATH + CONC (Model 5)
-
-# create temporary model first
-model5_tmp_freezeup <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model5_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model5_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model5_freezeup <- glmmTMB:::fitTMB(model5_tmp_freezeup) 
-summary(model5_freezeup)
-
-
-###
-
-# BATH + DIST_LAND (Model 6)
-
-# create temporary model first
-model6_tmp_freezeup <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model6_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model6_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model6_freezeup <- glmmTMB:::fitTMB(model6_tmp_freezeup) 
-summary(model6_freezeup)
-
-
-###
-
-# BATH + DIST_WATER (Model 7) - WAITING ON THIS FINAL COVARIATE
-
-# create temporary model first
-#model7_tmp_freezeup <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-#model7_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model7_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model7_freezeup <- glmmTMB:::fitTMB(model7_tmp_freezeup) 
-#summary(model7_freezeup)
-
-
-###
-
-# CONC + DIST_LAND (Model 8)
-
-# create temporary model first
-model8_tmp_freezeup <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model8_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model8_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-model8_freezeup <- glmmTMB:::fitTMB(model8_tmp_freezeup) 
-summary(model8_freezeup)
-
-
-###
-
-# CONC + DIST_WATER (Model 9) - SKIP FOR NOW
-
-# create temporary model first
-#model9_tmp_freezeup <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-#model9_tmp_wfreezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model9_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model9_freezeup <- glmmTMB:::fitTMB(model9_tmp_freezeup) 
-#summary(model9_freezeup)
-
-
-###
-  
-# DIST_LAND + DIST_WATER (Model 10)
-  
-# create temporary model first
-#model10_tmp_freezeup <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-  
-# fix standard deviation
-# model10_tmp_freezeup$parameters$theta[1] = log(1e3)
-  
-# alter variances
-# model10_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:2)))
-
-# fit model
-#model10_freezeup <- glmmTMB:::fitTMB(model10_tmp_freezeup) 
-#summary(model10_freezeup)
-
-
-###
-
-# BATH + CONC + DIST_LAND (Model 11)
-
-# create temporary model first
-model11_tmp_freezeup <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-model11_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-model11_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-model11_freezeup <- glmmTMB:::fitTMB(model11_tmp_freezeup) 
-summary(model11_freezeup)
-
-
-###
-
-# BATH + CONC + DIST_WATER (Model 12) - SKIP FOR NOW
-
-# create temporary model first
-#model12_tmp_freezeup<- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-#model12_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model12_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-#model12_freezeup <- glmmTMB:::fitTMB(model12_tmp_freezeup) 
-#summary(model12_freezeup)
-
-
-###
-
-# CONC + DIST_LAND + DIST_WATER (Model 13) - SKIP FOR NOW
-
-# create temporary model first
-#model13_tmp_freezeup <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-#model13_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model13_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:3)))
-
-# fit model
-#model13_freezeup <- glmmTMB:::fitTMB(model13_tmp_freezeup) 
-#summary(model13_freezeup)
-
-
-###
-
-# BATH + CONC + DIST_LAND + DIST_WATER (Model 14) - SKIP FOR NOW
-
-# create temporary model first
-#model14_tmp_freezeup <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_LAND_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_LAND_SCALED|ID), family=binomial(), data=freezeup, doFit=F, weights=W)
-
-# fix standard deviation
-#model14_tmp_freezeup$parameters$theta[1] = log(1e3)
-
-# alter variances
-#model14_tmp_freezeup$mapArg = list(theta = factor(c(NA, 1:4)))
-
-# fit model
-#model14_freezeup <- glmmTMB:::fitTMB(model14_tmp_freezeup) 
-#summary(model14_freezeup)
+# BATH + CONC + DIST_LAND + DIST_WATER (Model 14)
+model14_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model14_tmp_freeze$parameters$theta[1] = log(1e3)
+model14_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:4)))
+model14_freeze <- glmmTMB:::fitTMB(model14_tmp_freeze) 
+summary(model14_freeze)
 
 
 # 10. Interpreting and visualizing top model results ---------

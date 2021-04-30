@@ -560,6 +560,16 @@ used_avail_RSF_freezeup_FINAL$W <- ifelse(used_avail_RSF_freezeup_FINAL$USE == "
 str(used_avail_RSF_freezeup_FINAL)
 
 
+# make final dataframes
+
+write.csv(used_avail_RSF_pooled_FINAL, "data/Oct2020work/FINAL DATASET/used_avail_RSF_pooled_FINAL_Apr2021.csv")
+write.csv(used_avail_RSF_winter_FINAL, "data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+write.csv(used_avail_RSF_breakup_FINAL, "data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
+write.csv(used_avail_RSF_freezeup_FINAL, "data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+
+
+
+
 
 
 

@@ -6,6 +6,7 @@ library(move)
 library(chron)
 library(raster)
 library(dplyr)
+library(lubridate)
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -31,6 +32,15 @@ theme_nuwcru <- function(){
 setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/DS_polarbear_spatial/")
 
 
+# moveVis wouldn't work properly with version 4.0.3, so change to an older version
+
+
+
+
+
+
+
+
 # 2. Import data and format for moveVis ------
 
 # import
@@ -46,6 +56,28 @@ str(bears)
 bears$TIMESTAMP <- as.POSIXct(bears$TIMESTAMP, format="%Y-%m-%d %H:%M")
 
 # http://movevis.org/index.html
+
+
+
+###
+
+# WHB data
+
+HB_bears <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/WHB_data_movementgraphics/1991_1999_EC_Collar_Data.csv")
+head(HB_bears)
+
+HB_bears <- subset(HB_bears, select=-c(DATE2, COLLARYEAR, LAT, LONG, SATELLITE, PCODE, HITS, SEN_MSG, LOC_CODE, LAT_ARG, LONGE_ARG, LONGW_ARG, X, COMPFREQ, REMARKS))
+names(HB_bears) <- c("ID", "LAT", "LONG", "YEAR", "MONTH", "YEAR2", "MONTH2", "DATE", "TIME")
+
+# create timestamp column
+HB_bears$DATE <- as.POSIXct(HB_bears$DATE, format="%Y-%m-%d")
+HB_bears$TIMESTAMP <- paste(HB_bears$DATE, HB_bears$TIME)
+head(HB_bears)
+str(HB_bears)
+HB_bears$TIMESTAMP <- as.POSIXct(HB_bears$TIMESTAMP, format="%Y-%m-%d %H:%M:%S")
+
+
+
 
 # 3. TEST Create moveVis gifs (one bear) -------
 
@@ -139,6 +171,7 @@ bears_move <- df2move(bears, proj="+proj=longlat +datum=WGS84", x="LONG", y="LAT
 # align dates
 bears_move_align <- align_move(bears_move, res=4, unit="mins")
 
+
 # create spatial frames
 frames <- frames_spatial(bears_move_align, map_service="osm", map_type="watercolor", alpha=0.5) %>%
   add_labels(x="Longitude", y="Latitude") %>% 
@@ -155,6 +188,5 @@ animate_frames(frames, out_file="moveVis.gif")
 
 
 # path_colours=c("red","green", "blue"),
-
 
 

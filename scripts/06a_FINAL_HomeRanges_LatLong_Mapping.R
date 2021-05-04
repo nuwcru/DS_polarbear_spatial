@@ -1,6 +1,4 @@
 
-
-
 # 1. Import libraries  --------------
 
 library(adehabitatHR) # to use MCP function
@@ -522,38 +520,38 @@ for(i in 1: length(bear_annualMCP_list)){
 }
 
 # Name items in the list
-names(bear_annualMCPs) <- c("X10695_1991", "X12080_1994", "X13289_1994", "X13292_1993", "X13428_1994", "X13746_1994", "X13746_1995")
-head(bear_annualMCPs$X10695_1991) # check that it worked
+names(bear_annualMCPs) <- c("X10695_1991_mcp", "X12080_1994_mcp", "X13289_1994_mcp", "X13292_1993_mcp", "X13428_1994_mcp", "X13746_1994_mcp", "X13746_1995_mcp")
+head(bear_annualMCPs$X10695_1991_mcp) # check that it worked
 
 # test plot - it worked! 
-plot(bear_annualMCPs$X12080_1994)
+plot(bear_annualMCPs$X13292_1993_mcp)
 
 # unlist and rename them
 bear_annualMCPs <- unlist(bear_annualMCPs)
-names(bear_annualMCPs) <- c("X10695_1991", "X12080_1994", "X13289_1994", "X13292_1993", "X13428_1994", "X13746_1994", "X13746_1995")
-head(bear_annualMCPs$X10695_1991)
+names(bear_annualMCPs) <- c("X10695_1991_mcp", "X12080_1994_mcp", "X13289_1994_mcp", "X13292_1993_mcp", "X13428_1994_mcp", "X13746_1994_mcp", "X13746_1995_mcp")
+head(bear_annualMCPs$X10695_1991_mcp)
 
 # make shapefiles and export
-X10695_1991 <- bear_annualMCPs$X10695_1991
-writeOGR(X10695_1991, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1991_mcp.shp", layer="X10695_1991", driver="ESRI Shapefile")
+X10695_1991_mcp <- bear_annualMCPs$X10695_1991_mcp
+writeOGR(X10695_1991_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1991_mcp.shp", layer="X10695_1991_mcp", driver="ESRI Shapefile")
 
-X12080_1994 <- bear_annualMCPs$X12080_1994
-writeOGR(X12080_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1994_mcp.shp", layer="X12080_1994", driver="ESRI Shapefile")
+X12080_1994_mcp <- bear_annualMCPs$X12080_1994_mcp
+writeOGR(X12080_1994_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1994_mcp.shp", layer="X12080_1994_mcp", driver="ESRI Shapefile")
 
-X13289_1994 <- bear_annualMCPs$X13289_1994
-writeOGR(X13289_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1994_mcp.shp", layer="X13289_1994", driver="ESRI Shapefile")
+X13289_1994_mcp <- bear_annualMCPs$X13289_1994_mcp
+writeOGR(X13289_1994_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1994_mcp.shp", layer="X13289_1994_mcp", driver="ESRI Shapefile")
 
-X13292_1993 <- bear_annualMCPs$X13292_1993
-writeOGR(X13292_1993, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1993_mcp.shp", layer="X13292_1993", driver="ESRI Shapefile")
+X13292_1993_mcp <- bear_annualMCPs$X13292_1993_mcp
+writeOGR(X13292_1993_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1993_mcp.shp", layer="X13292_1993_mcp", driver="ESRI Shapefile")
 
-X13428_1994 <- bear_annualMCPs$X13428_1994
-writeOGR(X13428_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13428_1994_mcp.shp", layer="X13428_1994", driver="ESRI Shapefile")
+X13428_1994_mcp <- bear_annualMCPs$X13428_1994_mcp
+writeOGR(X13428_1994_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13428_1994_mcp.shp", layer="X13428_1994_mcp", driver="ESRI Shapefile")
 
-X13746_1994 <- bear_annualMCPs$X13746_1994
-writeOGR(X13746_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1994_mcp.shp", layer="X13746_1994", driver="ESRI Shapefile")
+X13746_1994_mcp <- bear_annualMCPs$X13746_1994_mcp
+writeOGR(X13746_1994_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1994_mcp.shp", layer="X13746_1994_mcp", driver="ESRI Shapefile")
 
-X13746_1995 <- bear_annualMCPs$X13746_1995
-writeOGR(X13746_1995, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1995_mcp.shp", layer="X13746_1995", driver="ESRI Shapefile")
+X13746_1995_mcp <- bear_annualMCPs$X13746_1995_mcp
+writeOGR(X13746_1995_mcp, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1995_mcp.shp", layer="X13746_1995_mcp", driver="ESRI Shapefile")
 
 
 # 9. Annual HRs: Hrefs ---------
@@ -573,81 +571,119 @@ head(bear_annualhref_list$X10695_1991)
 # Make empty list for the kernel and then extract it with loop
 bear_annualhref <- list()
 
+          # was getting grid size error; first set Domain
+x <- seq(0, 100, by=1.)
+y <- seq(0, 100, by=1.)
+xy <- expand.grid(x=x,y=y)
+coordinates(xy) <- ~x+y
+gridded(xy) <- TRUE
+class(xy)
+
+          # then increase Domain - for error messages that kept popping up in second loop below
+          # note: increasing the domain makes lines below run slower
+x <- seq(-500, 600, by=3)
+y <- seq(-500, 600, by=3)
+xy <- expand.grid(x=x, y=y)
+coordinates(xy) <- ~x+y
+gridded(xy) <- TRUE
+class(xy)
+
 for(i in 1:length(bear_annualhref_list)){
   temp_dat <- bear_annualhref_list[[i]]
-  bear_annualhref[[i]] <- kernelUD(SpatialPoints(temp_dat[, 15:14]), h="href")
+  bear_annualhref[[i]] <- kernelUD(SpatialPoints(temp_dat[, 15:14]), h="href") # grid=xy
 } # this worked! no warnings!
 
 plot(bear_annualhref[[1]]) # test plot
 
+# Name items in the list  
+names(bear_annualhref) <- c("X10695_1991", "X10695_1992", "X10700_1993", "X10700_1994", "X10703_1993", "X10703_1994", "X10707_1992", "X10707_1993", "X10709_1993", "X11975_1994", "X11975_1995", "X12080_1994", "X12080_1995", "X12086_1995", "X12092_1994", "X13284_1993", "X13289_1993", "X13289_1994", "X13292_1993", "X13292_1994", "X13428_1994", "X13437_1995", "X13746_1994", "X13746_1995", "X30126_1998", "X30126_1999", "X30129_1998", "X30129_1999", "X30131_1998", "X30131_1999", "X30135_1999")
+head(bear_annualhref$X10700_1993) 
+
+# Make empty list for the vertices and then extract with loop (for plotting)
+bear_annualhref_ver <- list()
+
+for(i in 1:length(bear_annualhref)){ 
+  temp_dat2 <- bear_annualhref[[i]]
+  bear_annualhref_ver[[i]] <- getverticeshr(temp_dat2, percent=94, unin='m', unout='km2') # 95 % won't work, but 94 does
+} # this worked!
+
+plot(bear_annualhref_ver[[1]]) 
+
+# Name items in the list
+names(bear_annualhref_ver) <- c("X10695_1991", "X10695_1992", "X10700_1993", "X10700_1994", "X10703_1993", "X10703_1994", "X10707_1992", "X10707_1993", "X10709_1993", "X11975_1994", "X11975_1995", "X12080_1994", "X12080_1995", "X12086_1995", "X12092_1994", "X13284_1993", "X13289_1993", "X13289_1994", "X13292_1993", "X13292_1994", "X13428_1994", "X13437_1995", "X13746_1994", "X13746_1995", "X30126_1998", "X30126_1999", "X30129_1998", "X30129_1999", "X30131_1998", "X30131_1999", "X30135_1999")
+head(bear_annualhref_ver$X10695_1992) # this worked!
+class(bear_annualhref_ver$X10695_1992)
+
 # unlist and rename them
-bear_annualhref <- unlist(bear_annualhref)
-names(bear_annualhref) <- c("X10695_1991_href", "X10695_1992_href", "X10700_1993_href", "X10700_1994_href", "X10703_1993_href", "X10703_1994_href", "X10707_1992_href", "X10707_1993_href", "X10709_1993_href", "X11975_1994_href", "X11975_1995_href", "X12080_1994_href", "X12080_1995_href", "X12086_1995_href", "X12092_1994_href", "X13284_1993_href", "X13289_1993_href", "X13289_1994_href", "X13292_1993_href", "X13292_1994_href", "X13428_1994_href", "X13437_1995_href", "X13746_1994_href", "X13746_1995_href", "X30126_1998_href", "X30126_1999_href", "X30129_1998_href", "X30129_1999_href", "X30131_1998_href", "X30131_1999_href", "X30135_1999_href")
-head(bear_annualhref$X10695_1991_href)
-plot(bear_annualhref$X10700_1994_href)
+bear_annualhref_ver <- unlist(bear_annualhref_ver)
+names(bear_annualhref_ver) <- c("X10695_1991_href", "X10695_1992_href", "X10700_1993_href", "X10700_1994_href", "X10703_1993_href", "X10703_1994_href", "X10707_1992_href", "X10707_1993_href", "X10709_1993_href", "X11975_1994_href", "X11975_1995_href", "X12080_1994_href", "X12080_1995_href", "X12086_1995_href", "X12092_1994_href", "X13284_1993_href", "X13289_1993_href", "X13289_1994_href", "X13292_1993_href", "X13292_1994_href", "X13428_1994_href", "X13437_1995_href", "X13746_1994_href", "X13746_1995_href", "X30126_1998_href", "X30126_1999_href", "X30129_1998_href", "X30129_1999_href", "X30131_1998_href", "X30131_1999_href", "X30135_1999_href")
+head(bear_annualhref_ver$X10695_1991_href)
+plot(bear_annualhref_ver$X10700_1994_href)
+class(bear_annualhref_ver$X10695_1991_href)
+
 
 # make shapefiles and export
-X10695_1991_href <- bear_annualhref$X10695_1991_href
+X10695_1991_href <- bear_annualhref_ver$X10695_1991_href
 writeOGR(X10695_1991_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1991_href.shp", layer="X10695_1991_href", driver="ESRI Shapefile")
-X10695_1992_href <- bear_annualhref$X10695_1992_href
+X10695_1992_href <- bear_annualhref_ver$X10695_1992_href
 writeOGR(X10695_1992_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1992_href.shp", layer="X10695_1992_href", driver="ESRI Shapefile")
-X10700_1993_href <- bear_annualhref$X10700_1993_href
+X10700_1993_href <- bear_annualhref_ver$X10700_1993_href
 writeOGR(X10700_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10700_1993_href.shp", layer="X10700_1993_href", driver="ESRI Shapefile")
-X10700_1994_href <- bear_annualhref$X10700_1994_href
+X10700_1994_href <- bear_annualhref_ver$X10700_1994_href
 writeOGR(X10700_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10700_1994_href.shp", layer="X10700_1994_href", driver="ESRI Shapefile")
-X10703_1993_href <- bear_annualhref$X10703_1993_href
+X10703_1993_href <- bear_annualhref_ver$X10703_1993_href
 writeOGR(X10703_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10703_1993_href.shp", layer="X10703_1993_href", driver="ESRI Shapefile")
-X10703_1994_href <- bear_annualhref$X10703_1994_href
+X10703_1994_href <- bear_annualhref_ver$X10703_1994_href
 writeOGR(X10703_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10703_1994_href.shp", layer="X10703_1994_href", driver="ESRI Shapefile")
-X10707_1992_href <- bear_annualhref$X10707_1992_href
+X10707_1992_href <- bear_annualhref_ver$X10707_1992_href
 writeOGR(X10707_1992_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10707_1992_href.shp", layer="X10707_1992_href", driver="ESRI Shapefile")
-X10707_1993_href <- bear_annualhref$X10707_1993_href
+X10707_1993_href <- bear_annualhref_ver$X10707_1993_href
 writeOGR(X10707_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10707_1993_href.shp", layer="X10707_1993_href", driver="ESRI Shapefile")
-X10709_1993_href <- bear_annualhref$X10709_1993_href
+X10709_1993_href <- bear_annualhref_ver$X10709_1993_href
 writeOGR(X10709_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10709_1993_href.shp", layer="X10709_1993_href", driver="ESRI Shapefile")
-X11975_1994_href <- bear_annualhref$X11975_1994_href
+X11975_1994_href <- bear_annualhref_ver$X11975_1994_href
 writeOGR(X11975_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X11975_1994_href.shp", layer="X11975_1994_href", driver="ESRI Shapefile")
-X11975_1995_href <- bear_annualhref$X11975_1995_href
+X11975_1995_href <- bear_annualhref_ver$X11975_1995_href
 writeOGR(X11975_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X11975_1995_href.shp", layer="X11975_1995_href", driver="ESRI Shapefile")
-X12080_1994_href <- bear_annualhref$X12080_1994_href
+X12080_1994_href <- bear_annualhref_ver$X12080_1994_href
 writeOGR(X12080_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1994_href.shp", layer="X12080_1994_href", driver="ESRI Shapefile")
-X12080_1995_href <- bear_annualhref$X12080_1995_href
+X12080_1995_href <- bear_annualhref_ver$X12080_1995_href
 writeOGR(X12080_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1995_href.shp", layer="X12080_1995_href", driver="ESRI Shapefile")
-X12086_1995_href <- bear_annualhref$X12086_1995_href
+X12086_1995_href <- bear_annualhref_ver$X12086_1995_href
 writeOGR(X12086_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12086_1995_href.shp", layer="X12086_1995_href", driver="ESRI Shapefile")
-X12092_1994_href <- bear_annualhref$X12092_1994_href
+X12092_1994_href <- bear_annualhref_ver$X12092_1994_href
 writeOGR(X12092_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12092_1994_href.shp", layer="X12092_1994_href", driver="ESRI Shapefile")
-X13284_1993_href <- bear_annualhref$X13284_1993_href
+X13284_1993_href <- bear_annualhref_ver$X13284_1993_href
 writeOGR(X13284_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13284_1993_href.shp", layer="X13284_1993_href", driver="ESRI Shapefile")
-X13289_1993_href <- bear_annualhref$X13289_1993_href
+X13289_1993_href <- bear_annualhref_ver$X13289_1993_href
 writeOGR(X13289_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1993_href.shp", layer="X13289_1993_href", driver="ESRI Shapefile")
-X13289_1994_href <- bear_annualhref$X13289_1994_href
+X13289_1994_href <- bear_annualhref_ver$X13289_1994_href
 writeOGR(X13289_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1994_href.shp", layer="X13289_1994_href", driver="ESRI Shapefile")
-X13292_1993_href <- bear_annualhref$X13292_1993_href
+X13292_1993_href <- bear_annualhref_ver$X13292_1993_href
 writeOGR(X13292_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1993_href.shp", layer="X13292_1993_href", driver="ESRI Shapefile")
-X13292_1994_href <- bear_annualhref$X13292_1994_href
+X13292_1994_href <- bear_annualhref_ver$X13292_1994_href
 writeOGR(X13292_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1994_href.shp", layer="X13292_1994_href", driver="ESRI Shapefile")
-X13428_1994_href <- bear_annualhref$X13428_1994_href
+X13428_1994_href <- bear_annualhref_ver$X13428_1994_href
 writeOGR(X13428_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13428_1994_href.shp", layer="X13428_1994_href", driver="ESRI Shapefile")
-X13437_1995_href <- bear_annualhref$X13437_1995_href
+X13437_1995_href <- bear_annualhref_ver$X13437_1995_href
 writeOGR(X13437_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13437_1995_href.shp", layer="X13437_1995_href", driver="ESRI Shapefile")
-X13746_1994_href <- bear_annualhref$X13746_1994_href
+X13746_1994_href <- bear_annualhref_ver$X13746_1994_href
 writeOGR(X13746_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1994_href.shp", layer="X13746_1994_href", driver="ESRI Shapefile")
-X13746_1995_href <- bear_annualhref$X13746_1995_href
+X13746_1995_href <- bear_annualhref_ver$X13746_1995_href
 writeOGR(X13746_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1995_href.shp", layer="X13746_1995_href", driver="ESRI Shapefile")
-X30126_1998_href <- bear_annualhref$X30126_1998_href
+X30126_1998_href <- bear_annualhref_ver$X30126_1998_href
 writeOGR(X30126_1998_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30126_1998_href.shp", layer="X30126_1998_href", driver="ESRI Shapefile")
-X30126_1999_href <- bear_annualhref$X30126_1999_href
+X30126_1999_href <- bear_annualhref_ver$X30126_1999_href
 writeOGR(X30126_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30126_1999_href.shp", layer="X30126_1999_href", driver="ESRI Shapefile")
-X30129_1998_href <- bear_annualhref$X30129_1998_href
+X30129_1998_href <- bear_annualhref_ver$X30129_1998_href
 writeOGR(X30129_1998_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30129_1998_href.shp", layer="X30129_1998_href", driver="ESRI Shapefile")
-X30129_1999_href <- bear_annualhref$X30129_1999_href
+X30129_1999_href <- bear_annualhref_ver$X30129_1999_href
 writeOGR(X30129_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30129_1999_href.shp", layer="X30129_1999_href", driver="ESRI Shapefile")
-X30131_1998_href <- bear_annualhref$X30131_1998_href
+X30131_1998_href <- bear_annualhref_ver$X30131_1998_href
 writeOGR(X30131_1998_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30131_1998_href.shp", layer="X30131_1998_href", driver="ESRI Shapefile")
-X30131_1999_href <- bear_annualhref$X30131_1999_href
+X30131_1999_href <- bear_annualhref_ver$X30131_1999_href
 writeOGR(X30131_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30131_1999_href.shp", layer="X30131_1999_href", driver="ESRI Shapefile")
-X30135_1999_href <- bear_annualhref$X30135_1999_href
+X30135_1999_href <- bear_annualhref_ver$X30135_1999_href
 writeOGR(X30135_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30135_1999_href.shp", layer="X30135_1999_href", driver="ESRI Shapefile")
 
 

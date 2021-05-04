@@ -49,7 +49,7 @@ theme_nuwcru <- function(){
 
 setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/DS_polarbear_spatial/")
 
-# 2. Pooled HRs: Import data ---------
+# 2. Pooled HRs: Import and format data ---------
 
 # import data
 bears_final_Nov2020_UTM_LATLONG <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020_UTM_LATLONG.csv")
@@ -140,7 +140,6 @@ for(i in 1:length(bear_list_greater100)){
   bear_list_greater100[[i]] <- temp         
 }
 
-
 # rename items in list
 names(bear_list_greater100) <- c("X10695_mcp", "X10703_mcp", "X13292_mcp", "X13289_mcp", "X13746_mcp")
 names(bear_list_greater100)
@@ -163,7 +162,6 @@ for(i in 1: length(bear_list_greater100)){
 # Name items in the list
 names(bear_list_greater100_mcps) <- c("X10695_mcp", "X10703_mcp", "X13292_mcp", "X13289_mcp", "X13746_mcp")
 head(bear_list_greater100_mcps$X13289_mcp) # check that it worked
-
 
 # test plot - it worked! 
 plot(bear_list_greater100_mcps$X13289_mcp)
@@ -284,8 +282,6 @@ writeOGR(X30140_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mappi
 
 
 # 6. Pooled HRs: Hpi -----------
-
-
 
 # use same list we used for href kernels at the beginning (bear_href_list) - both need >= 30 fixes
 
@@ -414,4 +410,419 @@ writeOGR(X30140_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mappin
 
 
 
-# 7. Annual HRs: Import data -------
+# 7. Annual HRs: Import and format data -------
+
+bears_final_Nov2020_UTM_LATLONG <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020_UTM_LATLONG.csv")
+
+
+# separate into bear years
+X03956_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X03956" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X10374_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10374" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X10374_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10374" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X10393_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10393" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X10695_1991 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10695" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1991")
+X10695_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10695" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X10700_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10700" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X10700_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10700" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X10700_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10700" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X10703_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10703" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X10703_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10703" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X10703_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10703" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X10707_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10707" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X10707_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10707" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X10709_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10709" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X10709_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10709" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X10709_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X10709" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X11974_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X11974" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X11974_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X11974" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X11974_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X11974" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X11975_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X11975" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X11975_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X11975" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X11975_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X11975" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X12078_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12078" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12080_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12080" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12080_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12080" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X12081_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12081" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12082_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12082" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12083_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12083" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12086_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12086" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12086_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12086" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X12092_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12092" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X12092_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X12092" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X13284_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13284" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X13284_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13284" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X13284_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13284" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X13289_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13289" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X13289_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13289" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X13289_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13289" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X13289_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13289" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X13292_1992 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13292" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1992")
+X13292_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13292" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X13292_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13292" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X13292_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13292" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X13428_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13428" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X13428_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13428" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X13428_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13428" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X13437_1993 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13437" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1993")
+X13437_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13437" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X13437_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13437" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X13746_1994 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13746" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1994")
+X13746_1995 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X13746" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1995")
+X30126_1997 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30126" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1997")
+X30126_1998 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30126" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1998")
+X30126_1999 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30126" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1999")
+X30129_1997 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30129" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1997")
+X30129_1998 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30129" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1998")
+X30129_1999 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30129" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1999")
+X30131_1997 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30131" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1997")
+X30131_1998 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30131" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1998")
+X30131_1999 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30131" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1999")
+X30135_1997 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30135" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1997")
+X30135_1998 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30135" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1998")
+X30135_1999 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30135" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1999")
+X30140_1997 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30140" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1997")
+X30140_1998 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30140" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1998")
+X30140_1999 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30140" & bears_final_Nov2020_UTM_LATLONG$YEAR=="1999")
+X30140_2000 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30140" & bears_final_Nov2020_UTM_LATLONG$YEAR=="2000")
+X30140_2001 <- bears_final_Nov2020_UTM_LATLONG %>% filter(bears_final_Nov2020_UTM_LATLONG$ID=="X30140" & bears_final_Nov2020_UTM_LATLONG$YEAR=="2001")
+
+
+# 8. Annual HRs: MCPs -------
+
+# make a list of all with the right number of fixes
+bear_annualMCP_list <- list(X10695_1991, X12080_1994, X13289_1994, X13292_1993, X13428_1994, X13746_1994, X13746_1995)
+names(bear_annualMCP_list)
+
+# name items in list
+names(bear_annualMCP_list) <- c("X10695_1991", "X12080_1994", "X13289_1994", "X13292_1993", "X13428_1994", "X13746_1994", "X13746_1995")
+head(bear_annualMCP_list$X10695_1991) # check that it worked
+names(bear_annualMCP_list) 
+
+# create loop to make each a spatial points dataframe (and check projections)
+for(i in 1:length(bear_annualMCP_list)){
+  coordinates(bear_annualMCP_list[[i]]) <- c("LONG", "LAT")
+  proj4string(bear_annualMCP_list[[i]]) <- CRS("+proj=stere +lat_0=90 +lat_ts=75") 
+  temp <- bear_annualMCP_list[[i]]         
+  temp[["ID"]] <- as.factor(temp[["ID"]]) 
+  bear_annualMCP_list[[i]] <- temp        
+}
+
+# Check projections
+proj4string(bear_annualMCP_list[[1]])
+proj4string(bear_annualMCP_list$'X10695_1991')
+
+# create loop for the MCPs
+# Make an empty list for the MCPs
+bear_annualMCPs <- list()
+
+# create 95% MCP for each (Step 5)
+for(i in 1: length(bear_annualMCP_list)){
+  temp_dat <- bear_annualMCP_list[[i]] # subset the the bear_list first, and then use that subset in the mcp function
+  bear_annualMCPs[[i]] <- mcp(temp_dat[, "ID"], percent=95, unin="m", unout="km2")  
+}
+
+# Name items in the list
+names(bear_annualMCPs) <- c("X10695_1991", "X12080_1994", "X13289_1994", "X13292_1993", "X13428_1994", "X13746_1994", "X13746_1995")
+head(bear_annualMCPs$X10695_1991) # check that it worked
+
+# test plot - it worked! 
+plot(bear_annualMCPs$X12080_1994)
+
+# unlist and rename them
+bear_annualMCPs <- unlist(bear_annualMCPs)
+names(bear_annualMCPs) <- c("X10695_1991", "X12080_1994", "X13289_1994", "X13292_1993", "X13428_1994", "X13746_1994", "X13746_1995")
+head(bear_annualMCPs$X10695_1991)
+
+# make shapefiles and export
+X10695_1991 <- bear_annualMCPs$X10695_1991
+writeOGR(X10695_1991, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1991_mcp.shp", layer="X10695_1991", driver="ESRI Shapefile")
+
+X12080_1994 <- bear_annualMCPs$X12080_1994
+writeOGR(X12080_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1994_mcp.shp", layer="X12080_1994", driver="ESRI Shapefile")
+
+X13289_1994 <- bear_annualMCPs$X13289_1994
+writeOGR(X13289_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1994_mcp.shp", layer="X13289_1994", driver="ESRI Shapefile")
+
+X13292_1993 <- bear_annualMCPs$X13292_1993
+writeOGR(X13292_1993, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1993_mcp.shp", layer="X13292_1993", driver="ESRI Shapefile")
+
+X13428_1994 <- bear_annualMCPs$X13428_1994
+writeOGR(X13428_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13428_1994_mcp.shp", layer="X13428_1994", driver="ESRI Shapefile")
+
+X13746_1994 <- bear_annualMCPs$X13746_1994
+writeOGR(X13746_1994, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1994_mcp.shp", layer="X13746_1994", driver="ESRI Shapefile")
+
+X13746_1995 <- bear_annualMCPs$X13746_1995
+writeOGR(X13746_1995, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1995_mcp.shp", layer="X13746_1995", driver="ESRI Shapefile")
+
+
+# 9. Annual HRs: Hrefs ---------
+
+
+# IMPORTANT: Rerun section 7 or this won't work
+
+
+# make list of bears with >=30 bear years
+bear_annualhref_list <- list(X10695_1991, X10695_1992, X10700_1993, X10700_1994, X10703_1993, X10703_1994, X10707_1992, X10707_1993, X10709_1993, X11975_1994, X11975_1995, X12080_1994, X12080_1995,
+                             X12086_1995, X12092_1994, X13284_1993, X13289_1993, X13289_1994, X13292_1993, X13292_1994, X13428_1994, X13437_1995, X13746_1994, X13746_1995, X30126_1998, X30126_1999,
+                             X30129_1998, X30129_1999, X30131_1998, X30131_1999, X30135_1999)
+names(bear_annualhref_list)
+names(bear_annualhref_list) <- c("X10695_1991", "X10695_1992", "X10700_1993", "X10700_1994", "X10703_1993", "X10703_1994", "X10707_1992", "X10707_1993", "X10709_1993", "X11975_1994", "X11975_1995", "X12080_1994", "X12080_1995", "X12086_1995", "X12092_1994", "X13284_1993", "X13289_1993", "X13289_1994", "X13292_1993", "X13292_1994", "X13428_1994", "X13437_1995", "X13746_1994", "X13746_1995", "X30126_1998", "X30126_1999", "X30129_1998", "X30129_1999", "X30131_1998", "X30131_1999", "X30135_1999")
+head(bear_annualhref_list$X10695_1991)
+
+# Make empty list for the kernel and then extract it with loop
+bear_annualhref <- list()
+
+for(i in 1:length(bear_annualhref_list)){
+  temp_dat <- bear_annualhref_list[[i]]
+  bear_annualhref[[i]] <- kernelUD(SpatialPoints(temp_dat[, 15:14]), h="href")
+} # this worked! no warnings!
+
+plot(bear_annualhref[[1]]) # test plot
+
+# unlist and rename them
+bear_annualhref <- unlist(bear_annualhref)
+names(bear_annualhref) <- c("X10695_1991_href", "X10695_1992_href", "X10700_1993_href", "X10700_1994_href", "X10703_1993_href", "X10703_1994_href", "X10707_1992_href", "X10707_1993_href", "X10709_1993_href", "X11975_1994_href", "X11975_1995_href", "X12080_1994_href", "X12080_1995_href", "X12086_1995_href", "X12092_1994_href", "X13284_1993_href", "X13289_1993_href", "X13289_1994_href", "X13292_1993_href", "X13292_1994_href", "X13428_1994_href", "X13437_1995_href", "X13746_1994_href", "X13746_1995_href", "X30126_1998_href", "X30126_1999_href", "X30129_1998_href", "X30129_1999_href", "X30131_1998_href", "X30131_1999_href", "X30135_1999_href")
+head(bear_annualhref$X10695_1991_href)
+plot(bear_annualhref$X10700_1994_href)
+
+# make shapefiles and export
+X10695_1991_href <- bear_annualhref$X10695_1991_href
+writeOGR(X10695_1991_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1991_href.shp", layer="X10695_1991_href", driver="ESRI Shapefile")
+X10695_1992_href <- bear_annualhref$X10695_1992_href
+writeOGR(X10695_1992_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1992_href.shp", layer="X10695_1992_href", driver="ESRI Shapefile")
+X10700_1993_href <- bear_annualhref$X10700_1993_href
+writeOGR(X10700_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10700_1993_href.shp", layer="X10700_1993_href", driver="ESRI Shapefile")
+X10700_1994_href <- bear_annualhref$X10700_1994_href
+writeOGR(X10700_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10700_1994_href.shp", layer="X10700_1994_href", driver="ESRI Shapefile")
+X10703_1993_href <- bear_annualhref$X10703_1993_href
+writeOGR(X10703_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10703_1993_href.shp", layer="X10703_1993_href", driver="ESRI Shapefile")
+X10703_1994_href <- bear_annualhref$X10703_1994_href
+writeOGR(X10703_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10703_1994_href.shp", layer="X10703_1994_href", driver="ESRI Shapefile")
+X10707_1992_href <- bear_annualhref$X10707_1992_href
+writeOGR(X10707_1992_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10707_1992_href.shp", layer="X10707_1992_href", driver="ESRI Shapefile")
+X10707_1993_href <- bear_annualhref$X10707_1993_href
+writeOGR(X10707_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10707_1993_href.shp", layer="X10707_1993_href", driver="ESRI Shapefile")
+X10709_1993_href <- bear_annualhref$X10709_1993_href
+writeOGR(X10709_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10709_1993_href.shp", layer="X10709_1993_href", driver="ESRI Shapefile")
+X11975_1994_href <- bear_annualhref$X11975_1994_href
+writeOGR(X11975_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X11975_1994_href.shp", layer="X11975_1994_href", driver="ESRI Shapefile")
+X11975_1995_href <- bear_annualhref$X11975_1995_href
+writeOGR(X11975_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X11975_1995_href.shp", layer="X11975_1995_href", driver="ESRI Shapefile")
+X12080_1994_href <- bear_annualhref$X12080_1994_href
+writeOGR(X12080_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1994_href.shp", layer="X12080_1994_href", driver="ESRI Shapefile")
+X12080_1995_href <- bear_annualhref$X12080_1995_href
+writeOGR(X12080_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1995_href.shp", layer="X12080_1995_href", driver="ESRI Shapefile")
+X12086_1995_href <- bear_annualhref$X12086_1995_href
+writeOGR(X12086_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12086_1995_href.shp", layer="X12086_1995_href", driver="ESRI Shapefile")
+X12092_1994_href <- bear_annualhref$X12092_1994_href
+writeOGR(X12092_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12092_1994_href.shp", layer="X12092_1994_href", driver="ESRI Shapefile")
+X13284_1993_href <- bear_annualhref$X13284_1993_href
+writeOGR(X13284_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13284_1993_href.shp", layer="X13284_1993_href", driver="ESRI Shapefile")
+X13289_1993_href <- bear_annualhref$X13289_1993_href
+writeOGR(X13289_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1993_href.shp", layer="X13289_1993_href", driver="ESRI Shapefile")
+X13289_1994_href <- bear_annualhref$X13289_1994_href
+writeOGR(X13289_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1994_href.shp", layer="X13289_1994_href", driver="ESRI Shapefile")
+X13292_1993_href <- bear_annualhref$X13292_1993_href
+writeOGR(X13292_1993_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1993_href.shp", layer="X13292_1993_href", driver="ESRI Shapefile")
+X13292_1994_href <- bear_annualhref$X13292_1994_href
+writeOGR(X13292_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1994_href.shp", layer="X13292_1994_href", driver="ESRI Shapefile")
+X13428_1994_href <- bear_annualhref$X13428_1994_href
+writeOGR(X13428_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13428_1994_href.shp", layer="X13428_1994_href", driver="ESRI Shapefile")
+X13437_1995_href <- bear_annualhref$X13437_1995_href
+writeOGR(X13437_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13437_1995_href.shp", layer="X13437_1995_href", driver="ESRI Shapefile")
+X13746_1994_href <- bear_annualhref$X13746_1994_href
+writeOGR(X13746_1994_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1994_href.shp", layer="X13746_1994_href", driver="ESRI Shapefile")
+X13746_1995_href <- bear_annualhref$X13746_1995_href
+writeOGR(X13746_1995_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1995_href.shp", layer="X13746_1995_href", driver="ESRI Shapefile")
+X30126_1998_href <- bear_annualhref$X30126_1998_href
+writeOGR(X30126_1998_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30126_1998_href.shp", layer="X30126_1998_href", driver="ESRI Shapefile")
+X30126_1999_href <- bear_annualhref$X30126_1999_href
+writeOGR(X30126_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30126_1999_href.shp", layer="X30126_1999_href", driver="ESRI Shapefile")
+X30129_1998_href <- bear_annualhref$X30129_1998_href
+writeOGR(X30129_1998_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30129_1998_href.shp", layer="X30129_1998_href", driver="ESRI Shapefile")
+X30129_1999_href <- bear_annualhref$X30129_1999_href
+writeOGR(X30129_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30129_1999_href.shp", layer="X30129_1999_href", driver="ESRI Shapefile")
+X30131_1998_href <- bear_annualhref$X30131_1998_href
+writeOGR(X30131_1998_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30131_1998_href.shp", layer="X30131_1998_href", driver="ESRI Shapefile")
+X30131_1999_href <- bear_annualhref$X30131_1999_href
+writeOGR(X30131_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30131_1999_href.shp", layer="X30131_1999_href", driver="ESRI Shapefile")
+X30135_1999_href <- bear_annualhref$X30135_1999_href
+writeOGR(X30135_1999_href, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30135_1999_href.shp", layer="X30135_1999_href", driver="ESRI Shapefile")
+
+
+# 10. Annual HRs: Hpi ------------
+
+
+# IMPORTANT: Rerun section 7 or this won't work
+
+
+# make list of bears with >=30 bear years
+bear_annualhpi_list <- list(X10695_1991, X10695_1992, X10700_1993, X10700_1994, X10703_1993, X10703_1994, X10707_1992, X10707_1993, X10709_1993, X11975_1994, X11975_1995, X12080_1994, X12080_1995,
+                             X12086_1995, X12092_1994, X13284_1993, X13289_1993, X13289_1994, X13292_1993, X13292_1994, X13428_1994, X13437_1995, X13746_1994, X13746_1995, X30126_1998, X30126_1999,
+                             X30129_1998, X30129_1999, X30131_1998, X30131_1999, X30135_1999)
+names(bear_annualhpi_list)
+names(bear_annualhpi_list) <- c("X10695_1991", "X10695_1992", "X10700_1993", "X10700_1994", "X10703_1993", "X10703_1994", "X10707_1992", "X10707_1993", "X10709_1993", "X11975_1994", "X11975_1995", "X12080_1994", "X12080_1995", "X12086_1995", "X12092_1994", "X13284_1993", "X13289_1993", "X13289_1994", "X13292_1993", "X13292_1994", "X13428_1994", "X13437_1995", "X13746_1994", "X13746_1995", "X30126_1998", "X30126_1999", "X30129_1998", "X30129_1999", "X30131_1998", "X30131_1999", "X30135_1999")
+head(bear_annualhpi_list$X10695_1991)
+
+
+# Make empty list and then create amse pilot with loop
+bear_annualhpi_amsepilot_utm <- list()
+
+for(i in 1:length(bear_annualhpi_list)){
+  temp_dat <- bear_annualhpi_list[[i]]
+  bear_annualhpi_amsepilot_utm[[i]] <- Hpi(temp_dat[, 15:14], pilot="amse", binned=T) 
+} 
+
+# Make empty list and then make amse contours
+bear_annualpolygon_utm <- list()
+
+for(i in 1:length(bear_annualhpi_amsepilot_utm)){
+  bear_annualhpi_amse_contour_utm <- kde(bear_annualhpi_list[[i]][15:14], H=bear_annualhpi_amsepilot_utm[[i]]) 
+  bear_annualcontourlevels_utm <- contourLevels(bear_annualhpi_amse_contour_utm, cont = 95)               
+  bear_annuallines_utm <- contourLines(x=bear_annualhpi_amse_contour_utm$eval.points[[1]], y=bear_annualhpi_amse_contour_utm$eval.points[[2]], 
+                                       z=bear_annualhpi_amse_contour_utm$estimate, level=bear_annualcontourlevels_utm) 
+  bear_annualsldf_utm = ContourLines2SLDF(bear_annuallines_utm)  
+  bear_annualpolyset_utm = SpatialLines2PolySet(bear_annualsldf_utm) 
+  bear_annualpolygon_utm[[i]] = PolySet2SpatialPolygons(bear_annualpolyset_utm) 
+} 
+
+# name items in list 
+names(bear_annualpolygon_utm) <- c("X10695_1991_hpi", "X10695_1992_hpi", "X10700_1993_hpi", "X10700_1994_hpi", "X10703_1993_hpi", "X10703_1994_hpi", "X10707_1992_hpi", "X10707_1993_hpi", "X10709_1993_hpi", "X11975_1994_hpi", "X11975_1995_hpi", "X12080_1994_hpi", "X12080_1995_hpi", "X12086_1995_hpi", "X12092_1994_hpi", "X13284_1993_hpi", "X13289_1993_hpi", "X13289_1994_hpi", "X13292_1993_hpi", "X13292_1994_hpi", "X13428_1994_hpi", "X13437_1995_hpi", "X13746_1994_hpi", "X13746_1995_hpi", "X30126_1998_hpi", "X30126_1999_hpi", "X30129_1998_hpi", "X30129_1999_hpi", "X30131_1998_hpi", "X30131_1999_hpi", "X30135_1999_hpi")
+head(bear_annualpolygon_utm$X10695_1991_hpi) # check that it worked - should be SpatialPolygons class
+names(bear_annualpolygon_utm) 
+
+# unlist and rename them
+bear_annualpolygon_utm <- unlist(bear_annualpolygon_utm)
+names(bear_annualpolygon_utm) <- c("X10695_1991_hpi", "X10695_1992_hpi", "X10700_1993_hpi", "X10700_1994_hpi", "X10703_1993_hpi", "X10703_1994_hpi", "X10707_1992_hpi", "X10707_1993_hpi", "X10709_1993_hpi", "X11975_1994_hpi", "X11975_1995_hpi", "X12080_1994_hpi", "X12080_1995_hpi", "X12086_1995_hpi", "X12092_1994_hpi", "X13284_1993_hpi", "X13289_1993_hpi", "X13289_1994_hpi", "X13292_1993_hpi", "X13292_1994_hpi", "X13428_1994_hpi", "X13437_1995_hpi", "X13746_1994_hpi", "X13746_1995_hpi", "X30126_1998_hpi", "X30126_1999_hpi", "X30129_1998_hpi", "X30129_1999_hpi", "X30131_1998_hpi", "X30131_1999_hpi", "X30135_1999_hpi")
+head(bear_annualpolygon_utm$X10695_1991_hpi)
+
+# make spatialpolygonsdataframes and export
+X10695_1991_hpi <- bear_annualpolygon_utm$X10695_1991_hpi
+X10695_1991_hpi <- SpatialPolygonsDataFrame(X10695_1991_hpi, data=as.data.frame("X10695_1991_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10695_1991_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1991_hpi.shp", layer="X10695_1991_hpi", driver="ESRI Shapefile")
+
+X10695_1992_hpi <- bear_annualpolygon_utm$X10695_1992_hpi
+X10695_1992_hpi <- SpatialPolygonsDataFrame(X10695_1992_hpi, data=as.data.frame("X10695_1992_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10695_1992_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10695_1992_hpi.shp", layer="X10695_1992_hpi", driver="ESRI Shapefile")
+
+X10700_1993_hpi <- bear_annualpolygon_utm$X10700_1993_hpi
+X10700_1993_hpi <- SpatialPolygonsDataFrame(X10700_1993_hpi, data=as.data.frame("X10700_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10700_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10700_1993_hpi.shp", layer="X10700_1993_hpi", driver="ESRI Shapefile")
+
+X10700_1994_hpi <- bear_annualpolygon_utm$X10700_1994_hpi
+X10700_1994_hpi <- SpatialPolygonsDataFrame(X10700_1994_hpi, data=as.data.frame("X10700_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10700_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10700_1994_hpi.shp", layer="X10700_1994_hpi", driver="ESRI Shapefile")
+
+X10703_1993_hpi <- bear_annualpolygon_utm$X10703_1993_hpi
+X10703_1993_hpi <- SpatialPolygonsDataFrame(X10703_1993_hpi, data=as.data.frame("X10703_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10703_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10703_1993_hpi.shp", layer="X10703_1993_hpi", driver="ESRI Shapefile")
+
+X10703_1994_hpi <- bear_annualpolygon_utm$X10703_1994_hpi
+X10703_1994_hpi <- SpatialPolygonsDataFrame(X10703_1994_hpi, data=as.data.frame("X10703_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10703_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10703_1994_hpi.shp", layer="X10703_1994_hpi", driver="ESRI Shapefile")
+
+X10707_1992_hpi <- bear_annualpolygon_utm$X10707_1992_hpi
+X10707_1992_hpi <- SpatialPolygonsDataFrame(X10707_1992_hpi, data=as.data.frame("X10707_1992_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10707_1992_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10707_1992_hpi.shp", layer="X10707_1992_hpi", driver="ESRI Shapefile")
+
+X10707_1993_hpi <- bear_annualpolygon_utm$X10707_1993_hpi
+X10707_1993_hpi <- SpatialPolygonsDataFrame(X10707_1993_hpi, data=as.data.frame("X10707_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10707_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10707_1993_hpi.shp", layer="X10707_1993_hpi", driver="ESRI Shapefile")
+
+X10709_1993_hpi <- bear_annualpolygon_utm$X10709_1993_hpi
+X10709_1993_hpi <- SpatialPolygonsDataFrame(X10709_1993_hpi, data=as.data.frame("X10709_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X10709_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X10709_1993_hpi.shp", layer="X10709_1993_hpi", driver="ESRI Shapefile")
+
+X11975_1994_hpi <- bear_annualpolygon_utm$X11975_1994_hpi
+X11975_1994_hpi <- SpatialPolygonsDataFrame(X11975_1994_hpi, data=as.data.frame("X11975_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X11975_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X11975_1994_hpi.shp", layer="X11975_1994_hpi", driver="ESRI Shapefile")
+
+X11975_1995_hpi <- bear_annualpolygon_utm$X11975_1995_hpi
+X11975_1995_hpi <- SpatialPolygonsDataFrame(X11975_1995_hpi, data=as.data.frame("X11975_1995_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X11975_1995_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X11975_1995_hpi.shp", layer="X11975_1995_hpi", driver="ESRI Shapefile")
+
+X12080_1994_hpi <- bear_annualpolygon_utm$X12080_1994_hpi
+X12080_1994_hpi <- SpatialPolygonsDataFrame(X12080_1994_hpi, data=as.data.frame("X12080_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X12080_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1994_hpi.shp", layer="X12080_1994_hpi", driver="ESRI Shapefile")
+
+X12080_1995_hpi <- bear_annualpolygon_utm$X12080_1995_hpi
+X12080_1995_hpi <- SpatialPolygonsDataFrame(X12080_1995_hpi, data=as.data.frame("X12080_1995_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X12080_1995_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12080_1995_hpi.shp", layer="X12080_1995_hpi", driver="ESRI Shapefile")
+
+X12086_1995_hpi <- bear_annualpolygon_utm$X12086_1995_hpi
+X12086_1995_hpi <- SpatialPolygonsDataFrame(X12086_1995_hpi, data=as.data.frame("X12086_1995_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X12086_1995_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12086_1995_hpi.shp", layer="X12086_1995_hpi", driver="ESRI Shapefile")
+
+X12092_1994_hpi <- bear_annualpolygon_utm$X12092_1994_hpi
+X12092_1994_hpi <- SpatialPolygonsDataFrame(X12092_1994_hpi, data=as.data.frame("X12092_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X12092_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X12092_1994_hpi.shp", layer="X12092_1994_hpi", driver="ESRI Shapefile")
+
+X13284_1993_hpi <- bear_annualpolygon_utm$X13284_1993_hpi
+X13284_1993_hpi <- SpatialPolygonsDataFrame(X13284_1993_hpi, data=as.data.frame("X13284_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13284_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13284_1993_hpi.shp", layer="X13284_1993_hpi", driver="ESRI Shapefile")
+
+X13289_1993_hpi <- bear_annualpolygon_utm$X13289_1993_hpi
+X13289_1993_hpi <- SpatialPolygonsDataFrame(X13289_1993_hpi, data=as.data.frame("X13289_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13289_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1993_hpi.shp", layer="X13289_1993_hpi", driver="ESRI Shapefile")
+
+X13289_1994_hpi <- bear_annualpolygon_utm$X13289_1994_hpi
+X13289_1994_hpi <- SpatialPolygonsDataFrame(X13289_1994_hpi, data=as.data.frame("X13289_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13289_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13289_1994_hpi.shp", layer="X13289_1994_hpi", driver="ESRI Shapefile")
+
+X13292_1993_hpi <- bear_annualpolygon_utm$X13292_1993_hpi
+X13292_1993_hpi <- SpatialPolygonsDataFrame(X13292_1993_hpi, data=as.data.frame("X13292_1993_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13292_1993_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1993_hpi.shp", layer="X13292_1993_hpi", driver="ESRI Shapefile")
+
+X13292_1994_hpi <- bear_annualpolygon_utm$X13292_1994_hpi
+X13292_1994_hpi <- SpatialPolygonsDataFrame(X13292_1994_hpi, data=as.data.frame("X13292_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13292_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13292_1994_hpi.shp", layer="X13292_1994_hpi", driver="ESRI Shapefile")
+
+X13428_1994_hpi <- bear_annualpolygon_utm$X13428_1994_hpi
+X13428_1994_hpi <- SpatialPolygonsDataFrame(X13428_1994_hpi, data=as.data.frame("X13428_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13428_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13428_1994_hpi.shp", layer="X13428_1994_hpi", driver="ESRI Shapefile")
+
+X13437_1995_hpi <- bear_annualpolygon_utm$X13437_1995_hpi
+X13437_1995_hpi <- SpatialPolygonsDataFrame(X13437_1995_hpi, data=as.data.frame("X13437_1995_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13437_1995_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13437_1995_hpi.shp", layer="X13437_1995_hpi", driver="ESRI Shapefile")
+
+X13746_1994_hpi <- bear_annualpolygon_utm$X13746_1994_hpi
+X13746_1994_hpi <- SpatialPolygonsDataFrame(X13746_1994_hpi, data=as.data.frame("X13746_1994_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13746_1994_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1994_hpi.shp", layer="X13746_1994_hpi", driver="ESRI Shapefile")
+
+X13746_1995_hpi <- bear_annualpolygon_utm$X13746_1995_hpi
+X13746_1995_hpi <- SpatialPolygonsDataFrame(X13746_1995_hpi, data=as.data.frame("X13746_1995_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X13746_1995_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X13746_1995_hpi.shp", layer="X13746_1995_hpi", driver="ESRI Shapefile")
+
+X30126_1998_hpi <- bear_annualpolygon_utm$X30126_1998_hpi
+X30126_1998_hpi <- SpatialPolygonsDataFrame(X30126_1998_hpi, data=as.data.frame("X30126_1998_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30126_1998_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30126_1998_hpi.shp", layer="X30126_1998_hpi", driver="ESRI Shapefile")
+
+X30126_1999_hpi <- bear_annualpolygon_utm$X30126_1999_hpi
+X30126_1999_hpi <- SpatialPolygonsDataFrame(X30126_1999_hpi, data=as.data.frame("X30126_1999_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30126_1999_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30126_1999_hpi.shp", layer="X30126_1999_hpi", driver="ESRI Shapefile")
+
+X30129_1998_hpi <- bear_annualpolygon_utm$X30129_1998_hpi
+X30129_1998_hpi <- SpatialPolygonsDataFrame(X30129_1998_hpi, data=as.data.frame("X30129_1998_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30129_1998_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30129_1998_hpi.shp", layer="X30129_1998_hpi", driver="ESRI Shapefile")
+
+X30129_1999_hpi <- bear_annualpolygon_utm$X30129_1999_hpi
+X30129_1999_hpi <- SpatialPolygonsDataFrame(X30129_1999_hpi, data=as.data.frame("X30129_1999_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30129_1999_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30129_1999_hpi.shp", layer="X30129_1999_hpi", driver="ESRI Shapefile")
+
+X30131_1998_hpi <- bear_annualpolygon_utm$X30131_1998_hpi
+X30131_1998_hpi <- SpatialPolygonsDataFrame(X30131_1998_hpi, data=as.data.frame("X30131_1998_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30131_1998_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30131_1998_hpi.shp", layer="X30131_1998_hpi", driver="ESRI Shapefile")
+
+X30131_1999_hpi <- bear_annualpolygon_utm$X30131_1999_hpi
+X30131_1999_hpi <- SpatialPolygonsDataFrame(X30131_1999_hpi, data=as.data.frame("X30131_1999_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30131_1999_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30131_1999_hpi.shp", layer="X30131_1999_hpi", driver="ESRI Shapefile")
+
+X30135_1999_hpi <- bear_annualpolygon_utm$X30135_1999_hpi
+X30135_1999_hpi <- SpatialPolygonsDataFrame(X30135_1999_hpi, data=as.data.frame("X30135_1999_hpi", proj4string=CRS("+proj=stere +lat_0=90 +lat_ts=75")))
+writeOGR(X30135_1999_hpi, dsn="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Home Ranges/Annual/X30135_1999_hpi.shp", layer="X30135_1999_hpi", driver="ESRI Shapefile")
+
+
+
+
+

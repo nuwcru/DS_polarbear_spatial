@@ -37,6 +37,28 @@ avail <- used_avail %>% filter(USED_AVAIL=="available") # 73,150
 
 
 
+###
+
+
+# try using these instead
+
+used_avail_RSF_pooled_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_pooled_FINAL_Apr2021.csv")
+used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Pooled model ------------------------------------------------------------
 
 
@@ -153,6 +175,22 @@ summary(null)
  summary(model4_break_free_var)
  
  
+ 
+ 
+ ###
+ 
+ # try again with dataframe from above
+ model4_tmp_break <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID)+(0+DIST_WATER_SCALED|ID), 
+                             family=binomial(), 
+                             data=used_avail_RSF_breakup_FINAL, 
+                             doFit=F, 
+                             weights=W)
+ model4_tmp_break$parameters$theta[1] = log(1e3)
+ model4_tmp_break$mapArg = list(theta = factor(c(NA, 1:1)))
+ model4_break <- glmmTMB:::fitTMB(model4_tmp_break) 
+ summary(model4_break)
+ 
+# still getting NA values in the summary
  
  
  

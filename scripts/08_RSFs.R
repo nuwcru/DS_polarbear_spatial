@@ -925,7 +925,14 @@ summary(model14)
 
 # 9.0. Notes on Seasonal RSFs using Model #4  (see sections 9.1, 9.2, 9.3)-------
 
-# need to run through section 5 first
+# either run through section 5 first or use these
+
+used_avail_RSF_pooled_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_pooled_FINAL_Apr2021.csv")
+used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+
+
 # use the dataframes below for the next sections
 
 head(used_avail_RSF_breakup_FINAL)
@@ -935,6 +942,11 @@ head(used_avail_RSF_winter_FINAL)
 # there are no bears with >20 fixes in the ice-free season
 # part of this is becuase we removed land-based fixes
 # don't do ice-free seasonal RSFs
+
+
+
+
+
 
 
 # 9.1. WINTER ------------

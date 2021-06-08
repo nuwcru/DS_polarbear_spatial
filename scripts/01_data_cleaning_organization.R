@@ -1107,6 +1107,9 @@ unique(bear_X12083$ICE_LAND) # only on-land and only 5 fixes
 # total fixes per ID
 bear_total <- as.data.frame(table(bears_ice$ID))
 summary(bear_total)
+std <- function(x) sd(x)/sqrt(length(x))
+std(bear_total$Freq) # standard error: https://stackoverflow.com/questions/2676554/in-r-how-to-find-the-standard-error-of-the-mean
+
 write.csv(bear_total, "/Volumes/Larissa G-drive/UAlberta MSc/Thesis/4. Manuscripts/1. Polar bear RSF/Figures/bear_total_iceonly.csv")
 
 # total fixes per month

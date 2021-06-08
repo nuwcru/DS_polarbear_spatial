@@ -49,15 +49,14 @@ used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_a
 
 
 
+summary(used_avail_RSF_breakup_FINAL)
 
+used_break <- used_avail_RSF_breakup_FINAL %>% filter(USE=="used")
 
-
-
-
-
-
-
-
+used_break_erik <- used_avail %>% filter(SEASON=="break")
+used_break_erik <- used_break_erik %>% filter(USED_AVAIL==1)
+unique(used_break_erik$ID)
+unique(used_break$ID)
 
 # Pooled model ------------------------------------------------------------
 

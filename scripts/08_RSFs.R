@@ -58,6 +58,7 @@ used_avail$DIST_WATER_M <- used_avail$DIST_WATER*111*1000
 used <- used_avail %>% filter(USED_AVAIL=="used") # 1463
 avail <- used_avail %>% filter(USED_AVAIL=="available") # 73,150
 
+str(used_avail)
 
 # 3. - SKIP - Testing normality and correlations between covariates------------
 
@@ -235,6 +236,9 @@ used_avail$DIST_SCALED <- scale(used_avail$DIST_LAND, scale=TRUE, center=TRUE)
 used_avail$CONC_SCALED <- scale(used_avail$CONC, scale=TRUE, center=TRUE)
 used_avail$DIST_WATER_SCALED <- scale(used_avail$DIST_WATER_M, scale=TRUE, center=TRUE)
 
+used <- used_avail %>% filter(USED_AVAIL=="used") # 1463
+avail <- used_avail %>% filter(USED_AVAIL=="available") # 73,150
+
       # visualize
 hist(used_avail$BATH_SCALED) # not normal
 ggqqplot(used_avail$BATH_SCALED, ylab="BATH_SCALED") # not normal
@@ -250,32 +254,49 @@ ggqqplot(used_avail$DIST_WATER_SCALED, ylab="DIST_WATER_SCALED") # not normal
 cor.test(used_avail$BATH_SCALED, used_avail$CONC_SCALED, method="kendall")
               # p-value < 0.001 = not correlated
               # tau = 0.1771989 = very mild positive correlation - these are the same values as above
+cor.test(used$BATH_SCALED, used$CONC_SCALED, method="kendall")
+              # p-value 0.5913 = correlated
+              # tau = 0.009780978 
 
         # BATH versus DIST_LAND
 cor.test(used_avail$BATH_SCALED, used_avail$DIST_SCALED, method="kendall")
               # p-value = <0.001 = not correlated
               # tau = -0.365865 = very mild negative correlation - these are the same values as above
+cor.test(used$BATH_SCALED, used$DIST_SCALED, method="kendall")
+              # p-value <0.001 = not correlated
+              # tau = -0.6015717
 
         # BATH versus DIST_WATER
 cor.test(used_avail$BATH_SCALED, used_avail$DIST_WATER_SCALED, method="kendall")
               # p-value = <0.001 = not correlated
               # tau = 0.08772621 = very mild positive correlation
+cor.test(used$BATH_SCALED, used$DIST_WATER_SCALED, method="kendall")
+              # p-value 0.07838 = correlated
+              # tau = 0.03153957 
 
         # CONC versus DIST_LAND
 cor.test(used_avail$CONC_SCALED, used_avail$DIST_SCALED, method="kendall")
               # p-value = <0.001 = not correlated
               # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+cor.test(used$CONC_SCALED, used$DIST_SCALED, method="kendall")
+              # p-value 0.08987 = correlated
+              # tau = -0.0309023  
 
         # CONC versus DIST_WATER
 cor.test(used_avail$CONC_SCALED, used_avail$DIST_WATER_SCALED, method="kendall")
-            # p-value = <0.001 = not correlated
-            # tau = 0.09508064 = very mild positive correlation 
+              # p-value = <0.001 = not correlated
+              # tau = 0.09508064 = very mild positive correlation 
+cor.test(used$CONC_SCALED, used$DIST_WATER_SCALED, method="kendall")
+              # p-value <0.001 = not correlated
+              # tau = 0.07522532 
 
         # DIST_LAND versus DIST_WATER
 cor.test(used_avail$DIST_SCALED, used_avail$DIST_WATER_SCALED, method="kendall")
-            # p-value = <0.001 = not correlated
-            # tau = -0.1619609 = very mild negative correlation - these are the same values as above
-
+              # p-value = <0.001 = not correlated
+              # tau = -0.1619609 = very mild negative correlation - these are the same values as above
+cor.test(used$DIST_SCALED, used$DIST_WATER_SCALED, method="kendall")
+              # p-value <0.001 = not correlated
+              # tau = 0.07522532 
 
 
 ####

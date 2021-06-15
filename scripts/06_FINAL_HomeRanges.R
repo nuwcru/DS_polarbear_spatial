@@ -862,6 +862,7 @@ summary(annualhpi_1999)
 
 # 11. Create final dataframes for all HRs and create figures ------
 
+
 # Create pooled dataframe
 head(bear_list_greater100_mcps_df) # columns are: ID, AREA, METHOD
 head(bears_href_area_df) # columns are: ID, AREA, METHOD
@@ -877,6 +878,7 @@ head(bear_hpi_annualarea_df) # columns are: ID_YEAR, ID, YEAR, AREA, METHOD
 
 annual_homerange_areas <- rbind(bear_annualMCPs_df, bear_annualhref_area_df, bear_hpi_annualarea_df)
 write.csv(annual_homerange_areas, "data/Oct2020work/annual_homerange_areas.csv")
+
 
 # summarize data
 summary(pooled_homerange_areas)
@@ -972,6 +974,112 @@ ggplot(annual_homerange_areas) +
 
 
 
+
+
+# 11a. Create final annual HR figures for manuscript (without pooled and Href) ------
+
+# import data and format
+annual_homerange_areas <- read.csv("data/Oct2020work/annual_homerange_areas.csv")
+head(annual_homerange_areas)
+unique(annual_homerange_areas$METHOD)
+annual_homerange_areas2 <- annual_homerange_areas %>% filter(METHOD=="MCP" | METHOD=="HPI")
+unique(annual_homerange_areas2$METHOD)
+
+      # calculate standard deviation for both methods
+MCP <- annual_homerange_areas2 %>% filter(METHOD=="MCP")
+sd(MCP$AREA) # 73984.9
+summary(MCP)
+HPI <- annual_homerange_areas2 %>% filter(METHOD=="HPI")
+sd(HPI$AREA) # 59687.65
+
+      # create summary dataframe and format
+annual_homerange_summary <- annual_homerange_areas2 %>% group_by(METHOD) %>% summarize(mean_area=mean(AREA), count=n())
+head(annual_homerange_summary) # HPI is first
+annual_homerange_summary$SD_area <- c("59687.65", "73984.9")
+str(annual_homerange_summary)
+annual_homerange_summary$mean_area <- as.numeric(annual_homerange_summary$mean_area)
+annual_homerange_summary$SD_area <- as.numeric(annual_homerange_summary$SD_area)
+
+      # calculate mean of both
+head(annual_homerange_summary) # MCP: 137,335; HPI = 66,215
+(137335+66215)/2 # = 101775
+
+      # create summary dataframe per year and format
+annual_summary <- annual_homerange_areas2 %>% group_by(METHOD, YEAR) %>% summarize(mean_area=mean(AREA), count=n())
+unique(annual_summary$YEAR) # 1991-1999
+              # get standard deviations per year for each method
+MCP_1991 <- annual_homerange_areas2 %>% filter(METHOD=="MCP" & YEAR=="1991")
+sd(MCP_1991$AREA) # NA: only 1
+MCP_1993 <- annual_homerange_areas2 %>% filter(METHOD=="MCP" & YEAR=="1993")
+sd(MCP_1993$AREA) # NA: only 1
+MCP_1994 <- annual_homerange_areas2 %>% filter(METHOD=="MCP" & YEAR=="1994")
+sd(MCP_1994$AREA) # 100091.3
+MCP_1995 <- annual_homerange_areas2 %>% filter(METHOD=="MCP" & YEAR=="1995")
+sd(MCP_1995$AREA) # NA: only 1
+HPI_1991 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1991")
+sd(HPI_1991$AREA) # NA: only 1
+HPI_1992 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1992")
+sd(HPI_1992$AREA) # 39579.65
+HPI_1993 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1993")
+sd(HPI_1993$AREA) # 50445.11
+HPI_1994 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1994")
+sd(HPI_1994$AREA) # 86635.87
+HPI_1995 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1995")
+sd(HPI_1995$AREA) # 55720.25
+HPI_1998 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1998")
+sd(HPI_1998$AREA) # 56381.19
+HPI_1999 <- annual_homerange_areas2 %>% filter(METHOD=="HPI" & YEAR=="1999")
+sd(HPI_1999$AREA) # 22086.38
+
+head(annual_summary) # HPI is first - all years (ordered chronologically), followed by MCP (also chronologically)
+tail(annual_summary) # HPI only has data for 1991-1995, 1998-1999; MCP only has 1991, 1993-1995
+annual_summary$SD_area <- c("NA", "39579.65", "50445.11", "86635.87", "55720.25", "56381.19", "22086.38", # these are HPI
+                            "NA", "NA", "100091.3", "NA") # these are MCP
+head(annual_summary)
+str(annual_summary)
+annual_summary$SD_area <- as.numeric(annual_summary$SD_area)
+
+      # means per year
+total_annual_summary <- annual_summary %>% group_by(YEAR) %>% summarize(total_mean=mean(mean_area))
+head(total_annual_summary)
+
+annual_summary2 <- merge(total_annual_summary, annual_summary)
+
+
+###
+
+
+# all together (i.e, using annual_homerange_summary)
+error_plot <- ggplot(annual_homerange_summary, aes(x=METHOD, y=mean_area, colour=METHOD)) +
+  geom_pointrange(aes(ymin=mean_area-SD_area, ymax=mean_area+SD_area)) + 
+  geom_errorbar(aes(ymin=mean_area-SD_area, ymax=mean_area+SD_area), width=0.2) + 
+  geom_abline(intercept=101775 , col="black", linetype="dashed") + 
+  scale_colour_manual(values=c("palegreen3", "skyblue3")) +
+  scale_y_continuous(breaks=c(0, 50000, 100000, 150000, 200000, 250000), labels=c("0", "50,000", "100,000", "150,000", "200,000", "250,000")) +
+  theme_nuwcru()
+error_plot2 <- error_plot + theme(axis.title.x = element_blank()) + labs(y="Home range size (km)")
+error_plot2
+
+# annual (using annual_summary)
+pd <- position_dodge(width=0.4)
+error_annualplot <- ggplot(annual_summary2, aes(x=YEAR, y=mean_area, colour=METHOD)) +
+  geom_pointrange(aes(ymin=mean_area-SD_area, ymax=mean_area+SD_area), position=pd) + 
+  geom_errorbar(aes(ymin=mean_area-SD_area, ymax=mean_area+SD_area), width=0.2, position=pd) + 
+  scale_colour_manual(values=c("palegreen3", "skyblue3")) +
+  scale_y_continuous(breaks=c(0, 50000, 100000, 150000, 200000, 250000), labels=c("0", "50,000", "100,000", "150,000", "200,000", "250,000")) +
+  scale_x_continuous(breaks=c(1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999), labels=c("1991", "1992", "1993", "1994", "1995", "1996", "1997", "1998", "1999")) +
+  theme_nuwcru()
+error_annualplot
+error_annualplot2 <- error_annualplot + 
+  theme(axis.title.x = element_blank()) + labs(y="Home range size (km)") +
+  geom_text(aes(label=annual_summary$count), vjust=-1.0, colour="black")
+error_annualplot2
+#error_annualplot3 <- error_annualplot2 +
+  #geom_point(aes(x=YEAR, y=total_mean), colour="red", shape=4)
+#error_annualplot3
+
+
+###
 
 
 # 12. Compare HR methods -------------

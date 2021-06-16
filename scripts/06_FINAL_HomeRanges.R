@@ -1055,9 +1055,9 @@ error_plot <- ggplot(annual_homerange_summary, aes(x=METHOD, y=mean_area, colour
   geom_errorbar(aes(ymin=mean_area-SD_area, ymax=mean_area+SD_area), width=0.2) + 
   geom_abline(intercept=101775 , col="black", linetype="dashed") + 
   scale_colour_manual(values=c("palegreen3", "skyblue3")) +
-  scale_y_continuous(breaks=c(0, 50000, 100000, 150000, 200000, 250000), labels=c("0", "50,000", "100,000", "150,000", "200,000", "250,000")) +
+  scale_y_continuous(limits=c(0, 250000), breaks=c(0, 50000, 100000, 150000, 200000, 250000), labels=c("0", "50,000", "100,000", "150,000", "200,000", "250,000")) +
   theme_nuwcru()
-error_plot2 <- error_plot + theme(axis.title.x = element_blank()) + labs(y="Home range size (km)")
+error_plot2 <- error_plot + theme(axis.title.x = element_blank()) + labs(y="Home range size (km2)")
 error_plot2
 
 # annual (using annual_summary)
@@ -1071,8 +1071,8 @@ error_annualplot <- ggplot(annual_summary2, aes(x=YEAR, y=mean_area, colour=METH
   theme_nuwcru()
 error_annualplot
 error_annualplot2 <- error_annualplot + 
-  theme(axis.title.x = element_blank()) + labs(y="Home range size (km)") +
-  geom_text(aes(label=annual_summary$count), vjust=-1.0, colour="black")
+  theme(axis.title.x = element_blank()) + labs(y="Home range size (km2)") +
+  geom_text(aes(label=count), vjust=-1.0, colour="black")
 error_annualplot2
 #error_annualplot3 <- error_annualplot2 +
   #geom_point(aes(x=YEAR, y=total_mean), colour="red", shape=4)

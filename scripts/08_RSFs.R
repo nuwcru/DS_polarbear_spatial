@@ -1731,7 +1731,7 @@ ggplot(Break) + geom_density(aes(x=CONC, fill=USED_AVAIL), alpha=0.2) +
   theme(legend.title=element_blank()) +
   theme_nuwcru()
 
-ggplot(Winter) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
+ggplot(Break) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
   labs(x="Distance (km)", y="Relative Probability") +
   ggtitle("Distance to land") +
   theme(legend.title=element_blank()) +

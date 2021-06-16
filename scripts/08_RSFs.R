@@ -236,6 +236,8 @@ used_avail$DIST_SCALED <- scale(used_avail$DIST_LAND, scale=TRUE, center=TRUE)
 used_avail$CONC_SCALED <- scale(used_avail$CONC, scale=TRUE, center=TRUE)
 used_avail$DIST_WATER_SCALED <- scale(used_avail$DIST_WATER_M, scale=TRUE, center=TRUE)
 
+write.csv(used_avail, "data/Oct2020work/FINAL DATASET/final_dataset_Jun2021.csv")
+
 used <- used_avail %>% filter(USED_AVAIL=="used") # 1463
 avail <- used_avail %>% filter(USED_AVAIL=="available") # 73,150
 
@@ -1641,11 +1643,6 @@ summary(model11_winter2)
       # this is still giving me incorrect values
       # how can BATH be 0.003048? It should be negative
 
-
-
-
-
-
 # break-up
 summary(model11_break)
 
@@ -1656,7 +1653,162 @@ summary(model11_icefree)
 summary(model11_freezeup)
 
 
+# 10a. Figures for manuscript ----------
+
+used_avail <- read.csv("data/Oct2020work/FINAL DATASET/final_dataset_Jun2021.csv")
+head(used_avail)
+used_avail$W <- ifelse(used_avail$USE == "used", 1, 1000)
+
+
+used <- used_avail %>% filter(USED_AVAIL=="used")
+Freeze <- used_avail %>% filter(SEASON=="freeze")
+Winter <- used_avail %>% filter(SEASON=="winter")
+Break <- used_avail %>% filter(SEASON=="break")
+
+
+###
+
+# pooled top model included: BATH, CONC, and DIST_LAND
+
+ggplot(used_avail) + geom_density(aes(x=BATH, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Depth (m)", y="Relative Probability") +
+  ggtitle("Bathymetry") +
+  theme(legend.title=element_blank()) +
+  theme_nuwcru()
+
+ggplot(used_avail) + geom_density(aes(x=CONC, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Concentration (%)", y="Relative Probability") +
+  ggtitle("Sea ice concentration") +
+  scale_x_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1.0), labels=c("0", "20", "40", "60", "80", "100")) +
+  theme(legend.title=element_blank()) +
+  theme_nuwcru()
+
+ggplot(used_avail) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Distance (km)", y="Relative Probability") +
+  ggtitle("Distance to land") +
+  theme(legend.title=element_blank()) +
+  scale_x_continuous(limits=c(0, 500000), breaks=c(0, 100000, 200000, 300000, 400000, 500000), labels=c("0", "100000", "200000", "300000", "400000", "500000")) +
+  theme_nuwcru()
+
+
+### Seasonal models
+
+# freeze-up top model included: BATH, and DIST_WATER
+
+ggplot(Freeze) + geom_density(aes(x=BATH, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Depth (m)", y="Relative Probability") +
+  ggtitle("Bathymetry") +
+  theme(legend.title=element_blank()) +
+  theme_nuwcru()
+
+ggplot(Freeze) + geom_density(aes(x=DIST_WATER, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Distance (km)", y="Relative Probability") +
+  ggtitle("Distance to water") +
+  theme(legend.title=element_blank()) +
+  theme_nuwcru()
+
+# winter top model included: CONC and DIST_LAND
+ggplot(Winter) + geom_density(aes(x=CONC, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Concentration (%)", y="Relative Probability") +
+  ggtitle("Sea ice concentration") +
+  scale_x_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1.0), labels=c("0", "20", "40", "60", "80", "100")) +
+  theme(legend.title=element_blank()) +
+  theme_nuwcru()
+
+ggplot(Winter) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Distance (km)", y="Relative Probability") +
+  ggtitle("Distance to land") +
+  theme(legend.title=element_blank()) +
+  scale_x_continuous(limits=c(0, 500000), breaks=c(0, 100000, 200000, 300000, 400000, 500000), labels=c("0", "100000", "200000", "300000", "400000", "500000")) +
+  theme_nuwcru()
+summary(Winter)
+
+# break-up top model included: CONC and DIST_LAND
+ggplot(Break) + geom_density(aes(x=CONC, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Concentration (%)", y="Relative Probability") +
+  ggtitle("Sea ice concentration") +
+  scale_x_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1.0), labels=c("0", "20", "40", "60", "80", "100")) +
+  theme(legend.title=element_blank()) +
+  theme_nuwcru()
+
+ggplot(Winter) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
+  labs(x="Distance (km)", y="Relative Probability") +
+  ggtitle("Distance to land") +
+  theme(legend.title=element_blank()) +
+  scale_x_continuous(limits=c(0, 400000), breaks=c(0, 100000, 200000, 300000, 400000), labels=c("0", "100000", "200000", "300000", "400000")) +
+  theme_nuwcru()
 
 
 
+###
+
+# TESTING PLOTS
+
+# frequency - i.e., histograms
+
+hist(used$BATH)
+
+      # OR
+h <- hist(used$BATH, breaks=100, plot=FALSE)
+h$counts=h$counts/sum(h$counts)
+plot(h)
+
+      # OR
+ggplot(data=used) + geom_histogram(aes(x=BATH))
+
+
+###
+
+
+# density
+hist(used$BATH, xlab="Ocean depth (m)", freq=FALSE)
+lines(density(used$BATH))
+#rug(used$BATH)
+
+      # OR
+BATH_d <- density(used$BATH)
+plot(BATH_d)
+
+
+###
+
+
+# relative frequency
+
+h <- hist(used$BATH, plot=FALSE)
+h$density = h$counts/sum(h$counts) * 100
+plot(h, main="Bathymetry", xlab="Depth (m)", ylab="Percent", col="grey", freq=FALSE)
+
+      # OR
+ggplot(data=used) +
+  geom_histogram(mapping=aes(x=BATH, y=..count../sum(..count..)*100), bins=50) +
+  geom_line(aes(x=density(BATH))) +
+  ggtitle("Bathymetry") +
+  xlab("Depth (m)") +
+  ylab("Percent")
+
+      # OR
+
+p <- ggplot(used) +
+  geom_histogram(aes(x=BATH, y=..density..), binwidth=100, fill="grey", color="black")
+p
+
+
+
+
+# plotting seasons altogether
+      # using ggplot
+plot(density(used$BATH))
+head(used)
+ggplot(used) + geom_density(aes(x=BATH, colour=SEASON))
+ggplot(used) + geom_density(aes(x=BATH, fill=SEASON), alpha=0.2)
+ggplot(used_avail) + geom_density(aes(x=BATH)) + facet_wrap(~SEASON) + theme_nuwcru() # https://homepage.divms.uiowa.edu/~luke/classes/STAT4580/histdens.html
+ggplot(used_avail) + geom_density(aes(x=BATH, fill=USED_AVAIL), alpha=0.2) + 
+  facet_wrap(~SEASON) + theme_nuwcru() # used and avail together
+
+      # using lattice
+densityplot(~BATH | SEASON, data=used) # https://homepage.divms.uiowa.edu/~luke/classes/STAT4580/histdens.html
+
+
+###
 

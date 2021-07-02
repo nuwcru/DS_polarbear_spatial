@@ -52,7 +52,7 @@ used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_a
 # Note: all top models were determined in script 08_RSFs
 
 
-# 3. Analyze top pooled RSF model results --------
+# 3. - SKIP - Analyze top pooled RSF model results --------
 
 # pooled: Model 11 (BATH + CONC + DIST_LAND)
 # run model 
@@ -80,7 +80,7 @@ mean(used_avail_RSF_pooled_FINAL$DIST_WATER_M)
 ##
 
 
-# 4. Analyze top seasonal RSF model (freeze-up) results--------
+# 4. - SKIP - Analyze top seasonal RSF model (freeze-up) results--------
 
 # freeze-up: Model 7 (BATH + DIST_WATER) - note that we couldn't set the variance here
 model7_freeze_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=TRUE, weights=W)
@@ -93,7 +93,7 @@ summary(unscale_model7_freeze_free_var)
 # get mean values
 mean(used_avail_RSF_freezeup_FINAL$CONC)
 
-# 5. Analyze top seasonal RSF model (winter) results--------
+# 5. - SKIP - Analyze top seasonal RSF model (winter) results--------
 
 # winter: Model 8 (CONT + DIST_LAND) - same issue as above
 model8_winter_free_var <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
@@ -106,7 +106,7 @@ summary(unscale_model8_winter_free_var)
 # get mean values
 mean(used_avail_RSF_winter_FINAL$DIST_WATER_M)
 
-# 6. Analyze top seasonal RSF model (break-up) results--------
+# 6. - SKIP - Analyze top seasonal RSF model (break-up) results--------
 
 # break-up: Model 6 (BATH + DIST_LAND)
 model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
@@ -339,13 +339,14 @@ ggplot(all_coefs3) +
 
 
 
-# 8. Creating manuscript figures FINAL - without pooled RSF -----
+# 8. Getting final #s per season - without pooled RSF (July 2021) -----
 
 # 1. import data
 used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
 used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
 used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 
+# 2. filter and count
 freeze_used <- used_avail_RSF_freezeup_FINAL %>% filter(USE=="used")
 freeze_avail <- used_avail_RSF_freezeup_FINAL %>% filter(USE=="available")
 winter_used <- used_avail_RSF_winter_FINAL %>% filter(USE=="used")
@@ -354,10 +355,11 @@ break_used <- used_avail_RSF_breakup_FINAL %>% filter(USE=="used")
 break_avail <- used_avail_RSF_breakup_FINAL %>% filter(USE=="available")
 
 freeze_mean <- freeze_used %>% group_by(ID) %>% summarize(count=n())
+winter_mean <- winter_used %>% group_by(ID) %>% summarize(count=n())
+break_mean <- break_used %>% group_by(ID) %>% summarize(count=n())
 
 
-
-# 11a. Plot coefficients FINAL (July 2021) ------
+# 9. Plot coefficients FINAL (July 2021) ------
 
 # see section 3: https://terpconnect.umd.edu/~egurarie/teaching/SpatialModelling_AKTWS2018/6_RSF_SSF.html
 # we ended up removing some of the models, so the top models for most seasons have changed (break-up stayed the same)
@@ -366,24 +368,16 @@ freeze_mean <- freeze_used %>% group_by(ID) %>% summarize(count=n())
 # need this package
 library(sjPlot)
 
-# import and format data
-used_avail <- read.csv("data/Oct2020work/FINAL DATASET/final_dataset_Jun2021.csv")
-head(used_avail)
-used_avail$W <- ifelse(used_avail$USE == "used", 1, 1000)
-used <- used_avail %>% filter(USED_AVAIL=="used")
-Freeze <- used_avail %>% filter(SEASON=="freeze")
-Winter <- used_avail %>% filter(SEASON=="winter")
-Break <- used_avail %>% filter(SEASON=="break")
-
+# 1. import data
 used_avail_RSF_pooled_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_pooled_FINAL_Apr2021.csv")
 used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
 used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
 used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 
 
-# re-run top models for each season then plot
+# 2. re-run top models for each season then plot - NOTE THAT THE TOP MODELS ARE DIFFERENT NOW 
 
-# freeze-up: BATH + CONC 
+      # freeze-up: BATH + CONC 
 model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
 model5_tmp_freeze$parameters$theta[1] = log(1e3)
 model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
@@ -393,14 +387,14 @@ summary(model5_freeze)$coef
 
 plot_model(model5_freeze)
 
-# winter: LAND + WATER
+      # winter: LAND + WATER
 model10_winter_free_var <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
 summary(model10_winter_free_var)
 summary(model10_winter_free_var)$coef
 
 plot_model(model10_winter_free_var)
 
-# break-up: BATH+ LAND
+      # break-up: BATH + LAND
 model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model6_tmp_break$parameters$theta[1] = log(1e3)
 model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
@@ -411,11 +405,7 @@ summary(model6_break)$coef
 plot_model(model6_break)
 
 
-
-###
-
-
-# create dataframe of coefficients and SEs to create a better plot of them alltogether
+# 3. create dataframe of coefficients and SEs to create a better plot of them alltogether
 
 coefficients <- data.frame(matrix(NA, nrow=6, ncol=5))
 colnames(coefficients) <- c("RSF", "Covariate", "Coef", "SE", "P")
@@ -429,6 +419,9 @@ coefficients$Low = coefficients$Coef-coefficients$SE
 coefficients$High = coefficients$Coef+coefficients$SE
 head(coefficients)
 
+
+# 4. plot 
+
 ggplot(data=coefficients, aes(linetype=P<0.05)) +
   geom_point(aes(x=Covariate, y=Coef, col=RSF), position=position_dodge(width=0.5)) +
   geom_errorbar(aes(ymin=Low, ymax=High, x=Covariate, col=RSF), position=position_dodge(width=0.5)) +
@@ -438,8 +431,6 @@ ggplot(data=coefficients, aes(linetype=P<0.05)) +
   labs(fill="RSF") +
   scale_fill_discrete(name="RSF", labels=c("break-up", "freeze-up", "winter")) +
   theme_nuwcru()
-
-
 
 
 
@@ -518,54 +509,30 @@ grid.arrange(freeze_plot, winter_plot, break_plot)
 ##
 
 
-
-
-
-
-
-
-
-
-###
-
-
-
-# 11b. Plot relative probability FINAL (July 2021) -------
+# 10. Plot relative probability FINAL (July 2021) -------
 
 # we ended up removing some of the models, so the top models for most seasons have changed (break-up stayed the same)
 # we're also not looking at the pooled model anymore
 
-# import and format data
+# 1. import and format data
 used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
 used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
 used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 
 freeze_used <- used_avail_RSF_freezeup_FINAL %>% filter(USE=="used")
-freeze_avail <- used_avail_RSF_freezeup_FINAL %>% filter(USE=="available")
 winter_used <- used_avail_RSF_winter_FINAL %>% filter(USE=="used")
-winter_avail <- used_avail_RSF_winter_FINAL %>% filter(USE=="available")
 break_used <- used_avail_RSF_breakup_FINAL %>% filter(USE=="used")
-break_avail <- used_avail_RSF_breakup_FINAL %>% filter(USE=="available")
-
-freeze_mean <- freeze_used %>% group_by(ID) %>% summarize(count=n())
 
 
+# 2. create seasonal plots
 
-
-
-
-###
-# create seasonal plots
-###
-
-# freeze-up top model included: BATH & CONC
-
-freeze_used <- Freeze %>% filter(USED_AVAIL=="used")
+      # freeze-up top model included: BATH & CONC
 
 ggplot(freeze_used) + geom_density(aes(x=BATH), alpha=0.2) +
   labs(x="Depth (m)", y="Relative Probability") +
   ggtitle("Bathymetry") +
   theme(legend.title=element_blank()) +
+  #scale_y_continuous(limits=c(0, 1)) +
   theme_nuwcru()
 
 ggplot(freeze_used) + geom_density(aes(x=DIST_WATER, fill=USED_AVAIL), alpha=0.2) +
@@ -573,6 +540,7 @@ ggplot(freeze_used) + geom_density(aes(x=DIST_WATER, fill=USED_AVAIL), alpha=0.2
   ggtitle("Distance to water") +
   theme(legend.title=element_blank()) +
   theme_nuwcru()
+
 
 
 
@@ -612,5 +580,77 @@ ggplot(Break) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
   theme(legend.title=element_blank()) +
   scale_x_continuous(limits=c(0, 400000), breaks=c(0, 100000, 200000, 300000, 400000), labels=c("0", "100000", "200000", "300000", "400000")) +
   theme_nuwcru()
+
+
+# Plots: Fletcher & Fortin (2018); section 8.3.5 -------
+
+head(used_avail_RSF_freezeup_FINAL)
+
+
+used_avail_RSF_freezeup_FINAL %>% group_by(USE, BATH) %>% 
+  summarize(n=n()) %>% 
+  mutate(prop=n/sum(n), label=paste0(round(prop*100, 1), "%")) %>% 
+  ggplot(aes(BATH, prop, fill=USE, group=USE, label=label)) +
+  geom_col(position=position_dodge2())
+
+
+
+h <- hist(vec, breaks = 100, plot=FALSE)
+h$counts=h$counts/sum(h$counts)
+plot(h)
+
+
+# https://stackoverflow.com/questions/17416453/force-r-to-plot-histogram-as-probability-relative-frequency
+freeze_bath_plot <- hist(freeze_used$BATH, breaks=100, plot=FALSE)
+freeze_bath_plot$counts = freeze_bath_plot$counts/sum(freeze_bath_plot$counts)
+plot(freeze_bath_plot)
+
+freeze_bath_plot$counts/length(freeze_used)
+
+# https://stackoverflow.com/questions/5033240/plot-probability-with-ggplot2-not-density
+
+ggplot(used_avail_RSF_freezeup_FINAL, aes(x=BATH)) + stat_density(kernel="biweight")
+ggplot(freeze_used, aes(x=BATH)) + stat_density(kernel="biweight")
+
+ggplot(used_avail_RSF_freezeup_FINAL, aes(x=BATH, fill=USE)) + stat_density(kernel="biweight")
+
+
+
+
+# Top models ------
+
+
+# Freeze-up: BATH + CONC (Model 5)
+model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL,
+                             map=list(theta=factor(c(NA, 2))), start=list(theta=c(log(1000), 0)),
+                             doFit=F, weights=W)
+model5_tmp_freeze$parameters$theta[1] = log(1e3)
+model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
+summary(model5_freeze)
+
+library(ggeffects)
+ggredict(model5_freeze, c("BATH_SCALED" [all]))
+
+
+ggpredict(model5_freeze, se=TRUE)
+
+
+
+predict_freeze <- ggpredict(model5_freeze, "BATH_SCALED")
+
+
+
+
+
+
+mod.toy <- glmmTMB(used~var1+(1|stratum)+(0+var1|group),
+                   family=poisson,data=dat,
+                   map=list(theta=factor(c(NA,1))),
+                   start=list(theta=c(log(1000),0)))
+
+
+
+
 
 

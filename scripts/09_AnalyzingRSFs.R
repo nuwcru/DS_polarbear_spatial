@@ -385,14 +385,23 @@ model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze)
 summary(model5_freeze)
 summary(model5_freeze)$coef
 
-plot_model(model5_freeze)
+                    # unscaled version
+model5_tmp_freeze_unscale <- glmmTMB(USED_AVAIL~BATH+CONC+(1|ID)+(0+BATH|ID)+(0+CONC|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model5_tmp_freeze_unscale$parameters$theta[1] = log(1e3)
+model5_tmp_freeze_unscale$mapArg = list(theta = factor(c(NA, 1:2)))
+model5_freeze_unscale <- glmmTMB:::fitTMB(model5_tmp_freeze_unscale) 
+summary(model5_freeze_unscale)
+summary(model5_freeze_unscale)$coef
+
 
       # winter: LAND + WATER
 model10_winter_free_var <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
 summary(model10_winter_free_var)
 summary(model10_winter_free_var)$coef
 
-plot_model(model10_winter_free_var)
+                    # unscaled version
+model10_winter_free_var_unscale <- glmmTMB(USED_AVAIL~DIST_LAND+DIST_WATER+(1|ID)+(0+DIST_LAND|ID)+(0+DIST_WATER|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model10_winter_free_var_unscale)$coef
 
       # break-up: BATH + LAND
 model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
@@ -402,7 +411,14 @@ model6_break <- glmmTMB:::fitTMB(model6_tmp_break)
 summary(model6_break)
 summary(model6_break)$coef
 
-plot_model(model6_break)
+                    # unscaled version
+model6_tmp_break <- glmmTMB(USED_AVAIL~BATH+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+model6_tmp_break$parameters$theta[1] = log(1e3)
+model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
+model6_break <- glmmTMB:::fitTMB(model6_tmp_break) 
+summary(model6_break)
+summary(model6_break)$coef
+
 
 
 # 3. create dataframe of coefficients and SEs to create a better plot of them alltogether
@@ -528,60 +544,56 @@ break_used <- used_avail_RSF_breakup_FINAL %>% filter(USE=="used")
 
       # freeze-up top model included: BATH & CONC
 
-ggplot(freeze_used) + geom_density(aes(x=BATH), alpha=0.2) +
+ggplot(used_avail_RSF_freezeup_FINAL) + geom_density(aes(x=BATH, fill=USE), alpha=0.2) +
   labs(x="Depth (m)", y="Relative Probability") +
   ggtitle("Bathymetry") +
   theme(legend.title=element_blank()) +
-  #scale_y_continuous(limits=c(0, 1)) +
+  scale_x_continuous(limits=c(-4000, 300)) +
   theme_nuwcru()
 
-ggplot(freeze_used) + geom_density(aes(x=DIST_WATER, fill=USED_AVAIL), alpha=0.2) +
-  labs(x="Distance (km)", y="Relative Probability") +
-  ggtitle("Distance to water") +
+ggplot(used_avail_RSF_freezeup_FINAL) + geom_density(aes(x=CONC, fill=USE), alpha=0.2) +
+  labs(x="Concentration (%)", y="Relative Probability") +
+  ggtitle("Sea ice concentration") +
   theme(legend.title=element_blank()) +
   theme_nuwcru()
-
 
 
 
 
 
 # winter top model included: CONC and DIST_LAND
-freeze_used <- Freeze %>% filter(USED_AVAIL=="used")
 
-ggplot(Winter) + geom_density(aes(x=CONC, fill=USED_AVAIL), alpha=0.2) +
-  labs(x="Concentration (%)", y="Relative Probability") +
-  ggtitle("Sea ice concentration") +
-  scale_x_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1.0), labels=c("0", "20", "40", "60", "80", "100")) +
+ggplot(used_avail_RSF_winter_FINAL) + geom_density(aes(x=DIST_WATER, fill=USE), alpha=0.2) +
+  labs(x="Distance (km)", y="Relative Probability") +
+  ggtitle("Distance to water") +
+  #scale_x_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1.0), labels=c("0", "20", "40", "60", "80", "100")) +
   theme(legend.title=element_blank()) +
   theme_nuwcru()
 
-ggplot(Winter) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
+ggplot(used_avail_RSF_winter_FINAL) + geom_density(aes(x=DIST_LAND, fill=USE), alpha=0.2) +
   labs(x="Distance (km)", y="Relative Probability") +
   ggtitle("Distance to land") +
   theme(legend.title=element_blank()) +
   scale_x_continuous(limits=c(0, 500000), breaks=c(0, 100000, 200000, 300000, 400000, 500000), labels=c("0", "100000", "200000", "300000", "400000", "500000")) +
   theme_nuwcru()
-summary(Winter)
+
 
 # break-up top model included: CONC and DIST_LAND
-freeze_used <- Freeze %>% filter(USED_AVAIL=="used")
-
-ggplot(Break) + geom_density(aes(x=CONC, fill=USED_AVAIL), alpha=0.2) +
-  labs(x="Concentration (%)", y="Relative Probability") +
-  ggtitle("Sea ice concentration") +
-  scale_x_continuous(breaks=c(0, 0.2, 0.4, 0.6, 0.8, 1.0), labels=c("0", "20", "40", "60", "80", "100")) +
+ggplot(used_avail_RSF_breakup_FINAL) + geom_density(aes(x=BATH, fill=USE), alpha=0.2) +
+  labs(x="Depth (m)", y="Relative Probability") +
+  ggtitle("Bathymetry") +
+  scale_x_continuous(limits=c(-4000, 300)) +
   theme(legend.title=element_blank()) +
   theme_nuwcru()
 
-ggplot(Break) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
+ggplot(used_avail_RSF_breakup_FINAL) + geom_density(aes(x=DIST_LAND, fill=USED_AVAIL), alpha=0.2) +
   labs(x="Distance (km)", y="Relative Probability") +
   ggtitle("Distance to land") +
   theme(legend.title=element_blank()) +
   scale_x_continuous(limits=c(0, 400000), breaks=c(0, 100000, 200000, 300000, 400000), labels=c("0", "100000", "200000", "300000", "400000")) +
   theme_nuwcru()
 
-
+summary(used_avail_RSF_breakup_FINAL)
 # Plots: Fletcher & Fortin (2018); section 8.3.5 -------
 
 head(used_avail_RSF_freezeup_FINAL)
@@ -638,16 +650,6 @@ ggpredict(model5_freeze, se=TRUE)
 
 
 predict_freeze <- ggpredict(model5_freeze, "BATH_SCALED")
-
-
-
-
-
-
-mod.toy <- glmmTMB(used~var1+(1|stratum)+(0+var1|group),
-                   family=poisson,data=dat,
-                   map=list(theta=factor(c(NA,1))),
-                   start=list(theta=c(log(1000),0)))
 
 
 

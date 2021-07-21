@@ -16,6 +16,8 @@ library(TMB)
 library(glmmTMB) # RSFs according to Muff et al. (2019)
 library(data.table) # required for section 10
 library(gridExtra) # for grid.arrange() in section 10
+library(AICcmodavg)
+library(MuMIn)
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -82,29 +84,49 @@ mean(used_avail_RSF_pooled_FINAL$DIST_WATER_M)
 
 # 4. - SKIP - Analyze top seasonal RSF model (freeze-up) results--------
 
-# freeze-up: Model 7 (BATH + DIST_WATER) - note that we couldn't set the variance here
-model7_freeze_free_var <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=TRUE, weights=W)
-summary(model7_freeze_free_var)
+# BATH + CONC (Model 5)
+model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
+model5_tmp_freeze$parameters$theta[1] = log(1e3)
+model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
+summary(model5_freeze)
+
 
 # re-run model with unscaled values
-unscale_model7_freeze_free_var <- glmmTMB(USED_AVAIL~BATH+DIST_WATER+(1|ID)+(0+BATH|ID)+(0+DIST_WATER|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=TRUE, weights=W)
-summary(unscale_model7_freeze_free_var)
+#unscale_model7_freeze_free_var <- glmmTMB(USED_AVAIL~BATH+DIST_WATER+(1|ID)+(0+BATH|ID)+(0+DIST_WATER|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=TRUE, weights=W)
+#summary(unscale_model7_freeze_free_var)
 
 # get mean values
-mean(used_avail_RSF_freezeup_FINAL$CONC)
+#mean(used_avail_RSF_freezeup_FINAL$CONC)
+
+# get AICc with AICcmodavg
+AICc(model5_freeze) # this and the line below both give 3,960.287, which is what the regular AIC value was
+AICc(model5_freeze, return.K = FALSE)
+
+# get AICc with MuMln
+AICc(model5_freeze) # same as above
+
 
 # 5. - SKIP - Analyze top seasonal RSF model (winter) results--------
 
 # winter: Model 8 (CONT + DIST_LAND) - same issue as above
-model8_winter_free_var <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_SCALED+(1|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
-summary(model8_winter_free_var)
+model10_winter_free_var <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+summary(model10_winter_free_var)
 
 # re-run model with unscaled values
-unscale_model8_winter_free_var <- glmmTMB(USED_AVAIL~CONC+DIST_LAND+(1|ID)+(0+CONC|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
-summary(unscale_model8_winter_free_var)
+#unscale_model8_winter_free_var <- glmmTMB(USED_AVAIL~CONC+DIST_LAND+(1|ID)+(0+CONC|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
+#summary(unscale_model8_winter_free_var)
 
 # get mean values
-mean(used_avail_RSF_winter_FINAL$DIST_WATER_M)
+#mean(used_avail_RSF_winter_FINAL$DIST_WATER_M)
+
+# get AICc with AICcmodavg
+AICc(model10_winter_free_var) # this and the line below both give 5142.009, which is what the regular AIC value was
+AICc(model10_winter_free_var, return.K = FALSE)
+
+# get AICc with MuMln
+AICc(model10_winter_free_var) # same as above
+
 
 # 6. - SKIP - Analyze top seasonal RSF model (break-up) results--------
 
@@ -116,15 +138,21 @@ model6_break <- glmmTMB:::fitTMB(model6_tmp_break)
 summary(model6_break)
 
 # re-run model with unscaled values
-unscale_model6_tmp_break <- glmmTMB(USED_AVAIL~BATH+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
-unscale_model6_tmp_break$parameters$theta[1] = log(1e3)
-unscale_model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-unscale_model6_break <- glmmTMB:::fitTMB(unscale_model6_tmp_break) 
-summary(unscale_model6_break)
+#unscale_model6_tmp_break <- glmmTMB(USED_AVAIL~BATH+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+#unscale_model6_tmp_break$parameters$theta[1] = log(1e3)
+#unscale_model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
+#unscale_model6_break <- glmmTMB:::fitTMB(unscale_model6_tmp_break) 
+#summary(unscale_model6_break)
 
 # get mean values
-mean(used_avail_RSF_breakup_FINAL$DIST_WATER_M)
+#mean(used_avail_RSF_breakup_FINAL$DIST_WATER_M)
 
+# get AICc with AICcmodavg
+AICc(model6_break) # this and the line below both give 7259.645, which is what the regular AIC value was
+AICc(model6_break, return.K = FALSE)
+
+# get AICc with MuMln
+AICc(model6_break) # same as above
 
 
 # 7. - SKIP - Creating manuscript figures ----------
@@ -412,12 +440,12 @@ summary(model6_break)
 summary(model6_break)$coef
 
                     # unscaled version
-model6_tmp_break <- glmmTMB(USED_AVAIL~BATH+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
-model6_tmp_break$parameters$theta[1] = log(1e3)
-model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-model6_break <- glmmTMB:::fitTMB(model6_tmp_break) 
-summary(model6_break)
-summary(model6_break)$coef
+model6_tmp_break_unscale <- glmmTMB(USED_AVAIL~BATH+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
+model6_tmp_break_unscale$parameters$theta[1] = log(1e3)
+model6_tmp_break_unscale$mapArg = list(theta = factor(c(NA, 1:2)))
+model6_break_unscale <- glmmTMB:::fitTMB(model6_tmp_break_unscale) 
+summary(model6_break_unscale)
+summary(model6_break_unscale)$coef
 
 
 
@@ -653,6 +681,98 @@ predict_freeze <- ggpredict(model5_freeze, "BATH_SCALED")
 
 
 
+
+
+
+
+# Plot from Samantha Morin (Morin, et al. 2020) ----
+
+# try with one season first
+# import data then run top model
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+# Freeze-up: BATH + CONC (Model 5)
+model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL,
+                             map=list(theta=factor(c(NA, 2))), start=list(theta=c(log(1000), 0)),
+                             doFit=F, weights=W)
+model5_tmp_freeze$parameters$theta[1] = log(1e3)
+model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
+summary(model5_freeze)
+
+
+###
+
+## script below is now Samantha's
+        # Need ggplot and mcclogit
+
+###
+
+library(mclogit)
+
+# Pred functions
+make_pred <- function(myvar,
+                      model,
+                      mydata){
+  
+  newdata <- data.frame(ID=as.character(rep("bear1",8500)),
+                        BATH=mean(mydata$BATH, na.rm=T),
+                        CONC=mean(mydata$CONC,na.rm=T))
+  newdata[,myvar] <- seq(min(mydata[,myvar],na.rm=T),
+                         max(mydata[,myvar],na.rm=T),
+                         length.out = 8500)
+  
+  coefs <- summary(model)
+  coefs <- data.frame(coefs$coefficients)
+  coefs$Var <- row.names(coefs)
+  
+  # Fit
+  var_prods <- c()
+  for(v in coefs$Var){
+    prods <- coefs$Estimate[coefs$Var == v]*newdata[,v]
+    var_prods <- cbind(var_prods,prods)
+  }
+  var_prods <- data.frame(var_prods)
+  colnames(var_prods) <- coefs$Var
+  newdata$Pred <- rowSums(var_prods)
+  
+  # SE
+  var_prods_upper <- var_prods
+  var_prods_upper[,myvar] <- var_prods_upper[,myvar] + 1.96*coefs$Std..Error[coefs$Var == myvar]
+  newdata$Upper <- rowSums(var_prods_upper)
+  
+  var_prods_lower <- var_prods
+  var_prods_lower[,myvar] <- var_prods_lower[,myvar] - 1.96*coefs$Std..Error[coefs$Var == myvar]
+  newdata$Lower <- rowSums(var_prods_lower)
+  
+  newdata$var <- myvar
+  newdata$value <- newdata[,myvar]
+  return(newdata[,c("var",'value',"Pred","Upper","Lower")])
+}
+
+
+myvars <- c("BATH", "CONC")
+bobpreds <- lapply(myvars, make_pred, model=model5_freeze, mydata=used_avail_RSF_freezeup_FINAL)
+bobpreds <- do.call("rbind",bobpreds)
+bobpreds$Species <-"Bobcat"
+lynxpreds <- lapply(myvars,make_pred,model = thirdlynx20,mydata = lynx20)
+lynxpreds <- do.call("rbind",lynxpreds)
+lynxpreds$Species <-"Lynx"
+catpreds <- rbind(bobpreds,lynxpreds)
+catpreds$Prob <- exp(catpreds$Pred)/(exp(catpreds$Pred)+1)
+catpreds$Pupper <- exp(catpreds$Upper)/(exp(catpreds$Upper)+1)
+catpreds$Plower <- exp(catpreds$Lower)/(exp(catpreds$Lower)+1)
+
+x11(12,12)
+ggplot(catpreds, aes(y = Prob, x = value, 
+                     group= Species,
+                     color = Species)) +
+  geom_line() +
+  geom_ribbon(aes(ymin=Plower, ymax=Pupper, fill = Species),
+              colour = NA, alpha = 0.2) +
+  theme_bw() +
+  ylab("Probability of use") +
+  xlab("") +
+  facet_wrap(~var,scales = "free_x",nrow = 3)
 
 
 

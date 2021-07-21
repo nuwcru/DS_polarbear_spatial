@@ -22,10 +22,9 @@ library(MuMIn)
 # 2. Import final dataframes ---------
 
 # import data
-used_avail_RSF_pooled_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_pooled_FINAL_Apr2021.csv")
-used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
-used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
-used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+used_avail_RSF_winter_FINAL <- read.csv("used_avail_RSF_winter_FINAL_Apr2021.csv")
+used_avail_RSF_breakup_FINAL <- read.csv("used_avail_RSF_breakup_FINAL_Apr2021.csv")
+used_avail_RSF_freezeup_FINAL <- read.csv("used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 
 
 # 3. Freeze-up top model --------

@@ -8,14 +8,14 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(tidyr)
-library(ggpubr) # for ggqqplots
-library(lme4) # for RSFs
-library(adehabitatHR) # for RSFs
-library(adehabitatHS) # for RSFs
+library(ggpubr) 
+library(lme4) 
+library(adehabitatHR) 
+library(adehabitatHS) 
 library(TMB)
-library(glmmTMB) # RSFs according to Muff et al. (2019)
-library(data.table) # required for section 10
-library(gridExtra) # for grid.arrange() in section 10
+library(glmmTMB) 
+library(data.table) 
+library(gridExtra) 
 library(AICcmodavg)
 library(MuMIn)
 

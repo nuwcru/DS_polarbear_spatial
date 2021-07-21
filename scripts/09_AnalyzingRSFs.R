@@ -112,6 +112,7 @@ AICc(model5_freeze) # same as above
 # winter: Model 8 (CONT + DIST_LAND) - same issue as above
 model10_winter_free_var <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
 summary(model10_winter_free_var)
+AIC(model10_winter_free_var)
 
 # re-run model with unscaled values
 #unscale_model8_winter_free_var <- glmmTMB(USED_AVAIL~CONC+DIST_LAND+(1|ID)+(0+CONC|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, doFit=TRUE, weights=W)
@@ -136,6 +137,7 @@ model6_tmp_break$parameters$theta[1] = log(1e3)
 model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
 model6_break <- glmmTMB:::fitTMB(model6_tmp_break) 
 summary(model6_break)
+AIC(model6_break)
 
 # re-run model with unscaled values
 #unscale_model6_tmp_break <- glmmTMB(USED_AVAIL~BATH+DIST_LAND+(1|ID)+(0+BATH|ID)+(0+DIST_LAND|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)

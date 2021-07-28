@@ -778,3 +778,44 @@ ggplot(catpreds, aes(y = Prob, x = value,
 
 
 
+# Help from Kylee ----
+
+
+# try with one season first
+# import data then run top model
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+# Freeze-up: BATH + CONC (Model 5)
+model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), 
+                             data=used_avail_RSF_freezeup_FINAL, map=list(theta=factor(c(NA, 2))), start=list(theta=c(log(1000), 0)),
+                             doFit=F, weights=W)
+model5_tmp_freeze$parameters$theta[1] = log(1e3)
+model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
+model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
+summary(model5_freeze)
+coef(model5_freeze)
+
+# Kylee's loop
+
+int <- 1.000e+06
+beta1 <- 2.911e-10
+beta2 <- 3.122e-09
+cov1 <- used_avail_RSF_freezeup_FINAL$BATH_SCALED
+cov2 <- used_avail_RSF_freezeup_FINAL$CONC_SCALED
+
+predict_use <- function(int, beta1, beta2, cov1, cov2) {
+  predict_lam <- c()
+  predict_prob <- c()
+  for(i in 1:nrow(cov)) {
+    predict_lam[i] <- exp(int + beta1*cov1[i] + beta2*cov2[i])
+    
+    predict_prob[i] <- 1-exp(-predict_lam[i])
+  }
+  predict_prob <- as.data.frame(predict_prob)
+  return(predict_prob)
+}
+
+
+
+
+
+

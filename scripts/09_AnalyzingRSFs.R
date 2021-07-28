@@ -814,8 +814,8 @@ predict_use <- function(int, beta1, beta2, cov1, cov2) {
   return(predict_prob)
 }
 
+predict_use(int, beta1, beta2, cov1, cov2)
 
 
-
-
+saveRDS(model5_freeze, file="model5_freeze.RDS")
 

@@ -1048,6 +1048,10 @@ annual_summary2 <- merge(total_annual_summary, annual_summary)
 
 ###
 
+# changed all "HPI" to "KDE" for manuscript
+
+annual_homerange_summary$METHOD[annual_homerange_summary$METHOD == "HPI"] <- "KDE"
+annual_summary2$METHOD[annual_summary2$METHOD == "HPI"] <- "KDE" 
 
 # all together (i.e, using annual_homerange_summary)
 error_plot <- ggplot(annual_homerange_summary, aes(x=METHOD, y=mean_area, colour=METHOD)) +

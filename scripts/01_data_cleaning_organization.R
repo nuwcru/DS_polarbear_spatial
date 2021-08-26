@@ -7,6 +7,8 @@ library(ggplot2)
 library(argosfilter) # for section 6 (speed limiter)
 library(lubridate)
 library(ggpubr) # section 6 (ggdensity function)
+library(dgof) # section 10
+library(circular) # section 11
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -1279,3 +1281,446 @@ bears_data_years_plot2 <- ggplot(bears_data_years2, aes(x=YEAR, y=ID2)) +
   scale_x_continuous(breaks=c(1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001))
 
 print(bears_data_years_plot2)
+
+
+# 10. Analysis of movement rates ----
+
+# https://www.r-bloggers.com/2017/08/one-way-anova-in-r/
+
+
+# import data and format
+bears <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
+head(bears)
+bears2 <- subset(bears, select=-c(X.1, X))
+bears3 <- bears2[!is.na(bears2$KM_PER_HR), ]
+is.factor(bears3$SEASON)
+bears3$SEASON <- as.factor(bears3$SEASON)
+
+# summarize movement rates
+summary(bears3) # mean = 0.43471 km/hr
+bears_movement <- bears3 %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
+summary(bears_movement) # mean = 0.53003 km/hr
+
+# test for normality
+shapiro.test(bears3$KM_PER_HR) # p<0.001; not normal
+
+plot(ecdf(bears3$KM_PER_HR))
+curve(pnorm(x, mean(bears3$KM_PER_HR), sd(bears3$KM_PER_HR)), col="red", add=TRUE)
+x <- bears3$KM_PER_DAY
+x_test <- ks.test(x, "pnorm") # ignore warning: https://stackoverflow.com/questions/51987605/problems-with-ks-test-and-ties
+x_test # p-value <0.05 = not normal
+
+# log transform data and test for normality
+bears3$LOG_KM_HR <- log10(bears3$KM_PER_HR)
+hist(bears3$LOG_KM_HR) # looks more normal
+shapiro.test(bears3$LOG_KM_HR) # NA
+y <- bears3$LOG_KM_HR
+y_test <- ks.test(y, "pnorm") 
+y_test # p-value <0.05 = not normal
+
+###
+
+# SEASON only - original values
+boxplot(KM_PER_HR~SEASON, data=bears3) # looks like we have outliers in break and winter, but ignore for now
+model1 <- aov(KM_PER_HR~SEASON, data=bears3)
+summary(model1) # F=66.22, p=<0.001; means are not =
+
+TukeyHSD(model1, conf.level = 0.95) # Tukey's HSD test to see which are different
+par(mar=c(6, 8, 4, 4)) # change axis limits so y-labels show up
+plot(TukeyHSD(model1, conf.level = 0.95),las=1, col = "red") # can't see y-labels
+require(gplots)
+plotmeans(KM_PER_HR~SEASON, data=bears3)
+plot(model1) # not normal
+uhat<-resid(model1)
+shapiro.test(uhat) # p-value < test stat = not normal
+
+ggplot(bears3, aes(SEASON,KM_PER_HR))+
+  geom_boxplot(aes(col=SEASON))+labs(title="Seasonal movement rates for DS polar bears") + 
+  ylab("km per hour") + xlab("Season") +
+  theme_nuwcru()
+
+# SEASON only - log10 values
+boxplot(LOG_KM_HR~SEASON, data=bears3) # some outliers in break-up, but not nearly as much as pre-log
+      # model won't run without changing Inf values to NA
+bears3[sapply(bears3, is.infinite)] <- NA # make all infinite values NAs
+model2 <- aov(LOG_KM_HR~SEASON, data=bears3)
+summary(model2) # F=101.5, p=<0.001; means are not =
+
+TukeyHSD(model2, conf.level = 0.95) # Tukey's HSD test to see which are different
+par(mar=c(6, 8, 4, 4))
+plot(TukeyHSD(model2, conf.level = 0.95),las=1, col = "red") # can't see y-labels
+require(gplots)
+plotmeans(KM_PER_HR~SEASON, data=bears3)
+plot(model2) # not normal
+uhat2<-resid(model2)
+shapiro.test(uhat2) # p-value < test stat = not normal
+
+ggplot(bears3, aes(SEASON,LOG_KM_HR))+
+  geom_boxplot(aes(col=SEASON))+labs(title="Seasonal movement rates for DS polar bears") + theme_nuwcru()
+
+# SEASON only - using kruskal-wallis rather than ANOVA: http://www.sthda.com/english/wiki/kruskal-wallis-test-in-r
+kruskal.test(KM_PER_HR~SEASON, data=bears3) # p<0.001; significant differences between seasons
+pairwise.wilcox.test(bears3$KM_PER_HR, bears3$SEASON, p.adjust.method = "BH")
+    # no difference between freeze-break or winter-break (p>0.05), which makes sense given the plot above
+
+
+####
+
+# YEAR only - use kruskal-wallis, since the data is the same
+boxplot(KM_PER_HR~YEAR, data=bears3) # outliers again, but ignore
+kruskal.test(KM_PER_HR~YEAR, data=bears3) # p<0.001;  significant differences between years
+pairwise.wilcox.test(bears3$KM_PER_HR, bears3$YEAR, p.adjust.method = "BH")
+      # differences exist between 1001-1002, 1991-2000, 1991-2001, 1992-2000...
+# it doesn't make sense to do this year to year - so ignore
+
+
+
+####
+
+####
+
+
+
+# looking at 1 year of data per bear only - go back to bears2 (don't need to worry about NA values right now)
+bear_year_total <- bears2 %>% group_by(YEAR, ID) %>% summarize(n())
+colnames(bear_year_total) = c("YEAR", "ID", "COUNT")
+head(bear_year_total)
+ungroup(bears2)
+
+# use the year with the most amount of data per bear and drop the rest
+unique(bears2$ID)
+
+X30140 <- bears2 %>% filter(ID=="X30140")
+unique(X30140$YEAR)
+X30140_total <- X30140 %>% group_by(YEAR) %>% summarize(n()) # use 1998
+X30140_1998 <- X30140 %>% filter(YEAR=="1998")
+
+X30135 <- bears2 %>% filter(ID=="X30135")
+unique(X30135$YEAR)
+X30135_total <- X30135 %>% group_by(YEAR) %>% summarize(n()) # use 1999
+X30135_1999 <- X30135 %>% filter(YEAR=="1999")
+
+X30131 <- bears2 %>% filter(ID=="X30131")
+unique(X30131$YEAR)
+X30131_total <- X30131 %>% group_by(YEAR) %>% summarize(n()) # use 1999
+X30131_1999 <- X30131 %>% filter(YEAR=="1999")
+
+X30129 <- bears2 %>% filter(ID=="X30129")
+unique(X30129$YEAR)
+X30129_total <- X30129 %>% group_by(YEAR) %>% summarize(n()) # use 1999
+X30129_1999 <- X30129 %>% filter(YEAR=="1999")
+
+X30126 <- bears2 %>% filter(ID=="X30126")
+unique(X30126$YEAR)
+X30126_total <- X30126 %>% group_by(YEAR) %>% summarize(n()) # use 1998
+X30126_1998 <- X30126 %>% filter(YEAR=="1998")
+
+X12080 <- bears2 %>% filter(ID=="X12080")
+unique(X12080$YEAR)
+X12080_total <- X12080 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X12080_1994 <- X12080 %>% filter(YEAR=="1994")
+
+X12092 <- bears2 %>% filter(ID=="X12092")
+unique(X12092$YEAR)
+X12092_total <- X12092 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X12092_1994 <- X12092 %>% filter(YEAR=="1994")
+
+X12086 <- bears2 %>% filter(ID=="X12086")
+unique(X12086$YEAR)
+X12086_total <- X12086 %>% group_by(YEAR) %>% summarize(n()) # use 1995
+X12086_1995 <- X12086 %>% filter(YEAR=="1995")
+
+X11975 <- bears2 %>% filter(ID=="X11975")
+unique(X11975$YEAR)
+X11975_total <- X11975 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X11975_1994 <- X11975 %>% filter(YEAR=="1994")
+
+X13746 <- bears2 %>% filter(ID=="X13746")
+unique(X13746$YEAR)
+X13746_total <- X13746 %>% group_by(YEAR) %>% summarize(n()) # use 1995
+X13746_1995 <- X13746 %>% filter(YEAR=="1995")
+
+X11974 <- bears2 %>% filter(ID=="X11974")
+unique(X11974$YEAR)
+X11974_total <- X11974 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X11974_1994 <- X11974 %>% filter(YEAR=="1994")
+
+X13292 <- bears2 %>% filter(ID=="X13292")
+unique(X13292$YEAR)
+X13292_total <- X13292 %>% group_by(YEAR) %>% summarize(n()) # use 1993
+X13292_1993 <- X13292 %>% filter(YEAR=="1993")
+
+X13289 <- bears2 %>% filter(ID=="X13289")
+unique(X13289$YEAR)
+X13289_total <- X13289 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X13289_1994 <- X13289 %>% filter(YEAR=="1994")
+
+X13437 <- bears2 %>% filter(ID=="X13437")
+unique(X13437$YEAR)
+X13437_total <- X13437 %>% group_by(YEAR) %>% summarize(n()) # use 1995
+X13437_1995 <- X13437 %>% filter(YEAR=="1995")
+
+X10374 <- bears2 %>% filter(ID=="X10374")
+unique(X10374$YEAR)
+X10374_total <- X10374 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X10374_1994 <- X10374 %>% filter(YEAR=="1994")
+
+X13428 <- bears2 %>% filter(ID=="X13428")
+unique(X13428$YEAR)
+X13428_total <- X13428 %>% group_by(YEAR) %>% summarize(n()) # use 1994
+X13428_1994 <- X13428 %>% filter(YEAR=="1994")
+
+X10700 <- bears2 %>% filter(ID=="X10700")
+unique(X10700$YEAR)
+X10700_total <- X10700 %>% group_by(YEAR) %>% summarize(n()) # use 1993
+X10700_1993 <- X10700 %>% filter(YEAR=="1993")
+
+X13284 <- bears2 %>% filter(ID=="X13284")
+unique(X13284$YEAR)
+X13284_total <- X13284 %>% group_by(YEAR) %>% summarize(n()) # use 1993
+X13284_1993 <- X13284 %>% filter(YEAR=="1993")
+
+X10703 <- bears2 %>% filter(ID=="X10703")
+unique(X10703$YEAR)
+X10703_total <- X10703 %>% group_by(YEAR) %>% summarize(n()) # use 1993 or 1994 - I just went with 1993
+X10703_1993 <- X10703 %>% filter(YEAR=="1993")
+
+X10709 <- bears2 %>% filter(ID=="X10709")
+unique(X10709$YEAR)
+X10709_total <- X10709 %>% group_by(YEAR) %>% summarize(n()) # use 1993
+X10709_1993 <- X10709 %>% filter(YEAR=="1993")
+
+X12078 <- bears2 %>% filter(ID=="X12078")
+unique(X12078$YEAR) # just one year
+
+X03956 <- bears2 %>% filter(ID=="X03956")
+unique(X03956$YEAR) # just one year
+
+X12082 <- bears2 %>% filter(ID=="X12082")
+unique(X12082$YEAR) # just one year
+ 
+X10393 <- bears2 %>% filter(ID=="X10393")
+unique(X10393$YEAR) # just one year
+
+X12083 <- bears2 %>% filter(ID=="X12083")
+unique(X12083$YEAR) # just one year
+
+X12081 <- bears2 %>% filter(ID=="X12081")
+unique(X12081$YEAR) # just one year
+
+X10707 <- bears2 %>% filter(ID=="X10707")
+unique(X10707$YEAR) 
+X10707_total <- X10707 %>% group_by(YEAR) %>% summarize(n()) # use 1993
+X10707_1993 <- X10707 %>% filter(YEAR=="1993")
+
+X10695 <- bears2 %>% filter(ID=="X10695")
+unique(X10695$YEAR)
+X10695_total <- X10695 %>% group_by(YEAR) %>% summarize(n()) # use 1992
+X10695_1992 <- X10695 %>% filter(YEAR=="1992")
+
+bears4 <- rbind(X30140_1998, X30135_1999, X30131_1999, X30129_1999, X30126_1998, X12080_1994, X12092_1994, X12086_1995,
+  X11975_1994, X13746_1995, X11974_1994, X13292_1993, X13289_1994, X13437_1995, X10374_1994, X13428_1994,
+  X10700_1993, X13284_1993, X10703_1993, X10709_1993, X12078, X03956, X12082, X10393, X12083, X12081,
+  X10707_1993, X10695_1992)
+
+bears5 <- bears4[!is.na(bears4$KM_PER_HR), ]
+is.factor(bears5$SEASON)
+bears5$SEASON <- as.factor(bears5$SEASON)
+
+# summarize movement rates
+summary(bears5) # mean = 0.43837 km/hr
+bears_movement <- bears5 %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
+summary(bears_movement) # mean = 0.52708 km/hr
+
+# test for normality
+shapiro.test(bears5$KM_PER_HR) # p<0.001; not normal
+
+x <- bears5$KM_PER_DAY
+x_test <- ks.test(x, "pnorm") # ignore warning: https://stackoverflow.com/questions/51987605/problems-with-ks-test-and-ties
+x_test # p-value <0.05 = not normal
+
+# log transform data and test for normality
+bears5$LOG_KM_HR <- log10(bears5$KM_PER_HR)
+hist(bears5$LOG_KM_HR) # looks more normal
+shapiro.test(bears5$LOG_KM_HR) # NA
+y <- bears5$LOG_KM_HR
+y_test <- ks.test(y, "pnorm") 
+y_test # p-value <0.05 = not normal
+
+###
+
+# SEASON only - using kruskal-wallis rather than ANOVA: http://www.sthda.com/english/wiki/kruskal-wallis-test-in-r
+kruskal.test(KM_PER_HR~SEASON, data=bears5) # p<0.001; significant differences between seasons
+pairwise.wilcox.test(bears5$KM_PER_HR, bears5$SEASON, p.adjust.method = "BH")
+      # no difference between freeze-break (p>0.05), and very close in winter-break (0.0428)
+
+
+####
+
+
+
+# 11. Analysis of directionality -------
+
+# https://bigdata.duke.edu/sites/bigdata.duke.edu/files/site-images/FullLesson.html
+
+# import data and format
+bears <- read.csv("data/Oct2020work/FINAL DATASET/bears_final_Nov2020.csv")
+head(bears)
+bears2 <- subset(bears, select=-c(X.1, X))
+head(bears2)
+str(bears2)
+bears3 <- bears2[!is.na(bears2$ANGLE), ] # remove NA values (below wasn't working with them in)
+
+# test angles for normality
+
+# test for normality
+shapiro.test(bears3$ANGLE) # p<0.001; not normal
+hist(bears3$ANGLE)
+x <- bears3$ANGLE
+x_test <- ks.test(x, "pnorm") # ignore warning: https://stackoverflow.com/questions/51987605/problems-with-ks-test-and-ties
+x_test # p-value <0.05 = not normal
+
+# log transform data and test for normality
+bears3$log_ANGLE <- log10(bears3$ANGLE)
+hist(bears3$log_ANGLE) # still not normal
+shapiro.test(bears3$log_ANGLE) # NA
+y <- bears3$log_ANGLE
+y_test <- ks.test(y, "pnorm") 
+y_test # p-value <0.05 = not normal
+
+
+###
+
+
+# convert to circular data using circular package and find/plot the mean
+circular <- circular(bears3$ANGLE, units="degrees", template="geographics")
+plot.circular(circular, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean <- mean(circular)
+mean # 167.7797
+arrows.circular(mean)
+
+# look at seasons separately
+breakup <- bears3 %>% filter(SEASON=="break")
+freezeup <- bears3 %>% filter(SEASON=="freeze")
+winter <- bears3 %>% filter(SEASON=="winter")
+icefree <- bears3 %>% filter(SEASON=="summer")
+
+circular_break <- circular(breakup$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_break, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_break <- mean(circular_break)
+mean_break # 174.1232
+arrows.circular(mean_break)
+
+circular_freeze <- circular(freezeup$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_freeze, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_freeze <- mean(circular_freeze)
+mean_freeze # -17.00145
+arrows.circular(mean_freeze)
+
+circular_winter <- circular(winter$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_winter, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_winter <- mean(circular_winter)
+mean_winter # -179.0483
+arrows.circular(mean_winter)
+
+circular_icefree <- circular(icefree$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_icefree, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_icefree <- mean(circular_icefree)
+mean_icefree # 125.1601
+arrows.circular(mean_icefree)
+
+###
+
+# Rayleigh test: teslls us if each season has significant evidence of non-uniform orientation (does not compare seasons)
+    # essentially, do animals significantly orient in a specific direction in each season?
+    # significant if p < 0.05, so all our seasons have significance
+rayleigh.test(circular_break) # p < 0.001 - yes
+rayleigh.test(circular_freeze) # p = 0.00 - yes
+rayleigh.test(circular_winter) # p = 0.0155 - yes 
+rayleigh.test(circular_icefree) # p = 0.0168 - yes
+
+
+# Watson test: compare significance between seasons
+      # 2 at a time, so break-freeze, break-winter, break-icefree, freeze-winter, freeze-icefree, winter-icefree
+      # significance < 0.05, so break-freeze, winter-freeze, and freeze-icefree are different
+          # but not break-winter, break-icefree, or winter-icefree
+watson.two.test(circular_break, circular_freeze) # p < 0.001 - yes
+watson.two.test(circular_break, circular_winter) # p > 0.10 - no
+watson.two.test(circular_break, circular_icefree) # p > 0.10 - no
+watson.two.test(circular_winter, circular_freeze) # p < 0.001 - yes
+watson.two.test(circular_icefree, circular_freeze) # p < 0.001 - yes
+watson.two.test(circular_winter, circular_icefree) # p > 0.10 - no
+
+###
+
+###
+
+# do all above with a max of 1 year per bear - see section 10 for how to get bears5
+bears6 <- bears5[!is.na(bears5$ANGLE), ] # remove NA values (below wasn't working with them in)
+
+# convert to circular data using circular package and find/plot the mean
+circular <- circular(bears6$ANGLE, units="degrees", template="geographics")
+plot.circular(circular, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean <- mean(circular)
+mean # 167.7797
+arrows.circular(mean)
+
+# look at seasons separately
+breakup <- bears6 %>% filter(SEASON=="break")
+freezeup <- bears6 %>% filter(SEASON=="freeze")
+winter <- bears6 %>% filter(SEASON=="winter")
+icefree <- bears6 %>% filter(SEASON=="summer")
+
+circular_break <- circular(breakup$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_break, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_break <- mean(circular_break)
+mean_break # -178.475
+arrows.circular(mean_break)
+
+circular_freeze <- circular(freezeup$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_freeze, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_freeze <- mean(circular_freeze)
+mean_freeze # 3.187082
+arrows.circular(mean_freeze)
+
+circular_winter <- circular(winter$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_winter, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_winter <- mean(circular_winter)
+mean_winter # -137.6089
+arrows.circular(mean_winter)
+
+circular_icefree <- circular(icefree$ANGLE, units="degrees", template="geographics")
+plot.circular(circular_icefree, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
+mean_icefree <- mean(circular_icefree)
+mean_icefree # 125.1601
+arrows.circular(mean_icefree)
+
+###
+
+# Rayleigh test: teslls us if each season has significant evidence of non-uniform orientation (does not compare seasons)
+      # essentially, do animals significantly orient in a specific direction in each season?
+      # significant if p < 0.05, so all our seasons have significance
+rayleigh.test(circular_break) # p = 0.0098 - yes
+rayleigh.test(circular_freeze) # p = 0.0243 - yes
+rayleigh.test(circular_winter) # p = 0.3839 - no 
+rayleigh.test(circular_icefree) # p = 0.0976 - no
+
+
+# Watson test: compare significance between seasons
+# 2 at a time, so break-freeze, break-winter, break-icefree, freeze-winter, freeze-icefree, winter-icefree
+# significance < 0.05, so break-freeze, winter-freeze, and freeze-icefree are different
+# but not break-winter, break-icefree, or winter-icefree
+watson.two.test(circular_break, circular_freeze) # p < 0.001 - yes
+watson.two.test(circular_break, circular_winter) # p > 0.10 - no
+watson.two.test(circular_break, circular_icefree) # p > 0.10 - no
+watson.two.test(circular_winter, circular_freeze) # p < 0.01 - yes
+watson.two.test(circular_icefree, circular_freeze) # p < 0.05 - yes
+watson.two.test(circular_winter, circular_icefree) # p < 0.10 - yes
+
+
+
+
+
+
+
+# 12. Analysis of N-S space use -----

@@ -11,7 +11,7 @@ library(mapdata)
 library(lubridate)
 library(amt) # step length, turning angles, and speed
 library(argosfilter) # step length, turning angles, and speed - specifically for Argos data
-library(plyr) # for mean of step angles
+#library(plyr) # for mean of step angles
 
 theme_nuwcru <- function(){
   theme_bw() +
@@ -514,6 +514,7 @@ ggplot(data=bears_step_angles, aes(PER_HR)) +
 ggplot(data=bears_step_angles, aes(M_PER_HR)) +
   geom_histogram(colour="darkgrey") +
   xlab("Movement rates (m/h)")
+
 
 
 

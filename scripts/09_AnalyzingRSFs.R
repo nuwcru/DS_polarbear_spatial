@@ -1,4 +1,8 @@
 
+
+# token: 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
+
+
 # 1. Load libraries ------
 
 library(rgdal)
@@ -623,13 +627,8 @@ ggplot(used_avail_RSF_breakup_FINAL) + geom_density(aes(x=DIST_LAND, fill=USED_A
 summary(used_avail_RSF_breakup_FINAL)
 
 
-# Help from Erin -------
 
-
-
-
-
-# Plot from Samantha Morin (Morin, et al. 2020) ----
+# 11. Plot from Samantha Morin (Morin, et al. 2020) ----
 
 # try with one season first
 # import data then run top model
@@ -720,7 +719,7 @@ ggplot(catpreds, aes(y = Prob, x = value,
 
 
 
-# Help from Kylee ----
+# 12. Help from Kylee ----
 
 
 # try with one season first

@@ -588,9 +588,6 @@ ggplot(used_avail_RSF_freezeup_FINAL) + geom_density(aes(x=CONC, fill=USE), alph
   theme_nuwcru()
 
 
-
-
-
 # winter top model included: CONC and DIST_LAND
 
 ggplot(used_avail_RSF_winter_FINAL) + geom_density(aes(x=DIST_WATER, fill=USE), alpha=0.2) +

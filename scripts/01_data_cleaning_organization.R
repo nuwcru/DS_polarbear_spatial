@@ -1336,7 +1336,7 @@ shapiro.test(uhat) # p-value < test stat = not normal
 
 ggplot(bears3, aes(SEASON,KM_PER_HR))+
   geom_boxplot(aes(col=SEASON))+labs(title="Seasonal movement rates for DS polar bears") + 
-  ylab("km per hour") + xlab("Season") +
+  ylab("km per hour") + xlab("season") +
   theme_nuwcru()
 
 # SEASON only - log10 values

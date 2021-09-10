@@ -624,64 +624,9 @@ ggplot(used_avail_RSF_breakup_FINAL) + geom_density(aes(x=DIST_LAND, fill=USED_A
   theme_nuwcru()
 
 summary(used_avail_RSF_breakup_FINAL)
-# Plots: Fletcher & Fortin (2018); section 8.3.5 -------
-
-head(used_avail_RSF_freezeup_FINAL)
 
 
-used_avail_RSF_freezeup_FINAL %>% group_by(USE, BATH) %>% 
-  summarize(n=n()) %>% 
-  mutate(prop=n/sum(n), label=paste0(round(prop*100, 1), "%")) %>% 
-  ggplot(aes(BATH, prop, fill=USE, group=USE, label=label)) +
-  geom_col(position=position_dodge2())
-
-
-
-h <- hist(vec, breaks = 100, plot=FALSE)
-h$counts=h$counts/sum(h$counts)
-plot(h)
-
-
-# https://stackoverflow.com/questions/17416453/force-r-to-plot-histogram-as-probability-relative-frequency
-freeze_bath_plot <- hist(freeze_used$BATH, breaks=100, plot=FALSE)
-freeze_bath_plot$counts = freeze_bath_plot$counts/sum(freeze_bath_plot$counts)
-plot(freeze_bath_plot)
-
-freeze_bath_plot$counts/length(freeze_used)
-
-# https://stackoverflow.com/questions/5033240/plot-probability-with-ggplot2-not-density
-
-ggplot(used_avail_RSF_freezeup_FINAL, aes(x=BATH)) + stat_density(kernel="biweight")
-ggplot(freeze_used, aes(x=BATH)) + stat_density(kernel="biweight")
-
-ggplot(used_avail_RSF_freezeup_FINAL, aes(x=BATH, fill=USE)) + stat_density(kernel="biweight")
-
-
-
-
-# Top models ------
-
-
-# Freeze-up: BATH + CONC (Model 5)
-model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL,
-                             map=list(theta=factor(c(NA, 2))), start=list(theta=c(log(1000), 0)),
-                             doFit=F, weights=W)
-model5_tmp_freeze$parameters$theta[1] = log(1e3)
-model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
-model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
-summary(model5_freeze)
-
-library(ggeffects)
-ggredict(model5_freeze, c("BATH_SCALED" [all]))
-
-
-ggpredict(model5_freeze, se=TRUE)
-
-
-
-predict_freeze <- ggpredict(model5_freeze, "BATH_SCALED")
-
-
+# Help from Erin -------
 
 
 

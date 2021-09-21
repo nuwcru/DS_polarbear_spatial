@@ -58,6 +58,7 @@ proj4string(raster_list$`19781026`) # check that it's in polar stereographic
 plot(raster_list$`19781026`)
 
 
+
 ###
 
 # import ocean mask

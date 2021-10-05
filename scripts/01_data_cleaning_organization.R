@@ -1335,7 +1335,8 @@ uhat<-resid(model1)
 shapiro.test(uhat) # p-value < test stat = not normal
 
 ggplot(bears3, aes(SEASON,KM_PER_HR))+
-  geom_boxplot(aes(col=SEASON))+labs(title="Seasonal movement rates for DS polar bears") + 
+  geom_boxplot(aes(col=SEASON)) +
+  labs(title="Seasonal movement rates for DS polar bears") + 
   ylab("km per hour") + xlab("season") +
   theme_nuwcru()
 
@@ -1554,6 +1555,12 @@ kruskal.test(KM_PER_HR~SEASON, data=bears5) # p<0.001; significant differences b
 pairwise.wilcox.test(bears5$KM_PER_HR, bears5$SEASON, p.adjust.method = "BH")
       # no difference between freeze-break (p>0.05), and very close in winter-break (0.0428)
 
+ggplot(bears5, aes(SEASON,KM_PER_HR))+
+  geom_boxplot(aes(col=SEASON)) +
+  labs(title="Seasonal movement rates for DS polar bears") + 
+  ylab("km per hour") + xlab("season") +
+  theme_nuwcru()
+plotmeans(KM_PER_HR~SEASON, data=bears5)
 
 ####
 

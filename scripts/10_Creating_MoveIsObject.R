@@ -168,9 +168,6 @@ animate_frames(frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1.
 
 
 # Organize DS and WHB data first
-
-
-
 bear_year_total <- bears %>% group_by(YEAR) %>% summarize(n()) 
 ungroup(bears)
 
@@ -182,8 +179,6 @@ ungroup(HB_unique)
 
 
 # use 1993 as there's lots for both in this year (373 for bears and 353 for HB_unique)
-
-
 DS_1993 <- bears %>% filter(YEAR=="1993")
 head(DS_1993)
 DS_1993 = subset(DS_1993, select=-c(X.2, ROWID, ZONE, EASTING, NORTHING, X.1, X, ICE_LAND, SEASON, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S, TIMESTAMP))
@@ -198,42 +193,60 @@ HB_1993$SUBPOP <- rep("HB")
 
 # running the movement graphic for all of them wouldn't work (I let it run for ~2 hours)
 # try using even less - choose 2 individuals from each
-
 DS_bear_total <- DS_1993 %>% group_by(ID) %>% summarize(n()) 
 HB_bear_total <- HB_1993 %>% group_by(ID) %>% summarize(n()) 
 
       # for HB, the 2 with the most fixs are 01003B (36) and 01004B (34)
       # 2 in DS with similar amounts of points = X10707	(39) and X10703 (38)
-
 DS_1993_subset <- DS_1993 %>% filter(ID=="X10707" | ID=="X10703")
 HB_1993_subset <- HB_1993 %>% filter(ID=="01003B" | ID=="01004B")
+str(DS_1993_subset)
+head(DS_1993_subset)
+
+str(HB_1993_subset)
+HB_1993_subset$MONTH <- month.name[HB_1993_subset$MONTH]  
+head(HB_1993_subset)
 
 # combine into one df
-allbears_1993 <- merge(DS_1993_subset, HB_1993_subset, by=c('ID', 'YEAR', 'DATE', 'LAT', 'LONG', 'SUBPOP'), all=TRUE)
+allbears_1993 <- merge(DS_1993_subset, HB_1993_subset, by=c('ID', 'YEAR', 'DATE', 'LAT', 'LONG', 'SUBPOP', 'MONTH', 'TIME'), all=TRUE)
 head(allbears_1993)
 str(allbears_1993)
+unique(allbears_1993$ID)
+unique(allbears_1993$MONTH)
+
+allbears_1993_months <- allbears_1993 %>% group_by(MONTH) %>% summarize(n()) 
+# use March, April, May, June, July
+allbears_1993_subset <- allbears_1993 %>% filter(MONTH=="March" | MONTH=="April" | MONTH=="May" | MONTH=="June"| MONTH=="July")
+head(allbears_1993_subset)
+unique(allbears_1993_subset$ID)
+# change IDs so they look better: 01003B, 01004B, X10703, X10707
+
+allbears_1993_subset$ID[allbears_1993_subset$ID == "01003B"] <- "Bear 1"
+allbears_1993_subset$ID[allbears_1993_subset$ID == "01004B"] <- "Bear 2"
+allbears_1993_subset$ID[allbears_1993_subset$ID == "X10703"] <- "Bear 3"
+allbears_1993_subset$ID[allbears_1993_subset$ID == "X10707"] <- "Bear 4"
 
 ###
 
 # convert to move object
-HB_1993_subset_move <- df2move(HB_1993_subset, proj="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0", x="LONG", y="LAT", time="DATE", track_id="ID")
+allbears_1993_move <- df2move(allbears_1993, proj="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0", x="LONG", y="LAT", time="DATE", track_id="ID")
 
 # align dates
-HB_1993_subset_move_align <- align_move(HB_1993_subset_move, res=4, unit="mins")
+allbears_1993_move_align <- align_move(allbears_1993_move, res=4, unit="mins")
 
 # create spatial frames
-HB_1993_subset_frames <- frames_spatial(HB_1993_subset_move_align, map_service="osm", map_type="watercolor", alpha=0.5) %>%
+allbears_1993_frames <- frames_spatial(allbears_1993_move_align, map_service="osm", map_type="watercolor", alpha=0.5) %>%
   add_labels(x="Longitude", y="Latitude") %>% 
   add_northarrow() %>% 
-  add_scalebar() %>% 
-  add_timestamps(HB_1993_subset_move_align, type="label") %>% 
+  #add_scalebar() %>% 
+  add_timestamps(allbears_1993_move_align, type="label") %>% 
   add_progress()
 
 # view one frame
-HB_1993_subset_frames[[25]]
+allbears_1993_frames[[25]]
 
 # animate frames
-animate_frames(HB_1993_subset_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/HB_1993_subset.mp4")
+animate_frames(allbears_1993_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/allbears_1993_frames.mp4")
 
 
 

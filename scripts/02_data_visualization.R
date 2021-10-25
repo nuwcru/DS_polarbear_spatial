@@ -434,6 +434,7 @@ bears_step_angles <- rbind(X30140, X30135, X30131, X30129, X30126, X12080, X1209
 
 summary(bears_step_angles)
 
+
       # plot step length
 ggplot(data=bears_step_angles, aes(DIST_KM, ID)) +
   geom_point(colour="darkgrey") +

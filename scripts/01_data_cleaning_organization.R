@@ -1741,7 +1741,7 @@ watson.two.test(circular_winter, circular_icefree) # p < 0.10 - yes
 
 
 # 12. Analysis of N-S space use -----
-# 13. Analysis of latitudinal displacement using centroids (LAT/LONG) ------
+# 13. Calculate centroids (LAT/LONG) ------
 
 ###
 # steps
@@ -1855,6 +1855,8 @@ bears_centroids <- rbind(winter_centroids_df, breakup_centroids_df, freezeup_cen
 write.csv(bears_centroids, "data/bears_centroids_Oct2021.csv")
 
 
+# 14. Analysis of latitudinal displacement using centroids (LAT/LONG) ---------
+
 # play around with visualizing the centroids - nevermind this looks like crap
 bears_centroids <- read.csv("data/bears_centroids_Oct2021.csv")
 
@@ -1952,158 +1954,32 @@ X30135$DIST_KM[2:nrow(X30135)] <- distanceTrack(X30135$LAT, X30135$LONG)
 X30140$DIST_KM[2:nrow(X30140)] <- distanceTrack(X30140$LAT, X30140$LONG) 
 
 
-
-#    
-
+head(X12092)
 
 
-
-
-
-
-# 14. Analysis of latitudinal displacement using centroids (UTM) ------
-
-###
-# steps
-# [x] create mcps for all bears per season
-# [x] generate centroids for each seasonal mcp
-# [] compare centroids per individual between seasons
-
-###
-
-# only do 1 year per bear max: bears5 was created in section 10
-bears5 <- read.csv("data/bears_movementanalysis_1yrmax_Oct2021.csv")
-head(bears5)
-unique(bears5$SEASON)
-
-# create MCPs of each individual bear per season
-# separate seasons first and remove bears with <5 points (mcp() won't work on them)
-winter <- bears5 %>% filter(SEASON=="winter")
-winter_totals <- winter %>% group_by(ID) %>% summarize(count=n()) # drop X12078, X12083
-winter_remove <- winter %>% filter(ID=="X12078" | ID=="X12083")
-winter2 <- anti_join(winter, winter_remove)
-
-breakup <- bears5 %>% filter(SEASON=="break")
-breakup_totals <- breakup %>% group_by(ID) %>% summarize(count=n()) # drop X12078, X12082, X30140, X13437, X30135
-breakup_remove <- breakup %>% filter(ID=="X12078" | ID=="X12082" | ID=="X30140" | ID=="X13437" | ID=="X30135")
-breakup2 <- anti_join(breakup, breakup_remove)
-
-freezeup <- bears5 %>% filter(SEASON=="freeze")
-freezeup_totals <- freezeup %>% group_by(ID) %>% summarize(count=n()) # drop X11974, X10707, X12086
-freezeup_remove <- freezeup %>% filter(ID=="X11974" | ID=="X10707" | ID=="X12086")
-freezeup2 <- anti_join(freezeup, freezeup_remove)
-
-summer <- bears5 %>% filter(SEASON=="summer")
-summer_totals <- summer %>% group_by(ID) %>% summarize(count=n()) # drop X30135, X30140, X13284
-summer_remove <- summer %>% filter(ID=="X30135" | ID=="X30140" | ID=="X13284")
-summer2 <- anti_join(summer, summer_remove)
-
-# make spatial and format projections
-winter.sp <- winter2[, c("ID", "LAT", "LONG")] 
-coordinates(winter.sp) <- c("LONG", "LAT")
-proj4string(winter.sp) <- CRS("+proj=stere +lat_0=90 +lat_ts=75")
-
-breakup.sp <- breakup2[, c("ID", "LAT", "LONG")] 
-coordinates(breakup.sp) <- c("LONG", "LAT")
-proj4string(breakup.sp) <- CRS("+proj=stere +lat_0=90 +lat_ts=75")
-
-freezeup.sp <- freezeup2[, c("ID", "LAT", "LONG")] 
-coordinates(freezeup.sp) <- c("LONG", "LAT")
-proj4string(freezeup.sp) <- CRS("+proj=stere +lat_0=90 +lat_ts=75")
-
-summer.sp <- summer2[, c("ID", "LAT", "LONG")] 
-coordinates(summer.sp) <- c("LONG", "LAT")
-proj4string(summer.sp) <- CRS("+proj=stere +lat_0=90 +lat_ts=75")
-
-
-#for(i in 1:length(bear_annualMCP_list)){
- # coordinates(bear_annualMCP_list[[i]]) <- c("EASTING", "NORTHING")
-  #proj4string(bear_annualMCP_list[[i]]) <- CRS("+proj=stere +lat_0=90 +lat_ts=75") 
-  #temp <- bear_annualMCP_list[[i]]         
-  #temp[["ID"]] <- as.factor(temp[["ID"]]) 
-  #bear_annualMCP_list[[i]] <- temp        
-#}
-
-
-
-# test
-plot(summer.sp)
-
-# create MCPs
-winter.mcp <- mcp(winter.sp, percent = 100) # error because some have <5 points
-breakup.mcp <- mcp(breakup.sp, percent = 100) # error because some have <5 points
-freezeup.mcp <- mcp(freezeup.sp, percent = 100) # error because some have <5 points
-summer.mcp <- mcp(summer.sp, percent = 100) # error because some have <5 points
-
-# test
-plot(winter.mcp)
-
-
-###
-
-# get centroids, test plot, and make into dataframe
-winter_centroids <- gCentroid(winter.mcp, byid=TRUE)
-plot(winter.mcp)
-plot(winter_centroids, add=TRUE)
-winter_centroids_df <- as.data.frame(winter_centroids)
-winter_centroids_df$ID <- row.names(winter_centroids_df)
-colnames(winter_centroids_df)[1] <- "LONG"
-colnames(winter_centroids_df)[2] <- "LAT"
-
-breakup_centroids <- gCentroid(breakup.mcp, byid=TRUE)
-plot(breakup.mcp)
-plot(breakup_centroids, add=TRUE)
-breakup_centroids_df <- as.data.frame(breakup_centroids)
-breakup_centroids_df$ID <- row.names(breakup_centroids_df)
-colnames(breakup_centroids_df)[1] <- "LONG"
-colnames(breakup_centroids_df)[2] <- "LAT"
-
-freezeup_centroids <- gCentroid(freezeup.mcp, byid=TRUE)
-plot(freezeup.mcp)
-plot(freezeup_centroids, add=TRUE)
-freezeup_centroids_df <- as.data.frame(freezeup_centroids)
-freezeup_centroids_df$ID <- row.names(freezeup_centroids_df)
-colnames(freezeup_centroids_df)[1] <- "LONG"
-colnames(freezeup_centroids_df)[2] <- "LAT"
-
-summer_centroids <- gCentroid(summer.mcp, byid=TRUE)
-plot(summer.mcp)
-plot(summer_centroids, add=TRUE)
-summer_centroids_df <- as.data.frame(summer_centroids)
-summer_centroids_df$ID <- row.names(summer_centroids_df)
-colnames(summer_centroids_df)[1] <- "LONG"
-colnames(summer_centroids_df)[2] <- "LAT"
-
-# create season column then combine into one dataframe
-winter_centroids_df$SEASON <- "winter"
-breakup_centroids_df$SEASON <- "break"
-freezeup_centroids_df$SEASON <- "freeze"
-summer_centroids_df$SEASON <- "summer"
-
-bears_centroids <- rbind(winter_centroids_df, breakup_centroids_df, freezeup_centroids_df, summer_centroids_df)
-
-# export
-write.csv(bears_centroids, "data/bears_centroids_Oct2021.csv")
+# calculate angles
+X10695$ANGLE[2:nrow(X10695)] <- bearingTrack(X10695$LAT, X10695$LONG) 
+X10700$ANGLE[2:nrow(X10700)] <- bearingTrack(X10700$LAT, X10700$LONG) 
+X10703$ANGLE[2:nrow(X10703)] <- bearingTrack(X10703$LAT, X10703$LONG) 
+X10707$ANGLE[2:nrow(X10707)] <- bearingTrack(X10707$LAT, X10707$LONG) 
+X10709$ANGLE[2:nrow(X10709)] <- bearingTrack(X10709$LAT, X10709$LONG)
+X11975$ANGLE[2:nrow(X11975)] <- bearingTrack(X11975$LAT, X11975$LONG) 
+X12080$ANGLE[2:nrow(X12080)] <- bearingTrack(X12080$LAT, X12080$LONG) 
+X12082$ANGLE[2:nrow(X12082)] <- bearingTrack(X12082$LAT, X12082$LONG) 
+X12086$ANGLE[2:nrow(X12086)] <- bearingTrack(X12086$LAT, X12086$LONG)
+X12092$ANGLE[2:nrow(X12092)] <- bearingTrack(X12092$LAT, X12092$LONG) 
+X13284$ANGLE[2:nrow(X13284)] <- bearingTrack(X13284$LAT, X13284$LONG) 
+X13289$ANGLE[2:nrow(X13289)] <- bearingTrack(X13289$LAT, X13289$LONG) 
+X13292$ANGLE[2:nrow(X13292)] <- bearingTrack(X13292$LAT, X13292$LONG) 
+X13428$ANGLE[2:nrow(X13428)] <- bearingTrack(X13428$LAT, X13428$LONG) 
+X13746$ANGLE[2:nrow(X13746)] <- bearingTrack(X13746$LAT, X13746$LONG)
+X30126$ANGLE[2:nrow(X30126)] <- bearingTrack(X30126$LAT, X30126$LONG) 
+X30129$ANGLE[2:nrow(X30129)] <- bearingTrack(X30129$LAT, X30129$LONG) 
+X30131$ANGLE[2:nrow(X30131)] <- bearingTrack(X30131$LAT, X30131$LONG) 
+X30135$ANGLE[2:nrow(X30135)] <- bearingTrack(X30135$LAT, X30135$LONG) 
+X30140$ANGLE[2:nrow(X30140)] <- bearingTrack(X30140$LAT, X30140$LONG) 
 
 
 
 
-
-
-
-# play around with visualizing the centroids - nevermind this looks like crap
-
-bears_centroids <- read.csv("data/bears_centroids_Oct2021.csv")
-
-ggplot(data=bears_centroids) +
-  geom_point(aes(LONG, LAT, color=ID, shape=SEASON)) +
-  theme_nuwcru()
-
-
-
-
-
-
-
-  
 

@@ -50,7 +50,6 @@ bears$TIMESTAMP <- as.POSIXct(bears$TIMESTAMP, format="%Y-%m-%d %H:%M")
 # http://movevis.org/index.html
 
 
-
 ###
 
 # WHB data
@@ -68,11 +67,7 @@ head(HB_bears)
 str(HB_bears)
 HB_bears$TIMESTAMP <- as.POSIXct(HB_bears$TIMESTAMP, format="%Y-%m-%d %H:%M:%S")
 
-
 HB_unique <- unique(setDT(HB_bears), by=c("ID", "DATE")) # remove all duplicates
-
-
-
 
 
 # 3. TEST Create moveVis gifs (one bear) -------
@@ -166,6 +161,11 @@ animate_frames(frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1.
 
 # MoveVis with both DS and WH -----
 
+###
+
+# RUN SECTION 2 FIRST
+
+###
 
 # Organize DS and WHB data first
 bear_year_total <- bears %>% group_by(YEAR) %>% summarize(n()) 
@@ -198,8 +198,9 @@ HB_bear_total <- HB_1993 %>% group_by(ID) %>% summarize(n())
 
       # for HB, the 2 with the most fixs are 01003B (36) and 01004B (34)
       # 2 in DS with similar amounts of points = X10707	(39) and X10703 (38)
-DS_1993_subset <- DS_1993 %>% filter(ID=="X10707" | ID=="X10703")
-HB_1993_subset <- HB_1993 %>% filter(ID=="01003B" | ID=="01004B")
+            # tried with just one bear as well
+DS_1993_subset <- DS_1993 %>% filter(ID=="X10703")
+HB_1993_subset <- HB_1993 %>% filter(ID=="01003B")
 str(DS_1993_subset)
 head(DS_1993_subset)
 
@@ -215,16 +216,14 @@ unique(allbears_1993$ID)
 unique(allbears_1993$MONTH)
 
 allbears_1993_months <- allbears_1993 %>% group_by(MONTH) %>% summarize(n()) 
-# use March, April, May, June, July
-allbears_1993_subset <- allbears_1993 %>% filter(MONTH=="March" | MONTH=="April" | MONTH=="May" | MONTH=="June"| MONTH=="July")
+# use March, April, May, June
+allbears_1993_subset <- allbears_1993 %>% filter(MONTH=="March" | MONTH=="April" | MONTH=="May")
 head(allbears_1993_subset)
 unique(allbears_1993_subset$ID)
 # change IDs so they look better: 01003B, 01004B, X10703, X10707
 
-allbears_1993_subset$ID[allbears_1993_subset$ID == "01003B"] <- "Bear 1"
-allbears_1993_subset$ID[allbears_1993_subset$ID == "01004B"] <- "Bear 2"
-allbears_1993_subset$ID[allbears_1993_subset$ID == "X10703"] <- "Bear 3"
-allbears_1993_subset$ID[allbears_1993_subset$ID == "X10707"] <- "Bear 4"
+allbears_1993_subset$ID[allbears_1993_subset$ID == "01004B"] <- "Hudson Bay Polar Bear"
+allbears_1993_subset$ID[allbears_1993_subset$ID == "X10703"] <- "Davis Strait Polar Bear"
 
 ###
 
@@ -246,7 +245,7 @@ allbears_1993_frames <- frames_spatial(allbears_1993_move_align, map_service="os
 allbears_1993_frames[[25]]
 
 # animate frames
-animate_frames(allbears_1993_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/allbears_1993_frames.mp4")
+animate_frames(allbears_1993_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/bears_1993_frames.mp4")
 
 
 

@@ -110,6 +110,24 @@ AICc(model5_freeze, return.K = FALSE)
 # get AICc with MuMln
 AICc(model5_freeze) # same as above
 
+###
+
+# https://terpconnect.umd.edu/~egurarie/research/NWT/Step09_RSF_PartIV.html
+      # use this link to try making a map!!!
+
+model5_freeze
+freeze.prediction <- predict(model5_freeze, allow.new.levels=TRUE)
+plot(used_avail_RSF_freezeup_FINAL$BATH, freeze.prediction, type = "l", ylab = "linear predictor") # these plots don't work
+plot(used_avail_RSF_freezeup_FINAL$BATH, exp(freeze.prediction)/max(exp(freeze.prediction)), type = "l", ylab = "RSF")
+plot(used_avail_RSF_freezeup_FINAL$BATH)
+
+# https://terpconnect.umd.edu/~egurarie/teaching/SpatialModelling_AKTWS2018/6_RSF_SSF.html
+
+require(sjPlot)
+plot_model(model5_freeze) # this looks right but I don't know what it means
+
+###
+
 
 # 5. - SKIP - Analyze top seasonal RSF model (winter) results--------
 

@@ -1,4 +1,7 @@
 
+# latest token (Nov 1): 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
+
+
 # 1. Load libraries -------
 
 library(rgdal)
@@ -128,13 +131,11 @@ plot(used_avail_RSF_freezeup_FINAL$CONC_SCALED, exp(bear_freeze_predict)/max(exp
 # Peter Here
 # Let's do concentration first
 median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
-predicted_lm_values = bears_model5_freeze$
-
-  
-bear_freeze_predict4 <- predict(bears_model5_freeze_4, bearfreeze_newdata, type="response")  
-plot(used_avail_RSF_freezeup_FINAL$BATH_SCALED, bear_freeze_predict4)
-
-
+coefs_freezeup_model4 = coef(bears_model5_freeze_4)
+coefs_freezeup_model4 = coefs_freezeup_model4$cond$ID
+rest_of_prediction = median_BATH * coefs_freezeup_model4$BATH_SCALED[1] + coefs_freezeup_model4$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model4$CONC_SCALED[1] + rest_of_prediction))), 
+      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration", ylab = "Relative probability of selection")
 
 
 ###

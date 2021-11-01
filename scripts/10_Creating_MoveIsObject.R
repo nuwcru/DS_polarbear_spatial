@@ -252,43 +252,111 @@ animate_frames(allbears_1993_frames, out_file="/Volumes/Larissa G-drive/UAlberta
 
 # Graphic for Earth Rangers ------
 
-# look at just freeze-up to winter season to show how they move off land
-      # find a year with lots of points
-bear_year_total <- bears %>% group_by(YEAR) %>% summarize(n()) 
-ungroup(bears)
-      # most are in 1994, so let's use that year
-bears_1994 <- bears %>% filter(YEAR==1994)
-bear_month_total <- bears_1994 %>% group_by(MONTH) %>% summarize(n()) 
-ungroup(bears_1994)
-      # good, there are lots during that time of year!
-head(bears_1994)
-bears_1994_subset <- bears_1994 %>% filter(MONTH=="September" | MONTH=="October" | MONTH=="November" | MONTH=="December" | MONTH=="January" | MONTH=="February" | MONTH=="March" | MONTH=="April")
-
 
 ###
 
+# RUN SECTION 2 FIRST
+
+###
+
+# Organize DS and WHB data first
+bear_year_total <- bears %>% group_by(YEAR) %>% summarize(n()) 
+ungroup(bears)
+
+HBbear_year_total <- HB_bears %>% group_by(YEAR) %>% summarize(n()) 
+ungroup(HB_bears)
+
+HBbear_unique_year_total <- HB_unique %>% group_by(YEAR) %>% summarize(n()) 
+ungroup(HB_unique)
+
+
+# use 1993 as there's lots for both in this year (373 for bears and 353 for HB_unique)
+DS_1993 <- bears %>% filter(YEAR=="1993")
+head(DS_1993)
+DS_1993 = subset(DS_1993, select=-c(X.2, ROWID, ZONE, EASTING, NORTHING, X.1, X, ICE_LAND, SEASON, ANGLE, DIST_KM, DIFF_DATE, KM_PER_DAY, KM_PER_HR, M_PER_HR, M_PER_S, TIMESTAMP))
+
+HB_1993 <- HB_unique %>% filter(YEAR=="1993")
+head(HB_1993)
+HB_1993 = subset(HB_1993, select=-c(YEAR2, MONTH2, TIMESTAMP))
+
+# running the movement graphic for all of them wouldn't work (I let it run for ~2 hours)
+# try using even less - choose 2 individuals from each
+DS_bear_total <- DS_1993 %>% group_by(ID) %>% summarize(n()) 
+HB_bear_total <- HB_1993 %>% group_by(ID) %>% summarize(n()) 
+
+# for HB, the 2 with the most fixs are 01003B (36) and 01004B (34)
+# 2 in DS with similar amounts of points = X10707	(39) and X10703 (38)
+DS_1993_subset <- DS_1993 %>% filter(ID=="X10703" | ID=="X10707")
+HB_1993_subset <- HB_1993 %>% filter(ID=="01003B" | ID=="01004B")
+str(DS_1993_subset)
+head(DS_1993_subset)
+
+str(HB_1993_subset)
+HB_1993_subset$MONTH <- month.name[HB_1993_subset$MONTH]  
+head(HB_1993_subset)
+
+# use March, April, May, June
+DS_1993_subset <- DS_1993_subset %>% filter(MONTH=="March" | MONTH=="April" | MONTH=="May" | MONTH=="June")
+HB_1993_subset <- HB_1993_subset %>% filter(MONTH=="March" | MONTH=="April" | MONTH=="May" | MONTH=="June")
+
+# change IDs so they look better: 01003B, 01004B, X10703, X10707
+DS_1993_subset$ID[DS_1993_subset$ID == "X10703"] <- "Bear1"
+DS_1993_subset$ID[DS_1993_subset$ID == "X10707"] <- "Bear2"
+
+HB_1993_subset$ID[HB_1993_subset$ID == "01003B"] <- "Bear3"
+HB_1993_subset$ID[HB_1993_subset$ID == "01004B"] <- "Bear4"
+
+###
+
+# make graphics
+
+###
+
+# Davis Strait
 
 # convert to move object
-bears_1994_subset_move <- df2move(bears_1994_subset, proj="+proj=longlat +datum=WGS84", x="LONG", y="LAT", time="DATE", track_id="ID")
+DS_1993_move <- df2move(DS_1993_subset, proj="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0", x="LONG", y="LAT", time="DATE", track_id="ID")
 
 # align dates
-bears_1994_subset_move_align <- align_move(bears_1994_subset_move, res=4, unit="mins")
+DS_1993_move_align <- align_move(DS_1993_move, res=4, unit="mins")
 
 # create spatial frames
-EarthRangers_frames <- frames_spatial(bears_1994_subset_move_align, map_service="osm", map_type="watercolor", alpha=0.5) %>%
+DS_1993_frames <- frames_spatial(DS_1993_move_align, map_service="osm", map_type="watercolor", alpha=0.5) %>%
   add_labels(x="Longitude", y="Latitude") %>% 
   add_northarrow() %>% 
-  add_scalebar() %>% 
-  add_timestamps(bears_1994_subset_move_align, type="label") %>% 
+  #add_scalebar() %>% 
+  add_timestamps(DS_1993_move_align, type="label") %>% 
   add_progress()
 
 # view one frame
-EarthRangers_frames[[100]]
+DS_1993_frames[[10]]
 
 # animate frames
-animate_frames(EarthRangers_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/EarthRangers_frames.mp4")
+animate_frames(DS_1993_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/DS_bears_1993_frames.mp4")
 
+###
 
+# WHB
+
+# convert to move object
+HB_1993_move <- df2move(HB_1993_subset, proj="+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs +towgs84=0,0,0", x="LONG", y="LAT", time="DATE", track_id="ID")
+
+# align dates
+HB_1993_move_align <- align_move(HB_1993_move, res=4, unit="mins")
+
+# create spatial frames
+HB_1993_frames <- frames_spatial(HB_1993_move_align, map_service="osm", map_type="watercolor", alpha=0.5) %>%
+  add_labels(x="Longitude", y="Latitude") %>% 
+  add_northarrow() %>% 
+  #add_scalebar() %>% 
+  add_timestamps(HB_1993_move_align, type="label") %>% 
+  add_progress()
+
+# view one frame
+HB_1993_frames[[25]]
+
+# animate frames
+animate_frames(HB_1993_frames, out_file="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/Movement graphics/HB_bears_1993_frames.mp4")
 
 
 

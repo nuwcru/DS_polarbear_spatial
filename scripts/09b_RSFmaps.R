@@ -68,6 +68,18 @@ model5_tmp_freeze$parameters$theta[1] = log(1e3)
 model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
 bears_model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
 summary(bears_model5_freeze)
+
+# freezeup attempt 2: Nov 1
+bears_model5_freeze_2 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, weights=W)
+
+# freezeup attempt 3: (no weights) Nov 1
+bears_model5_freeze_3 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+
+# freezeup attempt 4 (random intercept only, not slope): Nov 1
+bears_model5_freeze_4 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+
+
+
       # break-up: Model 6 (BATH + DIST_LAND)
 model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
 model6_tmp_break$parameters$theta[1] = log(1e3)
@@ -81,13 +93,13 @@ model14_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIS
 model14_tmp_freeze$parameters$theta[1] = log(1e3)
 model14_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:4)))
 seals_model14_freeze <- glmmTMB:::fitTMB(model14_tmp_freeze) 
-summary(seals_model14_freeze) # AIC: 10,557,014
+summary(seals_model14_freeze) 
       # break-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
 model14_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=breakup_RSF, doFit=F, weights=W)
 model14_tmp_break$parameters$theta[1] = log(1e3)
 model14_tmp_break$mapArg = list(theta = factor(c(NA, 1:4)))
 seals_model14_break <- glmmTMB:::fitTMB(model14_tmp_break) 
-summary(seals_model14_break) # AIC: 16,693,700
+summary(seals_model14_break) 
 
 
 # 3. Create predictive maps (bears) ---------
@@ -99,7 +111,6 @@ bears_model6_break
 
 bear_freeze_predict <- predict(bears_model5_freeze, used_avail_RSF_freezeup_FINAL)
 plot(used_avail_RSF_freezeup_FINAL$BATH, bear_freeze_predict)
-plot()
 
 BATH_SCALED <- used_avail_RSF_freezeup_FINAL$BATH_SCALED
 CONC_SCALED <- used_avail_RSF_freezeup_FINAL$CONC_SCALED
@@ -114,10 +125,19 @@ plot(used_avail_RSF_freezeup_FINAL$CONC_SCALED, bear_freeze_predict) # same as a
 plot(used_avail_RSF_freezeup_FINAL$BATH_SCALED, exp(bear_freeze_predict)/max(exp(bear_freeze_predict)), type="l") # as above
 plot(used_avail_RSF_freezeup_FINAL$CONC_SCALED, exp(bear_freeze_predict)/max(exp(bear_freeze_predict)), type="l") # as above
 
-bear_freeze_predict2 <- predict(bears_model5_freeze, newdata=bearfreeze_newdata, allow.new.levels=TRUE)
-summary(bear_freeze_predict2) # all zeros
+# Peter Here
+# Let's do concentration first
+median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
+predicted_lm_values = bears_model5_freeze$
+
+  
+bear_freeze_predict4 <- predict(bears_model5_freeze_4, bearfreeze_newdata, type="response")  
+plot(used_avail_RSF_freezeup_FINAL$BATH_SCALED, bear_freeze_predict4)
 
 
+
+
+###
 
 
 
@@ -148,5 +168,8 @@ plot(freezeup_RSF$DIST_WATER_SCALED, seal_freeze_predict) # same as above
 
 seal_freeze_predict2 <- predict(seals_model14_freeze, newdata=sealfreeze_newdata, allow.new.levels=TRUE)
 summary(bear_freeze_predict2) # all zeros
+
+
+
 
 

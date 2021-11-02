@@ -41,8 +41,6 @@ theme_nuwcru <- function(){
 
 setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration/DS_polarbear_spatial/")
 
-
-
 # 2. Import data and format -------
 
 # bear data
@@ -57,7 +55,6 @@ freezeup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding
       # add weight column
 breakup_RSF$W <- ifelse(breakup_RSF$USE == "used", 1, 1000)
 freezeup_RSF$W <- ifelse(freezeup_RSF$USE == "used", 1, 1000)
-
 
 
 # 3. Run top RSF models -------
@@ -78,9 +75,14 @@ bears_model5_freeze_2 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BA
 # freezeup attempt 3: (no weights) Nov 1
 bears_model5_freeze_3 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 
-# freezeup attempt 4 (random intercept only, not slope): Nov 1
+# freezeup attempt 4 (no weights and random intercept only, not slope): Nov 1
 bears_model5_freeze_4 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 
+# freezeup attempt 5 (weights added and random intercept only, not slope): Nov 1
+bears_model5_freeze_5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, weights=W)
+
+summary(bears_model5_freeze_4)
+summary(bears_model5_freeze_5)
 
 
       # break-up: Model 6 (BATH + DIST_LAND)
@@ -130,13 +132,25 @@ plot(used_avail_RSF_freezeup_FINAL$CONC_SCALED, exp(bear_freeze_predict)/max(exp
 
 # Peter Here
 # Let's do concentration first
+# 4
 median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
 coefs_freezeup_model4 = coef(bears_model5_freeze_4)
 coefs_freezeup_model4 = coefs_freezeup_model4$cond$ID
 rest_of_prediction = median_BATH * coefs_freezeup_model4$BATH_SCALED[1] + coefs_freezeup_model4$`(Intercept)`[1]
 curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model4$CONC_SCALED[1] + rest_of_prediction))), 
-      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration", ylab = "Relative probability of selection")
+      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Model 4", ylab = "Relative probability of selection")
+summary(bears_model5_freeze_4)
+summary(coefs_freezeup_model4)
 
+# 5
+median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
+coefs_freezeup_model5 = coef(bears_model5_freeze_5)
+coefs_freezeup_model5 = coefs_freezeup_model5$cond$ID
+rest_of_prediction = median_BATH * coefs_freezeup_model4$BATH_SCALED[1] + coefs_freezeup_model4$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model5$CONC_SCALED[1] + rest_of_prediction))), 
+      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
+summary(bears_model5_freeze_5)
+summary(coefs_freezeup_model5)
 
 ###
 

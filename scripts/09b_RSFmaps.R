@@ -1,6 +1,4 @@
 
-# latest token (Nov 1): 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
-
 
 # 1. Load libraries -------
 

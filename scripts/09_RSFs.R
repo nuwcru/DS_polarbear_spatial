@@ -226,7 +226,7 @@ cor.test(used$DIST_LAND, used$DIST_WATER_M, method="kendall")
 
 
 
-# 4. Transform data and test for colinearity again --------
+# 4. - SKIP - Transform data and test for colinearity again --------
 
 
 # 1. SCALE COVARIATES
@@ -385,7 +385,7 @@ plot(DIST_lm)
 
 
 
-# 5. Prepare data for RSFs --------
+# 5. - SKIP - Prepare data for RSFs --------
 
 head(avail) 
 avail$USED_AVAIL <- 0 # available is now classified as 0
@@ -768,7 +768,7 @@ ranef(m4)
   
   
 
-# 8. Pooled RSFs using Model #4 from Muff et al. (2019)  -------------------------------------------------
+# 8. - SKIP - Pooled RSFs using Model #4 from Muff et al. (2019)  -------------------------------------------------
 
 ###
 # Use this dataframe: used_avail_RSF_pooled_FINAL
@@ -946,7 +946,7 @@ model14 <- glmmTMB:::fitTMB(model14_tmp)
 summary(model14)
 
 
-# 9.0. Notes on Seasonal RSFs using Model #4  (see sections 9.1, 9.2, 9.3)-------
+# 9.0. - SKIP - Notes on Seasonal RSFs using Model #4  (see sections 9.1, 9.2, 9.3)-------
 
 # either run through section 5 first or use these
 
@@ -972,7 +972,7 @@ head(used_avail_RSF_winter_FINAL)
 
 
 
-# 9.1. WINTER ------------
+# 9.1. - SKIP - WINTER ------------
 
 # use M2 for a null model instead
 null_winter <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
@@ -1152,7 +1152,65 @@ model14_winter <- glmmTMB:::fitTMB(model14_tmp_winter)
 summary(model14_winter)
 
 
-# 9.2. BREAK-UP ---------
+# 9.1a WINTER SIMPLIFIED (Nov 2021) -------
+
+###
+
+# New simplified models since our complex ones weren't giving us predicted values
+# these ones have no weighting and a random intercept only (as opposed to also a random slope)
+# Model #s align with Table 7 in manuscript
+
+###
+
+# import data
+used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+head(used_avail_RSF_winter_FINAL)
+
+###
+
+# Model 1: ID + BATH
+bears_winter_m1 <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m1
+summary(bears_winter_m1)
+
+# Model 2: ID + CONC
+bears_winter_m2 <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m2
+summary(bears_winter_m2)
+
+# Model 3: ID + LAND
+bears_winter_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m3
+summary(bears_winter_m3)
+
+# Model 4: ID + WATER
+bears_winter_m4 <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m4
+summary(bears_winter_m4)
+
+# Model 5: ID + BATH + CONC
+bears_winter_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m5
+summary(bears_winter_m5)
+
+# Model 6: ID + BATH + LAND
+bears_winter_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m6
+summary(bears_winter_m6)
+
+# Model 7: ID + CONC + WATER
+bears_winter_m7 <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m7
+summary(bears_winter_m7)
+
+# Model 8: ID + LAND + WATER
+bears_winter_m8 <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m8
+summary(bears_winter_m8)
+
+
+
+# 9.2. - SKIP - BREAK-UP ---------
 
 # use M2 for a null model instead
 null_break <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
@@ -1327,7 +1385,64 @@ model14_tmp_break$mapArg = list(theta = factor(c(NA, 1:4)))
 model14_break <- glmmTMB:::fitTMB(model14_tmp_break) 
 summary(model14_break)
 
-# 9.3. FREEZE-UP -------
+# 9.2a BREAK-UP SIMPLIFIED (Nov 2021) -------
+
+###
+
+# New simplified models since our complex ones weren't giving us predicted values
+# these ones have no weighting and a random intercept only (as opposed to also a random slope)
+# Model #s align with Table 7 in manuscript
+
+###
+
+# import data
+used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
+head(used_avail_RSF_breakup_FINAL)
+
+###
+
+# Model 1: ID + BATH
+bears_breakup_m1 <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m1
+summary(bears_breakup_m1)
+
+# Model 2: ID + CONC
+bears_breakup_m2 <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m2
+summary(bears_breakup_m2)
+
+# Model 3: ID + LAND
+bears_breakup_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m3
+summary(bears_breakup_m3)
+
+# Model 4: ID + WATER
+bears_breakup_m4 <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m4
+summary(bears_breakup_m4)
+
+# Model 5: ID + BATH + CONC
+bears_breakup_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m5
+summary(bears_breakup_m5)
+
+# Model 6: ID + BATH + LAND
+bears_breakup_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m6
+summary(bears_breakup_m6)
+
+# Model 7: ID + CONC + WATER
+bears_breakup_m7 <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m7
+summary(bears_breakup_m7)
+
+# Model 8: ID + LAND + WATER
+bears_breakup_m8 <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m8
+summary(bears_breakup_m8)
+
+
+# 9.3. - SKIP - FREEZE-UP -------
 
 # use M2 for a null model instead
 null_freeze <- glmmTMB(USED_AVAIL~1+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
@@ -1476,6 +1591,63 @@ model14_tmp_freeze$parameters$theta[1] = log(1e3)
 model14_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:4)))
 model14_freeze <- glmmTMB:::fitTMB(model14_tmp_freeze) 
 summary(model14_freeze)
+
+
+# 9.3a FREEZE-UP SIMPLIFIED (Nov 2021) -------
+
+###
+
+# New simplified models since our complex ones weren't giving us predicted values
+# these ones have no weighting and a random intercept only (as opposed to also a random slope)
+# Model #s align with Table 7 in manuscript
+
+###
+
+# import data
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+head(used_avail_RSF_freezeup_FINAL)
+
+###
+
+# Model 1: ID + BATH
+bears_freezeup_m1 <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m1
+summary(bears_freezeup_m1)
+
+# Model 2: ID + CONC
+bears_freezeup_m2 <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m2
+summary(bears_freezeup_m2)
+
+# Model 3: ID + LAND
+bears_freezeup_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m3
+summary(bears_freezeup_m3)
+
+# Model 4: ID + WATER
+bears_freezeup_m4 <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m4
+summary(bears_freezeup_m4)
+
+# Model 5: ID + BATH + CONC
+bears_freezeup_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m5
+summary(bears_freezeup_m5)
+
+# Model 6: ID + BATH + LAND
+bears_freezeup_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m6
+summary(bears_freezeup_m6)
+
+# Model 7: ID + CONC + WATER
+bears_freezeup_m7 <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m7
+summary(bears_freezeup_m7)
+
+# Model 8: ID + LAND + WATER
+bears_freezeup_m8 <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m8
+summary(bears_freezeup_m8)
 
 
 # 10a. Interpreting and visualizing top model results ---------
@@ -1819,6 +1991,103 @@ densityplot(~BATH | SEASON, data=used) # https://homepage.divms.uiowa.edu/~luke/
 
 
 ###
+
+
+
+
+
+# 11. Relative probability plots for simplified models --------
+
+###
+
+# Code is from Peter!
+
+###
+
+# run top models
+
+# winter: Model 5 (ID + BATH + CONC)
+bears_winter_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m5
+summary(bears_winter_m5)
+
+# Model 5: ID + BATH + CONC with weighting
+#bears_winter_m5_weight <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL, weights=W)
+#bears_winter_m5_weight
+#summary(bears_winter_m5_weight)
+
+# break-up: Model 5 (ID + BATH + CONC)
+bears_breakup_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m5
+summary(bears_breakup_m5)
+
+# freeze-up: Model 5 (ID + BATH + CONC)
+bears_freezeup_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m5
+summary(bears_freezeup_m5)
+
+
+###
+
+# winter
+      # CONC
+winter_median_BATH = median(used_avail_RSF_winter_FINAL$BATH_SCALED)
+coefs_winter = coef(bears_winter_m5)
+coefs_winter = coefs_winter$cond$ID
+winter_prediction = winter_median_BATH * coefs_winter$BATH_SCALED[1] + coefs_winter$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$CONC)) / sd(used_avail_RSF_winter_FINAL$CONC) * coefs_winter$CONC_SCALED[1] + winter_prediction))), 
+      xlim = range(used_avail_RSF_winter_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Winter", ylab = "Relative probability of selection")
+      # BATH
+winter_median_CONC = median(used_avail_RSF_winter_FINAL$CONC_SCALED)
+winter_prediction2 = winter_median_CONC * coefs_winter$CONC_SCALED[1] + coefs_winter$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$BATH)) / sd(used_avail_RSF_winter_FINAL$BATH) * coefs_winter$BATH_SCALED[1] + winter_prediction2))), 
+      xlim = range(used_avail_RSF_winter_FINAL$BATH), ylim = c(0,1), xlab = "Ocean depth (m) \n Winter", ylab = "Relative probability of selection")
+
+      # CONC: weighting
+#winter_median_BATH = median(used_avail_RSF_winter_FINAL$BATH_SCALED)
+#coefs_winter = coef(bears_winter_m5_weight)
+#coefs_winter = coefs_winter$cond$ID
+#winter_prediction = winter_median_BATH * coefs_winter$BATH_SCALED[1] + coefs_winter$`(Intercept)`[1]
+#curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$CONC)) / sd(used_avail_RSF_winter_FINAL$CONC) * coefs_winter$CONC_SCALED[1] + winter_prediction))), 
+ #     xlim = range(used_avail_RSF_winter_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Winter", ylab = "Relative probability of selection")
+      # BATH: weighting
+#winter_median_CONC = median(used_avail_RSF_winter_FINAL$CONC_SCALED)
+#winter_prediction2 = winter_median_CONC * coefs_winter$CONC_SCALED[1] + coefs_winter$`(Intercept)`[1]
+#curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$BATH)) / sd(used_avail_RSF_winter_FINAL$BATH) * coefs_winter$BATH_SCALED[1] + winter_prediction2))), 
+ #     xlim = range(used_avail_RSF_winter_FINAL$BATH), ylim = c(0,1), xlab = "Ocean depth (m) \n Winter", ylab = "Relative probability of selection")
+
+
+
+# break-up
+      # CONC
+break_median_BATH = median(used_avail_RSF_breakup_FINAL$BATH_SCALED)
+coefs_break = coef(bears_breakup_m5)
+coefs_break = coefs_break$cond$ID
+break_prediction = break_median_BATH * coefs_break$BATH_SCALED[1] + coefs_break$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_avail_RSF_breakup_FINAL$CONC) * coefs_break$CONC_SCALED[1] + break_prediction))), 
+      xlim = range(used_avail_RSF_breakup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Break-up", ylab = "Relative probability of selection")
+      # BATH
+break_median_CONC = median(used_avail_RSF_breakup_FINAL$CONC_SCALED)
+break_prediction2 = break_median_CONC * coefs_break$CONC_SCALED[1] + coefs_break$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$BATH)) / sd(used_avail_RSF_breakup_FINAL$BATH) * coefs_break$BATH_SCALED[1] + break_prediction2))), 
+      xlim = range(used_avail_RSF_breakup_FINAL$BATH), ylim = c(0,1), xlab = "Ocean depth (m) \n Break-up", ylab = "Relative probability of selection")
+
+
+# freeze-up
+      # CONC
+freeze_median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
+coefs_freeze = coef(bears_freezeup_m5)
+coefs_freeze = coefs_freeze$cond$ID
+freeze_prediction = freeze_median_BATH * coefs_freeze$BATH_SCALED[1] + coefs_freeze$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freeze$CONC_SCALED[1] + freeze_prediction))), 
+      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Freeze-up", ylab = "Relative probability of selection")
+      # BATH
+freeze_median_CONC = median(used_avail_RSF_freezeup_FINAL$CONC_SCALED)
+freeze_prediction2 = freeze_median_CONC * coefs_freeze$CONC_SCALED[1] + coefs_freeze$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_avail_RSF_freezeup_FINAL$BATH) * coefs_freeze$BATH_SCALED[1] + freeze_prediction2))), 
+      xlim = range(used_avail_RSF_freezeup_FINAL$BATH), ylim = c(0,1), xlab = "Ocean depth (m) \n Freeze-up", ylab = "Relative probability of selection")
+
+
 
 
 

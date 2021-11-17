@@ -105,7 +105,7 @@ seals_model14_break <- glmmTMB:::fitTMB(model14_tmp_break)
 summary(seals_model14_break) 
 
 
-# 3. Create predictive maps (bears) ---------
+# 3. Create predictive plots (bears) ---------
 
 # https://terpconnect.umd.edu/~egurarie/research/NWT/Step09_RSF_PartIV.html
 
@@ -154,7 +154,7 @@ summary(coefs_freezeup_model5)
 
 
 
-# 4. Create predictive maps (seals) ---------
+# 4. Create predictive plots (seals) ---------
 
 # https://terpconnect.umd.edu/~egurarie/research/NWT/Step09_RSF_PartIV.html
 
@@ -186,3 +186,18 @@ summary(bear_freeze_predict2) # all zeros
 
 
 
+
+# 5. Create predictive maps (bears) -------
+
+bears_model5_freeze_5
+bear_freeze_predict <- predict(bears_model5_freeze_5, used_avail_RSF_freezeup_FINAL)
+plot(used_avail_RSF_freezeup_FINAL$BATH, bear_freeze_predict, type="l")
+
+used_avail_RSF_freezeup_FINAL$BATH[which.max(bear_freeze_predict)]
+
+
+
+
+
+
+###

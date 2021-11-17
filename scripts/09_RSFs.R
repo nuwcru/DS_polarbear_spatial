@@ -1166,6 +1166,11 @@ summary(model14_winter)
 used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
 head(used_avail_RSF_winter_FINAL)
 
+# create squared conc column then scale
+used_avail_RSF_winter_FINAL$CONC_2 = '^'(used_avail_RSF_winter_FINAL$CONC,2)
+used_avail_RSF_winter_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_winter_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
+
 ###
 
 # Model 1: ID + BATH
@@ -1177,6 +1182,11 @@ summary(bears_winter_m1)
 bears_winter_m2 <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
 bears_winter_m2
 summary(bears_winter_m2)
+
+# Model 2a: ID + CONC + CONC_2
+bears_winter_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m2a
+summary(bears_winter_m2a)
 
 # Model 3: ID + LAND
 bears_winter_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
@@ -1193,6 +1203,11 @@ bears_winter_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=bin
 bears_winter_m5
 summary(bears_winter_m5)
 
+# Model 5a: ID + BATH + CONC + CONC_2
+bears_winter_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m5a
+summary(bears_winter_m5a)
+
 # Model 6: ID + BATH + LAND
 bears_winter_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
 bears_winter_m6
@@ -1202,6 +1217,11 @@ summary(bears_winter_m6)
 bears_winter_m7 <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
 bears_winter_m7
 summary(bears_winter_m7)
+
+# Model 7a: ID + CONC + WATER
+bears_winter_m7a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m7a
+summary(bears_winter_m7a)
 
 # Model 8: ID + LAND + WATER
 bears_winter_m8 <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
@@ -1399,6 +1419,10 @@ summary(model14_break)
 used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
 head(used_avail_RSF_breakup_FINAL)
 
+# create squared conc column then scale
+used_avail_RSF_breakup_FINAL$CONC_2 = '^'(used_avail_RSF_breakup_FINAL$CONC,2)
+used_avail_RSF_breakup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_breakup_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
 ###
 
 # Model 1: ID + BATH
@@ -1410,6 +1434,11 @@ summary(bears_breakup_m1)
 bears_breakup_m2 <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
 bears_breakup_m2
 summary(bears_breakup_m2)
+
+# Model 2a: ID + CONC + CONC_2
+bears_breakup_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m2a
+summary(bears_breakup_m2a)
 
 # Model 3: ID + LAND
 bears_breakup_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
@@ -1426,6 +1455,11 @@ bears_breakup_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=bi
 bears_breakup_m5
 summary(bears_breakup_m5)
 
+# Model 5a: ID + BATH + CONC + CONC_2
+bears_breakup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m5a
+summary(bears_breakup_m5a)
+
 # Model 6: ID + BATH + LAND
 bears_breakup_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
 bears_breakup_m6
@@ -1435,6 +1469,11 @@ summary(bears_breakup_m6)
 bears_breakup_m7 <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
 bears_breakup_m7
 summary(bears_breakup_m7)
+
+# Model 7: ID + CONC + WATER + CONC_2
+bears_breakup_m7a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m7a
+summary(bears_breakup_m7a)
 
 # Model 8: ID + LAND + WATER
 bears_breakup_m8 <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
@@ -1607,6 +1646,10 @@ summary(model14_freeze)
 used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 head(used_avail_RSF_freezeup_FINAL)
 
+# create squared conc column then scale
+used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
+used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
 ###
 
 # Model 1: ID + BATH
@@ -1618,6 +1661,11 @@ summary(bears_freezeup_m1)
 bears_freezeup_m2 <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 bears_freezeup_m2
 summary(bears_freezeup_m2)
+
+# Model 2a: ID + CONC + CONC_2
+bears_freezeup_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m2a
+summary(bears_freezeup_m2a)
 
 # Model 3: ID + LAND
 bears_freezeup_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
@@ -1634,6 +1682,11 @@ bears_freezeup_m5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=b
 bears_freezeup_m5
 summary(bears_freezeup_m5)
 
+# Model 5a: ID + BATH + CONC + CONC_2
+bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m5a
+summary(bears_freezeup_m5a)
+
 # Model 6: ID + BATH + LAND
 bears_freezeup_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 bears_freezeup_m6
@@ -1643,6 +1696,11 @@ summary(bears_freezeup_m6)
 bears_freezeup_m7 <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 bears_freezeup_m7
 summary(bears_freezeup_m7)
+
+# Model 7a: ID + CONC + WATER + CONC_2
+bears_freezeup_m7a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m7a
+summary(bears_freezeup_m7a)
 
 # Model 8: ID + LAND + WATER
 bears_freezeup_m8 <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)

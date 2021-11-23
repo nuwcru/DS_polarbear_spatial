@@ -47,12 +47,18 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
 used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 
+# create squared conc column then scale
+used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
+used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
 # seal data
 breakup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/DS_harpseals/data/breakup_RSF.csv")
 freezeup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/DS_harpseals/data/freezeup_RSF.csv")
       # add weight column
 breakup_RSF$W <- ifelse(breakup_RSF$USE == "used", 1, 1000)
 freezeup_RSF$W <- ifelse(freezeup_RSF$USE == "used", 1, 1000)
+
+
 
 
 # 3. Run top RSF models -------
@@ -67,20 +73,11 @@ model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
 bears_model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
 summary(bears_model5_freeze)
 
-# freezeup attempt 2: Nov 1
-bears_model5_freeze_2 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, weights=W)
+      # freeze-up: Model 5a (BATH + CONC + CONC^2)
+bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m5a
+summary(bears_freezeup_m5a)
 
-# freezeup attempt 3: (no weights) Nov 1
-bears_model5_freeze_3 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
-
-# freezeup attempt 4 (no weights and random intercept only, not slope): Nov 1
-bears_model5_freeze_4 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
-
-# freezeup attempt 5 (weights added and random intercept only, not slope): Nov 1
-bears_model5_freeze_5 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, weights=W)
-
-summary(bears_model5_freeze_4)
-summary(bears_model5_freeze_5)
 
 
       # break-up: Model 6 (BATH + DIST_LAND)
@@ -142,15 +139,23 @@ summary(coefs_freezeup_model4)
 
 # 5
 median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
-coefs_freezeup_model5 = coef(bears_model5_freeze_5)
+coefs_freezeup_model5 = coef(bears_freezeup_m5a)
 coefs_freezeup_model5 = coefs_freezeup_model5$cond$ID
-rest_of_prediction = median_BATH * coefs_freezeup_model4$BATH_SCALED[1] + coefs_freezeup_model4$`(Intercept)`[1]
-curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model5$CONC_SCALED[1] + rest_of_prediction))), 
-      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
+rest_of_prediction = median_BATH * coefs_freezeup_model5$BATH_SCALED[1] + coefs_freezeup_model5$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / sd(used_avail_RSF_freezeup_FINAL$CONC_2) * coefs_freezeup_model5$CONC_2_SCALED[1] + rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
 summary(bears_model5_freeze_5)
 summary(coefs_freezeup_model5)
 
+summary(used_avail_RSF_freezeup_FINAL$CONC)
+
 ###
+
+
+# New plots with updated top models (using CONC^2)
+
+# top freeze-up for bears = 5a (BATH + CONC + CONC^2)
+summary(bears_freezeup_m5a)
+
 
 
 

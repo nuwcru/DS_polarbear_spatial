@@ -63,71 +63,143 @@ freezeup_RSF$W <- ifelse(freezeup_RSF$USE == "used", 1, 1000)
 
 # 3. Run top RSF models -------
 
-# freeze-up and break-up only!
+# freeze-up, break-up, and winter for bears
+# freeze-up and break-up only for seal
+
+###
 
 # bears
-      # freeze-up: Model 5 (BATH + CONC)
-model5_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL, doFit=F, weights=W)
-model5_tmp_freeze$parameters$theta[1] = log(1e3)
-model5_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:2)))
-bears_model5_freeze <- glmmTMB:::fitTMB(model5_tmp_freeze) 
-summary(bears_model5_freeze)
+      # break-up: Model 2a (CONC + CONC_2)
+bears_breakup_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m2a
+summary(bears_breakup_m2a)
 
-      # freeze-up: Model 5a (BATH + CONC + CONC^2)
+      # freeze-up: Model 5a (BATH + CONC + CONC_2)
 bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 bears_freezeup_m5a
 summary(bears_freezeup_m5a)
 
+      # winter: Model 5a (BATH + CONC + CONC_2)
+bears_winter_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m5a
+summary(bears_winter_m5a)
 
-
-      # break-up: Model 6 (BATH + DIST_LAND)
-model6_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+DIST_SCALED|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL, doFit=F, weights=W)
-model6_tmp_break$parameters$theta[1] = log(1e3)
-model6_tmp_break$mapArg = list(theta = factor(c(NA, 1:2)))
-bears_model6_break <- glmmTMB:::fitTMB(model6_tmp_break) 
-summary(bears_model6_break)
+###
 
 # seals
-      # freeze-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
-model14_tmp_freeze <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=freezeup_RSF, doFit=F, weights=W)
-model14_tmp_freeze$parameters$theta[1] = log(1e3)
-model14_tmp_freeze$mapArg = list(theta = factor(c(NA, 1:4)))
-seals_model14_freeze <- glmmTMB:::fitTMB(model14_tmp_freeze) 
-summary(seals_model14_freeze) 
+      # freeze-up: Model 12 (BATH + CONC + DIST_WATER)
+seals_freezeup_m12 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_RSF)
+seals_freezeup_m12
+summary(seals_freezeup_m12)
+
       # break-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
-model14_tmp_break <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID)+(0+BATH_SCALED|ID)+(0+CONC_SCALED|ID)+(0+DIST_SCALED|ID)+(0+DIST_WATER_SCALED|ID), family=binomial(), data=breakup_RSF, doFit=F, weights=W)
-model14_tmp_break$parameters$theta[1] = log(1e3)
-model14_tmp_break$mapArg = list(theta = factor(c(NA, 1:4)))
-seals_model14_break <- glmmTMB:::fitTMB(model14_tmp_break) 
-summary(seals_model14_break) 
+seals_breakup_m14 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=breakup_RSF)
+seals_breakup_m14
+summary(seals_breakup_m14)
+
+###
+
+# 4. Create predictive plots (bears) -------
+# 4a.      Winter ---------
+
+# winter: Model 5a (BATH + CONC + CONC_2)
 
 
-# 3. Create predictive plots (bears) ---------
+# BATH - get Peter's help; how do I keep multiple constant??
+# I haven't altered this, it's just copied and pasted from the CONC below
+median_BATH = median(used_avail_RSF_winter_FINAL$BATH_SCALED)
+coefs_winter_model5 = coef(bears_winter_m5a)
+coefs_winter_model5 = coefs_winter_model5$cond$ID
+rest_of_prediction = median_BATH * coefs_winter_model5$BATH_SCALED[1] + coefs_winter_model5$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$CONC)) / sd(used_avail_RSF_winter_FINAL$CONC) * 
+                       coefs_winter_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_winter_FINAL$CONC_2)) / 
+                       sd(used_avail_RSF_winter_FINAL$CONC_2) * coefs_winter_model5$CONC_2_SCALED[1] + 
+                       rest_of_prediction))), xlim = range(used_avail_RSF_winter_FINAL$CONC), ylim = c(0,1), 
+      xlab = "Sea ice concentration", ylab = "Relative probability of selection")
 
-# https://terpconnect.umd.edu/~egurarie/research/NWT/Step09_RSF_PartIV.html
 
-bears_model5_freeze
-bears_model6_break
+# CONC
+median_BATH = median(used_avail_RSF_winter_FINAL$BATH_SCALED)
+coefs_winter_model5 = coef(bears_winter_m5a)
+coefs_winter_model5 = coefs_winter_model5$cond$ID
+rest_of_prediction = median_BATH * coefs_winter_model5$BATH_SCALED[1] + coefs_winter_model5$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$CONC)) / sd(used_avail_RSF_winter_FINAL$CONC) * 
+                       coefs_winter_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_winter_FINAL$CONC_2)) / 
+                       sd(used_avail_RSF_winter_FINAL$CONC_2) * coefs_winter_model5$CONC_2_SCALED[1] + 
+                       rest_of_prediction))), xlim = range(used_avail_RSF_winter_FINAL$CONC), ylim = c(0,1), 
+      xlab = "Sea ice concentration", ylab = "Relative probability of selection")
 
-bear_freeze_predict <- predict(bears_model5_freeze, used_avail_RSF_freezeup_FINAL)
-plot(used_avail_RSF_freezeup_FINAL$BATH, bear_freeze_predict)
 
-BATH_SCALED <- used_avail_RSF_freezeup_FINAL$BATH_SCALED
-CONC_SCALED <- used_avail_RSF_freezeup_FINAL$CONC_SCALED
-ID <- used_avail_RSF_freezeup_FINAL$ID
-W <- used_avail_RSF_freezeup_FINAL$W
-bearfreeze_newdata <- data.frame(ID, CONC_SCALED, BATH_SCALED, W)
 
-bear_freeze_predict <- predict(bears_model5_freeze, bearfreeze_newdata, type="response")
-summary(bear_freeze_predict) # all the same values (0.5)
-plot(used_avail_RSF_freezeup_FINAL$BATH_SCALED, bear_freeze_predict) # straight line regardless of if original or scaled values are used
-plot(used_avail_RSF_freezeup_FINAL$CONC_SCALED, bear_freeze_predict) # same as above
-plot(used_avail_RSF_freezeup_FINAL$BATH_SCALED, exp(bear_freeze_predict)/max(exp(bear_freeze_predict)), type="l") # as above
-plot(used_avail_RSF_freezeup_FINAL$CONC_SCALED, exp(bear_freeze_predict)/max(exp(bear_freeze_predict)), type="l") # as above
 
-# Peter Here
-# Let's do concentration first
-# 4
+# 4b.      Freeze-up --------
+
+# top model for freeze-up: Model 5a (BATH + CONC + CONC_2)
+
+###
+
+# BATH - get Peter's help; how do I keep multiple constant??
+    # I haven't altered this, it's just copied and pasted from the CONC below
+median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
+coefs_freezeup_model5 = coef(bears_freezeup_m5a)
+coefs_freezeup_model5 = coefs_freezeup_model5$cond$ID
+rest_of_prediction = median_BATH * coefs_freezeup_model5$BATH_SCALED[1] + coefs_freezeup_model5$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * 
+                       coefs_freezeup_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / 
+                       sd(used_avail_RSF_freezeup_FINAL$CONC_2) * coefs_freezeup_model5$CONC_2_SCALED[1] + 
+                       rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), 
+      xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
+summary(bears_model5_freeze_5)
+summary(coefs_freezeup_model5)
+
+summary(used_avail_RSF_freezeup_FINAL$CONC)
+
+
+# CONC
+median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
+coefs_freezeup_model5 = coef(bears_freezeup_m5a)
+coefs_freezeup_model5 = coefs_freezeup_model5$cond$ID
+rest_of_prediction = median_BATH * coefs_freezeup_model5$BATH_SCALED[1] + coefs_freezeup_model5$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * 
+                       coefs_freezeup_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / 
+                       sd(used_avail_RSF_freezeup_FINAL$CONC_2) * coefs_freezeup_model5$CONC_2_SCALED[1] + 
+                       rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), 
+      xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
+
+
+###
+
+# 4c.      Break-up --------
+
+# break-up: Model 2a (CONC + CONC_2)
+
+###
+
+# CONC - get Peter's help!!
+# how do I create this without keeping anything consta
+median_BATH = median(used_avail_RSF_breakup_FINAL$BATH_SCALED)
+coefs_breakup_model2 = coef(bears_breakup_m2a)
+coefs_breakup_model2 = bears_breakup_m2a$cond$ID
+rest_of_prediction = median_BATH * used_avail_RSF_breakup_FINAL$BATH_SCALED[1] + used_avail_RSF_breakup_FINAL$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_avail_RSF_breakup_FINAL$CONC) * 
+                       used_avail_RSF_breakup_FINAL$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_breakup_FINAL$CONC_2)) / 
+                       sd(used_avail_RSF_breakup_FINAL$CONC_2) * used_avail_RSF_breakup_FINAL$CONC_2_SCALED[1] + 
+                       rest_of_prediction))), xlim = range(used_avail_RSF_breakup_FINAL$CONC), ylim = c(0,1), 
+      xlab = "Sea ice concentration", ylab = "Relative probability of selection")
+
+
+
+# 5. Create predictive plots (seals) ---------
+
+
+
+
+
+# 5a.      Freeze-up --------
+
+# freeze-up: Model 12 (BATH + CONC + DIST_WATER)
+
+# Concentration
 median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
 coefs_freezeup_model4 = coef(bears_model5_freeze_4)
 coefs_freezeup_model4 = coefs_freezeup_model4$cond$ID
@@ -137,62 +209,20 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_av
 summary(bears_model5_freeze_4)
 summary(coefs_freezeup_model4)
 
-# 5
-median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
-coefs_freezeup_model5 = coef(bears_freezeup_m5a)
-coefs_freezeup_model5 = coefs_freezeup_model5$cond$ID
-rest_of_prediction = median_BATH * coefs_freezeup_model5$BATH_SCALED[1] + coefs_freezeup_model5$`(Intercept)`[1]
-curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / sd(used_avail_RSF_freezeup_FINAL$CONC_2) * coefs_freezeup_model5$CONC_2_SCALED[1] + rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
-summary(bears_model5_freeze_5)
-summary(coefs_freezeup_model5)
 
-summary(used_avail_RSF_freezeup_FINAL$CONC)
+
 
 ###
 
+# 5b.      Break-up --------
 
-# New plots with updated top models (using CONC^2)
-
-# top freeze-up for bears = 5a (BATH + CONC + CONC^2)
-summary(bears_freezeup_m5a)
+# break-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
 
 
+#
 
 
-# 4. Create predictive plots (seals) ---------
-
-# https://terpconnect.umd.edu/~egurarie/research/NWT/Step09_RSF_PartIV.html
-
-seals_model14_freeze
-seals_model14_break
-
-seals_freeze_predict <- predict(seals_model14_freeze, freezeup_RSF)
-plot(freezeup_RSF$BATH, seals_freeze_predict)
-
-BATH_SCALED <- freezeup_RSF$BATH_SCALED
-CONC_SCALED <- freezeup_RSF$CONC_SCALED
-DIST_SCALED <- freezeup_RSF$DIST_LAND
-DIST_WATER_SCALED <- freezeup_RSF$DIST_WATER_SCALED
-ID <- freezeup_RSF$ID
-W <- freezeup_RSF$W
-sealfreeze_newdata <- data.frame(ID, CONC_SCALED, BATH_SCALED, DIST_SCALED, DIST_WATER_SCALED, W)
-
-seal_freeze_predict <- predict(seals_model14_freeze, sealfreeze_newdata, type="response")
-summary(bear_freeze_predict) # all the same values (0.5)
-plot(freezeup_RSF$BATH_SCALED, seal_freeze_predict) # straight line regardless of if original or scaled values are used
-plot(freezeup_RSF$CONC_SCALED, seal_freeze_predict) # same as above
-plot(freezeup_RSF$DIST_SCALED, seal_freeze_predict) # same as above
-plot(freezeup_RSF$DIST_WATER_SCALED, seal_freeze_predict) # same as above
-
-seal_freeze_predict2 <- predict(seals_model14_freeze, newdata=sealfreeze_newdata, allow.new.levels=TRUE)
-summary(bear_freeze_predict2) # all zeros
-
-
-
-
-
-
-# 5. Create predictive maps (bears) -------
+# 6. Create predictive maps (bears) -------
 
 bears_model5_freeze_5
 bear_freeze_predict <- predict(bears_model5_freeze_5, used_avail_RSF_freezeup_FINAL)

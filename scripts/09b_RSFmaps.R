@@ -9,9 +9,7 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(tidyr)
-#library(lme4) # for RSFs
 library(adehabitatHR) # for RSFs
-#library(adehabitatHS) # for RSFs
 library(TMB)
 library(glmmTMB) # RSFs according to Muff et al. (2019)
 library(jtools) # for effect_plot() (section 3)
@@ -42,8 +40,7 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 # 2. Import data and format -------
 
 # bear data
-#used_avail_RSF_pooled_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_pooled_FINAL_Apr2021.csv")
-#used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
 used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
 used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
 
@@ -51,13 +48,19 @@ used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_a
 used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
 used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
 
+used_avail_RSF_breakup_FINAL$CONC_2 = '^'(used_avail_RSF_breakup_FINAL$CONC,2)
+used_avail_RSF_breakup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_breakup_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
+used_avail_RSF_winter_FINAL$CONC_2 = '^'(used_avail_RSF_winter_FINAL$CONC,2)
+used_avail_RSF_winter_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_winter_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
+
 # seal data
 breakup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/DS_harpseals/data/breakup_RSF.csv")
 freezeup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/DS_harpseals/data/freezeup_RSF.csv")
       # add weight column
 breakup_RSF$W <- ifelse(breakup_RSF$USE == "used", 1, 1000)
 freezeup_RSF$W <- ifelse(freezeup_RSF$USE == "used", 1, 1000)
-
 
 
 
@@ -105,17 +108,16 @@ summary(seals_breakup_m14)
 # winter: Model 5a (BATH + CONC + CONC_2)
 
 
-# BATH - get Peter's help; how do I keep multiple constant??
-# I haven't altered this, it's just copied and pasted from the CONC below
-median_BATH = median(used_avail_RSF_winter_FINAL$BATH_SCALED)
+# BATH
+median_CONC = median(used_avail_RSF_winter_FINAL$CONC_SCALED)
+median_CONC_2 = median_CONC^2
 coefs_winter_model5 = coef(bears_winter_m5a)
 coefs_winter_model5 = coefs_winter_model5$cond$ID
-rest_of_prediction = median_BATH * coefs_winter_model5$BATH_SCALED[1] + coefs_winter_model5$`(Intercept)`[1]
-curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$CONC)) / sd(used_avail_RSF_winter_FINAL$CONC) * 
-                       coefs_winter_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_winter_FINAL$CONC_2)) / 
-                       sd(used_avail_RSF_winter_FINAL$CONC_2) * coefs_winter_model5$CONC_2_SCALED[1] + 
-                       rest_of_prediction))), xlim = range(used_avail_RSF_winter_FINAL$CONC), ylim = c(0,1), 
-      xlab = "Sea ice concentration", ylab = "Relative probability of selection")
+rest_of_prediction = median_CONC * coefs_winter_model5$CONC_SCALED[1] + median_CONC_2 * coefs_winter_model5$CONC_2_SCALED[1]+ coefs_winter_model5$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$BATH)) / sd(used_avail_RSF_winter_FINAL$BATH) * 
+                       coefs_winter_model5$BATH_SCALED[1] + rest_of_prediction))), 
+      xlim = range(used_avail_RSF_winter_FINAL$BATH), ylim = c(0,1), 
+      xlab = "Ocean depth (m)", ylab = "Relative probability of selection")
 
 
 # CONC
@@ -138,21 +140,15 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_winter_FINAL$CONC)) / sd(used_avai
 
 ###
 
-# BATH - get Peter's help; how do I keep multiple constant??
-    # I haven't altered this, it's just copied and pasted from the CONC below
-median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
-coefs_freezeup_model5 = coef(bears_freezeup_m5a)
-coefs_freezeup_model5 = coefs_freezeup_model5$cond$ID
-rest_of_prediction = median_BATH * coefs_freezeup_model5$BATH_SCALED[1] + coefs_freezeup_model5$`(Intercept)`[1]
-curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * 
-                       coefs_freezeup_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / 
-                       sd(used_avail_RSF_freezeup_FINAL$CONC_2) * coefs_freezeup_model5$CONC_2_SCALED[1] + 
-                       rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), 
-      xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
-summary(bears_model5_freeze_5)
-summary(coefs_freezeup_model5)
-
-summary(used_avail_RSF_freezeup_FINAL$CONC)
+# BATH
+median_CONC = median(used_avail_RSF_freezeup_FINAL$CONC_SCALED)
+median_CONC_2 = median_CONC^2
+coefs_freezeup_model5a = coef(bears_freezeup_m5a)
+coefs_freezeup_model5a = coefs_freezeup_model5a$cond$ID
+rest_of_prediction = median_CONC * coefs_freezeup_model5a$CONC_SCALED[1] + median_CONC_2 * coefs_freezeup_model5a$CONC_2_SCALED[1] + coefs_freezeup_model5a$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_avail_RSF_freezeup_FINAL$BATH) * 
+                       coefs_freezeup_model5a$BATH_SCALED[1] + rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$BATH), 
+      ylim = c(0,1), xlab = "Ocean depth (m)", ylab = "Relative probability of selection")
 
 
 # CONC
@@ -164,7 +160,7 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_av
                        coefs_freezeup_model5$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / 
                        sd(used_avail_RSF_freezeup_FINAL$CONC_2) * coefs_freezeup_model5$CONC_2_SCALED[1] + 
                        rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), 
-      xlab = "Sea ice concentration \n Model 5", ylab = "Relative probability of selection")
+      xlab = "Sea ice concentration", ylab = "Relative probability of selection")
 
 
 ###
@@ -175,19 +171,19 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_av
 
 ###
 
-# CONC - get Peter's help!!
-# how do I create this without keeping anything consta
-median_BATH = median(used_avail_RSF_breakup_FINAL$BATH_SCALED)
-coefs_breakup_model2 = coef(bears_breakup_m2a)
-coefs_breakup_model2 = bears_breakup_m2a$cond$ID
-rest_of_prediction = median_BATH * used_avail_RSF_breakup_FINAL$BATH_SCALED[1] + used_avail_RSF_breakup_FINAL$`(Intercept)`[1]
+# CONC
+#median_BATH = median(used_avail_RSF_breakup_FINAL$BATH_SCALED)
+coefs_breakup_model2a = coef(bears_breakup_m2a)
+coefs_breakup_model2a = coefs_breakup_model2a$cond$ID
+#rest_of_prediction = median_BATH * used_avail_RSF_breakup_FINAL$BATH_SCALED[1] + used_avail_RSF_breakup_FINAL$`(Intercept)`[1]
 curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_avail_RSF_breakup_FINAL$CONC) * 
-                       used_avail_RSF_breakup_FINAL$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_breakup_FINAL$CONC_2)) / 
-                       sd(used_avail_RSF_breakup_FINAL$CONC_2) * used_avail_RSF_breakup_FINAL$CONC_2_SCALED[1] + 
-                       rest_of_prediction))), xlim = range(used_avail_RSF_breakup_FINAL$CONC), ylim = c(0,1), 
+                       coefs_breakup_model2a$CONC_SCALED[1] + (x^2 - mean(used_avail_RSF_breakup_FINAL$CONC_2)) / 
+                       sd(used_avail_RSF_breakup_FINAL$CONC_2) * coefs_breakup_model2a$CONC_2_SCALED[1]))), 
+      xlim = range(used_avail_RSF_breakup_FINAL$CONC), ylim = c(0,1), 
       xlab = "Sea ice concentration", ylab = "Relative probability of selection")
 
 
+###
 
 # 5. Create predictive plots (seals) ---------
 
@@ -199,15 +195,20 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 
 # freeze-up: Model 12 (BATH + CONC + DIST_WATER)
 
-# Concentration
-median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
-coefs_freezeup_model4 = coef(bears_model5_freeze_4)
-coefs_freezeup_model4 = coefs_freezeup_model4$cond$ID
-rest_of_prediction = median_BATH * coefs_freezeup_model4$BATH_SCALED[1] + coefs_freezeup_model4$`(Intercept)`[1]
-curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC) * coefs_freezeup_model4$CONC_SCALED[1] + rest_of_prediction))), 
-      xlim = range(used_avail_RSF_freezeup_FINAL$CONC), ylim = c(0,1), xlab = "Sea ice concentration \n Model 4", ylab = "Relative probability of selection")
-summary(bears_model5_freeze_4)
-summary(coefs_freezeup_model4)
+freezeup_RSF
+
+# BATH
+median_CONC = median(freezeup_RSF$CONC_SCALED)
+median_WATER = median(freezeup_RSF$DIST_WATER_SCALED)
+coefs_seals_freeze_model12 = coef(seals_freezeup_m12)
+coefs_seals_freeze_model12 = coefs_seals_freeze_model12$cond$ID
+rest_of_prediction = median_CONC * coefs_seals_freeze_model12$CONC_SCALED[1] + median_WATER * coefs_seals_freeze_model12$DIST_WATER_SCALED[1] + coefs_seals_freeze_model12$`(Intercept)`[1]
+curve(1 / (1 + exp(-((x - mean(freezeup_RSF$BATH)) / sd(freezeup_RSF$BATH) * 
+                       coefs_seals_freeze_model12$BATH_SCALED[1] + rest_of_prediction))), xlim = range(freezeup_RSF$BATH), 
+      ylim = c(0,1), xlab = "Ocean depth (m)", ylab = "Relative probability of selection")
+
+
+summary(freezeup_RSF)
 
 
 
@@ -218,6 +219,7 @@ summary(coefs_freezeup_model4)
 
 # break-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
 
+breakup_RSF
 
 #
 

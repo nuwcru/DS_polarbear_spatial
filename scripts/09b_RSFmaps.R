@@ -55,15 +55,6 @@ used_avail_RSF_winter_FINAL$CONC_2 = '^'(used_avail_RSF_winter_FINAL$CONC,2)
 used_avail_RSF_winter_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_winter_FINAL$CONC_2, scale=TRUE, center=TRUE)
 
 
-# seal data
-breakup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/DS_harpseals/data/breakup_RSF.csv")
-freezeup_RSF <- read.csv("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/DS_harpseals/data/freezeup_RSF.csv")
-      # add weight column
-breakup_RSF$W <- ifelse(breakup_RSF$USE == "used", 1, 1000)
-freezeup_RSF$W <- ifelse(freezeup_RSF$USE == "used", 1, 1000)
-
-
-
 # 3. Run top RSF models -------
 
 # freeze-up, break-up, and winter for bears
@@ -91,14 +82,14 @@ summary(bears_winter_m5a)
 
 # seals
       # freeze-up: Model 12 (BATH + CONC + DIST_WATER)
-seals_freezeup_m12 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_RSF)
-seals_freezeup_m12
-summary(seals_freezeup_m12)
+#seals_freezeup_m12 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_RSF)
+#seals_freezeup_m12
+#summary(seals_freezeup_m12)
 
       # break-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
-seals_breakup_m14 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=breakup_RSF)
-seals_breakup_m14
-summary(seals_breakup_m14)
+#seals_breakup_m14 <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=breakup_RSF)
+#seals_breakup_m14
+#summary(seals_breakup_m14)
 
 ###
 
@@ -150,6 +141,7 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_av
                        coefs_freezeup_model5a$BATH_SCALED[1] + rest_of_prediction))), xlim = range(used_avail_RSF_freezeup_FINAL$BATH), 
       ylim = c(0,1), xlab = "Ocean depth (m)", ylab = "Relative probability of selection")
 
+summary(used_avail_RSF_freezeup_FINAL$BATH)
 
 # CONC
 median_BATH = median(used_avail_RSF_freezeup_FINAL$BATH_SCALED)
@@ -185,56 +177,25 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 
 ###
 
-# 5. Create predictive plots (seals) ---------
+# 5. Create predictive maps (bears) -------
 
+# Load rasters
 
-
-
-
-# 5a.      Freeze-up --------
-
-# freeze-up: Model 12 (BATH + CONC + DIST_WATER)
-
-freezeup_RSF
-
-# BATH
-median_CONC = median(freezeup_RSF$CONC_SCALED)
-median_WATER = median(freezeup_RSF$DIST_WATER_SCALED)
-coefs_seals_freeze_model12 = coef(seals_freezeup_m12)
-coefs_seals_freeze_model12 = coefs_seals_freeze_model12$cond$ID
-rest_of_prediction = median_CONC * coefs_seals_freeze_model12$CONC_SCALED[1] + median_WATER * coefs_seals_freeze_model12$DIST_WATER_SCALED[1] + coefs_seals_freeze_model12$`(Intercept)`[1]
-curve(1 / (1 + exp(-((x - mean(freezeup_RSF$BATH)) / sd(freezeup_RSF$BATH) * 
-                       coefs_seals_freeze_model12$BATH_SCALED[1] + rest_of_prediction))), xlim = range(freezeup_RSF$BATH), 
-      ylim = c(0,1), xlab = "Ocean depth (m)", ylab = "Relative probability of selection")
-
-
-summary(freezeup_RSF)
-
-
-
-
-###
-
-# 5b.      Break-up --------
-
-# break-up: Model 14 (BATH + CONC + DIST_LAND + DIST_WATER)
-
-breakup_RSF
-
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78.rds")
+plot(raster_list$`20101010`)
+raster_values <- values(raster_list$`19781026`)
+raster_values
 #
 
+# 5a.      Freeze-up -----
 
-# 6. Create predictive maps (bears) -------
-
-bears_model5_freeze_5
-bear_freeze_predict <- predict(bears_model5_freeze_5, used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m5a
+bear_freeze_predict <- predict(bears_freezeup_m5a, used_avail_RSF_freezeup_FINAL)
 plot(used_avail_RSF_freezeup_FINAL$BATH, bear_freeze_predict, type="l")
 
 used_avail_RSF_freezeup_FINAL$BATH[which.max(bear_freeze_predict)]
 
 
-
-
-
-
 ###
+
+# 6. ------

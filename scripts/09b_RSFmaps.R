@@ -179,23 +179,65 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 
 # 5. Create predictive maps (bears) -------
 
-# Load rasters
 
+
+# 5a.       Prep data --------------
+
+# load polygon for cropping
+polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_map_boundary.shp")
+proj4string(polygon) # lat/long
+polygon_proj <- spTransform(polygon, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(polygon_proj) # lat/long
+plot(polygon_proj) 
+
+# Load sea ice
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78.rds")
 plot(raster_list$`20101010`)
 raster_values <- values(raster_list$`19781026`)
-raster_values
+head(raster_values)
+
+# create one day of sea ice and crop
+Oct10_2010 <- raster_list$`20101010`
+proj4string(Oct10_2010)
+plot(Oct10_2010)
+plot(polygon_proj, add=TRUE) # looks right
+Oct10_2010_crop <- crop(Oct10_2010, polygon_proj, snap='out') # crop
+Oct10_2010_crop <- mask(Oct10_2010_crop, polygon_proj, snap='out') # mask outside pixels
+plot(Oct10_2010_crop)
+plot(polygon_proj, add=TRUE) # looks right
+      # make it finer scale
+Oct10_2010_crop_resam <- resample(Oct10_2010_crop,bathymetry_crop) #,method='bilinear')
+
+# Load bathymetry
+bathymetry <- raster("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
+plot(bathymetry)
+proj4string(bathymetry)
+bathymetry_proj <- projectRaster(bathymetry, crs=crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(bathymetry_proj)
+plot(bathymetry_proj)
+bathymetry_crop <- crop(bathymetry_proj, polygon_proj, snap='out') # crop
+bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outside pixels
+plot(bathymetry_crop)
+plot(polygon_proj, add=TRUE) # looks right
+
+# 5b.      Freeze-up map -----
+
+# freeze-up: Model 5a (BATH + CONC + CONC_2)
+
+# combine 1 sea ice raster and bathymetry and get values
+freeze_covariates_brick <- brick(Oct10_2010_crop_resam, bathymetry_crop)
+freeze_covariates_values <- values(freeze_covariates_brick)
+head(freeze_covariates_values)
+freeze_covariates_values <- names(freeze_covariates_values) <- c("CONC", "BATH")
+summary(freeze_covariates_values)
+freeze_covariates_values_df <- data.frame(freeze_covariates_values)
+
+# predict raster
+system.time(bears_freezeup_prediction <- predict(bears_freezeup_m5a, newdata=freeze_covariates_values, allow.new.levels=TRUE))
+
+
+
 #
 
-# 5a.      Freeze-up -----
-
-bears_freezeup_m5a
-bear_freeze_predict <- predict(bears_freezeup_m5a, used_avail_RSF_freezeup_FINAL)
-plot(used_avail_RSF_freezeup_FINAL$BATH, bear_freeze_predict, type="l")
-
-used_avail_RSF_freezeup_FINAL$BATH[which.max(bear_freeze_predict)]
-
-
-###
 
 # 6. ------

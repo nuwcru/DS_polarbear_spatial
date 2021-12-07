@@ -177,7 +177,7 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 
 ###
 
-# 5. Create predictive maps (bears) -------
+#5. Create predictive maps (bears) -------
 
 
 
@@ -220,22 +220,43 @@ bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outsid
 plot(bathymetry_crop)
 plot(polygon_proj, add=TRUE) # looks right
 
+
+#
+
+
 # 5b.      Freeze-up map -----
 
 # freeze-up: Model 5a (BATH + CONC + CONC_2)
 
 # combine 1 sea ice raster and bathymetry and get values
 freeze_covariates_brick <- brick(Oct10_2010_crop_resam, bathymetry_crop)
+names(freeze_covariates_brick) <- c("CONC", "BATH")
+head(freeze_covariates_brick)
 freeze_covariates_values <- values(freeze_covariates_brick)
 head(freeze_covariates_values)
-freeze_covariates_values <- names(freeze_covariates_values) <- c("CONC", "BATH")
 summary(freeze_covariates_values)
 freeze_covariates_values_df <- data.frame(freeze_covariates_values)
 
 # predict raster
-system.time(bears_freezeup_prediction <- predict(bears_freezeup_m5a, newdata=freeze_covariates_values, allow.new.levels=TRUE))
+bears_freezeup_prediction <- predict(bears_freezeup_m5a, data=freeze_covariates_values, allow.new.levels=TRUE)
+str(bears_freezeup_prediction)
+
+bears_freezeup_prediction2 <- predict(bears_freezeup_m5a, data=freeze_covariates_values)
+head(bears_freezeup_prediction2)
+
+freeze_covariates_values_noNA = freeze_covariates_values[!is.na(freeze_covariates_values[, 1]), ]
+bears_freezeup_prediction3 = predict(bears_freezeup_m5a, newdata = freeze_covariates_values_noNA)
+
+# make the map
+RSF_map <- freeze_covariates_brick[[1]] %>% setValues(bears_freezeup_prediction2)
+
+plot(RSF_map)
+
+#
 
 
+logRSF.layer <- Covar.brick.small[[1]] %>% setValues(hayriver.prediction)
+plot(logRSF.layer)
 
 #
 

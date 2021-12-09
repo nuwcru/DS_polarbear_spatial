@@ -177,11 +177,17 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 
 ###
 
-#5. Create predictive maps (bears) -------
+# 5. Create predictive maps (bears) -------
 
+# 5a.      Freeze-up Prep data --------------
 
+# import bear data and format
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
+used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
 
-# 5a.       Prep data --------------
+# run top bear model
+bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
 
 # load polygon for cropping
 polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_map_boundary.shp")
@@ -191,22 +197,11 @@ proj4string(polygon_proj) # lat/long
 plot(polygon_proj) 
 
 # Load sea ice
-raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78.rds")
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20_final.rds")
+head(names(raster_list))
 plot(raster_list$`20101010`)
 raster_values <- values(raster_list$`19781026`)
 head(raster_values)
-
-# create one day of sea ice and crop
-Oct10_2010 <- raster_list$`20101010`
-proj4string(Oct10_2010)
-plot(Oct10_2010)
-plot(polygon_proj, add=TRUE) # looks right
-Oct10_2010_crop <- crop(Oct10_2010, polygon_proj, snap='out') # crop
-Oct10_2010_crop <- mask(Oct10_2010_crop, polygon_proj, snap='out') # mask outside pixels
-plot(Oct10_2010_crop)
-plot(polygon_proj, add=TRUE) # looks right
-      # make it finer scale
-Oct10_2010_crop_resam <- resample(Oct10_2010_crop,bathymetry_crop) #,method='bilinear')
 
 # Load bathymetry
 bathymetry <- raster("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
@@ -220,13 +215,22 @@ bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outsid
 plot(bathymetry_crop)
 plot(polygon_proj, add=TRUE) # looks right
 
+# create one day of sea ice and crop
+Oct10_2010 <- raster_list$`20101010`
+proj4string(Oct10_2010)
+plot(Oct10_2010)
+plot(polygon_proj, add=TRUE) # looks right
+Oct10_2010_crop <- crop(Oct10_2010, polygon_proj, snap='out') # crop
+Oct10_2010_crop <- mask(Oct10_2010_crop, polygon_proj, snap='out') # mask outside pixels
+plot(Oct10_2010_crop)
+plot(polygon_proj, add=TRUE) # looks right
+      # make it finer scale
+Oct10_2010_crop_resam <- resample(Oct10_2010_crop,bathymetry_crop) #,method='bilinear')
 
 #
 
 
 # 5b.      Freeze-up map -----
-
-# freeze-up: Model 5a (BATH + CONC + CONC_2)
 
 # combine 1 sea ice raster and bathymetry and get values
 freeze_covariates_brick <- brick(Oct10_2010_crop_resam, bathymetry_crop)
@@ -238,18 +242,42 @@ summary(freeze_covariates_values)
 freeze_covariates_values_df <- data.frame(freeze_covariates_values)
 
 # predict raster
-bears_freezeup_prediction <- predict(bears_freezeup_m5a, data=freeze_covariates_values, allow.new.levels=TRUE)
-str(bears_freezeup_prediction)
+#bears_freezeup_prediction <- predict(bears_freezeup_m5a, data=freeze_covariates_values, allow.new.levels=TRUE)
+#str(bears_freezeup_prediction)
 
-bears_freezeup_prediction2 <- predict(bears_freezeup_m5a, data=freeze_covariates_values)
-head(bears_freezeup_prediction2)
+#bears_freezeup_prediction2 <- predict(bears_freezeup_m5a, data=freeze_covariates_values)
+#head(bears_freezeup_prediction2)
 
 freeze_covariates_values_noNA = freeze_covariates_values[!is.na(freeze_covariates_values[, 1]), ]
-bears_freezeup_prediction3 = predict(bears_freezeup_m5a, newdata = freeze_covariates_values_noNA)
+freeze_covariates_values_noNA_df <- as.data.frame(freeze_covariates_values_noNA)
+
+# Scale them!
+freeze_covariates_values_noNA_df$BATH_SCALED = (freeze_covariates_values_noNA_df$BATH - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_avail_RSF_freezeup_FINAL$BATH)
+freeze_covariates_values_noNA_df$CONC_SCALED = (freeze_covariates_values_noNA_df$CONC - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC)
+freeze_covariates_values_noNA_df$CONC_2 = freeze_covariates_values_noNA_df$CONC^2
+freeze_covariates_values_noNA_df$CONC_2_SCALED = (freeze_covariates_values_noNA_df$CONC_2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / sd(used_avail_RSF_freezeup_FINAL$CONC_2)
+freeze_covariates_values_noNA_df$ID = "30135" # map will be based on this bear only, which makes no sense
+
+#freeze_covariates_values_df$BATH_SCALED = (freeze_covariates_values_df$BATH - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_avail_RSF_freezeup_FINAL$BATH)
+#freeze_covariates_values_df$CONC_SCALED = (freeze_covariates_values_df$CONC - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC)
+#freeze_covariates_values_df$CONC_2 = freeze_covariates_values_df$CONC^2
+#freeze_covariates_values_df$CONC_2_SCALED = (freeze_covariates_values_df$CONC_2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / sd(used_avail_RSF_freezeup_FINAL$CONC_2)
+#freeze_covariates_values_df$ID = "30135" # map will be based on this bear only, which makes no sense
+
+# without NAs
+bears_freezeup_prediction3=predict(bears_freezeup_m5a, newdata=freeze_covariates_values_noNA_df, data=freeze_covariates_values_noNA_df)
+
+# with NAs
+#bears_freezeup_prediction4=predict(bears_freezeup_m5a, newdata=freeze_covariates_values_df, data=freeze_covariates_values_df)
+
+# add NA values back in
+
+
+
+
 
 # make the map
-RSF_map <- freeze_covariates_brick[[1]] %>% setValues(bears_freezeup_prediction2)
-
+RSF_map <- freeze_covariates_brick[[1]] %>% setValues(bears_freezeup_prediction4)
 plot(RSF_map)
 
 #

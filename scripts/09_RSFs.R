@@ -1170,6 +1170,9 @@ head(used_avail_RSF_winter_FINAL)
 used_avail_RSF_winter_FINAL$CONC_2 = '^'(used_avail_RSF_winter_FINAL$CONC,2)
 used_avail_RSF_winter_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_winter_FINAL$CONC_2, scale=TRUE, center=TRUE)
 
+# create squared water column then scale
+used_avail_RSF_winter_FINAL$DIST_WATER_2 = '^'(used_avail_RSF_winter_FINAL$DIST_WATER,2)
+used_avail_RSF_winter_FINAL$DIST_WATER_2_SCALED <- scale(used_avail_RSF_winter_FINAL$DIST_WATER_2, scale=TRUE, center=TRUE)
 
 ###
 
@@ -1445,6 +1448,10 @@ head(used_avail_RSF_breakup_FINAL)
 used_avail_RSF_breakup_FINAL$CONC_2 = '^'(used_avail_RSF_breakup_FINAL$CONC,2)
 used_avail_RSF_breakup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_breakup_FINAL$CONC_2, scale=TRUE, center=TRUE)
 
+# create squared water column then scale
+used_avail_RSF_breakup_FINAL$DIST_WATER_2 = '^'(used_avail_RSF_breakup_FINAL$DIST_WATER,2)
+used_avail_RSF_breakup_FINAL$DIST_WATER_2_SCALED <- scale(used_avail_RSF_breakup_FINAL$DIST_WATER_2, scale=TRUE, center=TRUE)
+
 ###
 
 # null
@@ -1694,6 +1701,10 @@ head(used_avail_RSF_freezeup_FINAL)
 # create squared conc column then scale
 used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
 used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
+
+# create squared water column then scale
+used_avail_RSF_freezeup_FINAL$DIST_WATER_2 = '^'(used_avail_RSF_freezeup_FINAL$DIST_WATER,2)
+used_avail_RSF_freezeup_FINAL$DIST_WATER_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$DIST_WATER_2, scale=TRUE, center=TRUE)
 
 ###
 
@@ -2122,7 +2133,42 @@ densityplot(~BATH | SEASON, data=used) # https://homepage.divms.uiowa.edu/~luke/
 
 
 
-# 11. Relative probability plots for simplified models --------
+# 11. Relative probability plots & histograms for simplified models --------
+
+
+# histograms
+library(lattice)
+
+      # winter
+used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+used_winter <- used_avail_RSF_winter_FINAL %>% filter(USED_AVAIL=="1")
+avail_winter <- used_avail_RSF_winter_FINAL %>% filter(USED_AVAIL=="0")
+histogram(used_winter$BATH)
+histogram(used_winter$CONC)
+histogram(used_winter$CONC_2)
+histogram(avail_winter$BATH)
+histogram(avail_winter$CONC)
+histogram(avail_winter$CONC_2)
+
+used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
+used_breakup<- used_avail_RSF_breakup_FINAL %>% filter(USED_AVAIL=="1")
+avail_breakup <- used_avail_RSF_breakup_FINAL %>% filter(USED_AVAIL=="0")
+histogram(used_breakup$CONC)
+histogram(used_breakup$CONC_2)
+histogram(avail_breakup$CONC)
+histogram(avail_breakup$CONC_2)
+
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+used_freezeup <- used_avail_RSF_freezeup_FINAL %>% filter(USED_AVAIL=="1")
+avail_freezeup <- used_avail_RSF_freezeup_FINAL %>% filter(USED_AVAIL=="0")
+histogram(used_freezeup$BATH)
+histogram(used_freezeup$CONC)
+histogram(used_freezeup$CONC_2)
+histogram(avail_freezeup$BATH)
+histogram(avail_freezeup$CONC)
+histogram(avail_freezeup$CONC_2)
+
+
 
 ###
 

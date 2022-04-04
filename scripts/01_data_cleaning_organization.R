@@ -1537,6 +1537,7 @@ write.csv(bears5, "data/bears_movementanalysis_1yrmax_Oct2021.csv")
 
 
 # summarize movement rates
+bears5 <- read.csv("data/bears_movementanalysis_1yrmax_Oct2021.csv")
 summary(bears5) # mean = 0.43837 km/hr
 bears_movement <- bears5 %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
 summary(bears_movement) # mean = 0.52708 km/hr
@@ -1571,6 +1572,29 @@ ggplot(bears5, aes(SEASON,KM_PER_HR))+
 plotmeans(KM_PER_HR~SEASON, data=bears5)
 
 ####
+
+freeze_movement <- bears5 %>% filter(SEASON=="freeze")
+winter_movement <- bears5 %>% filter(SEASON=="winter")
+break_movement <- bears5 %>% filter(SEASON=="break")
+icefree_movement <- bears5 %>% filter(SEASON=="summer")
+
+freeze_movement2 <- freeze_movement %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
+summary(freeze_movement2) # range: 0.003963 - 0.829553; mean: 0.391212 km/h
+se <- function(x) sqrt(var(x) / length(x))
+se(freeze_movement2$MEAN_MVMT) # 0.06538574
+
+winter_movement2 <- winter_movement %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
+summary(winter_movement2) # range: 0.04996 - 2.19134; mean: 0.57924 km/h
+se(winter_movement2$MEAN_MVMT) # 0.0840446
+
+break_movement2 <- break_movement %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
+summary(break_movement2) # range: 0.05371 - 1.37257; mean: 0.45820 km/h
+se(break_movement2$MEAN_MVMT) # 0.05318254
+
+icefree_movement2 <- icefree_movement %>% group_by(ID) %>% summarize(MEAN_MVMT=mean(KM_PER_HR))
+summary(icefree_movement2) # range: 0.01526 - 0.62485; mean: 0.16059 km/h
+se(icefree_movement2$MEAN_MVMT) # 0.03456597
+
 
 
 
@@ -1710,7 +1734,43 @@ circular_icefree <- circular(icefree$ANGLE, units="degrees", template="geographi
 plot.circular(circular_icefree, stack=TRUE, pch=20, sep=0.08, shrink=1.6)
 mean_icefree <- mean(circular_icefree)
 mean_icefree # 125.1601
-arrows.circular(mean_icefree)
+arrows.circular(mean_icefree, length=2)
+
+
+
+
+### ignore below
+# ended up just doing the arrow in PowerPoint
+
+
+library(plotly)
+icefree_plot <- plot_ly(type='scatterpolar', r=circular_icefree, mode='markers')
+icefree_plot
+icefree_plot2 <- plot_ly(type='scatterpolar', r=icefree$ANGLE, mode='markers')
+icefree_plot2
+
+
+library(plotrix)
+polar.plot(icefree$ANGLE,main="Ice-free",rp.type="s", clockwise=TRUE, start=90)
+
+
+
+icefreeplot3 <- ggplot(icefree, aes(x=ANGLE)) +geom_histogram(binwidth=10) + coord_polar() + scale_x_continuous(limits=c(0, 360)) + xlab(NULL)+ylab(NULL) 
+icefreeplot3
+
+icefreeplot3 + geom_segment(aes(y=0, xend=ANGLE, yend=ANGLE), arrow=arrow(length=unit(0.3,"cm")))
+
+
+icefreeplot4 <- ggplot(icefree, aes(x=ANGLE)) +geom_histogram(binwidth=10) + coord_polar() + scale_x_continuous(limits=c(0, 360)) + xlab(NULL)+ylab(NULL) + geom_arrow()
+
+?geom_arrow()
+
+
+icefreeplot4 <- icefreeplot3 + 
+  geom_path(arrow=arrow(length=unit(0.3,"cm"), type="closed"))
+
+icefreeplot4
+
 
 ###
 

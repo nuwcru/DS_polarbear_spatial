@@ -54,6 +54,16 @@ used_avail_RSF_breakup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_breakup_FINAL
 used_avail_RSF_winter_FINAL$CONC_2 = '^'(used_avail_RSF_winter_FINAL$CONC,2)
 used_avail_RSF_winter_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_winter_FINAL$CONC_2, scale=TRUE, center=TRUE)
 
+# create squared water column then scale
+used_avail_RSF_freezeup_FINAL$DIST_WATER_2 = '^'(used_avail_RSF_freezeup_FINAL$DIST_WATER,2)
+used_avail_RSF_freezeup_FINAL$DIST_WATER_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$DIST_WATER_2, scale=TRUE, center=TRUE)
+
+used_avail_RSF_breakup_FINAL$DIST_WATER_2 = '^'(used_avail_RSF_breakup_FINAL$DIST_WATER,2)
+used_avail_RSF_breakup_FINAL$DIST_WATER_2_SCALED <- scale(used_avail_RSF_breakup_FINAL$DIST_WATER_2, scale=TRUE, center=TRUE)
+
+used_avail_RSF_winter_FINAL$DIST_WATER_2 = '^'(used_avail_RSF_winter_FINAL$DIST_WATER,2)
+used_avail_RSF_winter_FINAL$DIST_WATER_2_SCALED <- scale(used_avail_RSF_winter_FINAL$DIST_WATER_2, scale=TRUE, center=TRUE)
+
 
 # 3. Run top RSF models -------
 
@@ -63,20 +73,20 @@ used_avail_RSF_winter_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_winter_FINAL$C
 ###
 
 # bears
-      # break-up: Model 2a (CONC + CONC_2)
-bears_breakup_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
-bears_breakup_m2a
-summary(bears_breakup_m2a)
+      # break-up: Model 2b (CONC + CONC_2)
+bears_breakup_m2b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+bears_breakup_m2b
+summary(bears_breakup_m2b)
 
       # freeze-up: Model 5a (BATH + CONC + CONC_2)
-bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
-bears_freezeup_m5a
-summary(bears_freezeup_m5a)
+bears_freezeup_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+bears_freezeup_m5b
+summary(bears_freezeup_m5b)
 
       # winter: Model 5a (BATH + CONC + CONC_2)
-bears_winter_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
-bears_winter_m5a
-summary(bears_winter_m5a)
+bears_winter_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
+bears_winter_m5b
+summary(bears_winter_m5b)
 
 ###
 
@@ -178,155 +188,51 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 
 # 5a.      Freeze-up Prep data --------------
 
-# import bear data and format
-used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
-used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
-used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
+# run sections 2-3 first
 
-# run top bear model
-bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+# freezeup top model (5b) has: BATH + ICE + ICE_2
 
 # load polygon for cropping
-polygon <- readOGR("/1. Coding/Shapefiles/RSF_map_boundary.shp")
+polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_map_boundary.shp")
 proj4string(polygon) # lat/long
 polygon_proj <- spTransform(polygon, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
 proj4string(polygon_proj) # lat/long
 plot(polygon_proj) 
 
-# Load sea ice
-raster_list <- readRDS("/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
-head(names(raster_list))
-plot(raster_list$`20101010`)
+# Load sea ice and land mask
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
+tail(names(raster_list))
+plot(raster_list$`20200102`)
 raster_values <- values(raster_list$`19781026`)
 head(raster_values)
+land_mask <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/Ocean_Clipped_RSFboundary.shp")
+land_mask_proj <- spTransform(land_mask, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(land_mask_proj) 
+plot(land_mask_proj) 
+plot(polygon_proj, add=TRUE)
+
+      # create one day of sea ice, crop, and mask land: Dec 2 2005
+Dec02_2005 <- raster_list$`20051202`
+proj4string(Dec02_2005)
+plot(Dec02_2005)
+plot(polygon_proj, add=TRUE) # looks right
+Dec02_2005_crop <- crop(Dec02_2005, polygon_proj, snap='out') # crop
+Dec02_2005_crop <- mask(Dec02_2005_crop, polygon_proj, snap='out') # mask outside pixels
+plot(Dec02_2005_crop)
+plot(polygon_proj, add=TRUE) # looks right
+Dec02_2005_crop_resam <- resample(Dec02_2005_crop, bathymetry_crop) # make it finer scale
+plot(Dec02_2005_crop_resam)
+plot(polygon_proj, add=TRUE)
+plot(land_mask, add=TRUE) # looks good!
+Dec02_2005_crop_resam_noland <- crop(Dec02_2005_crop_resam, land_mask_proj, snap='out') 
+Dec02_2005_crop_resam_noland <- mask(Dec02_2005_crop_resam, land_mask_proj, snap='out')
+plot(Dec02_2005_crop_resam_noland)
+plot(polygon_proj, add=TRUE) # it worked!
+
+### 
 
 # Load bathymetry
-bathymetry <- raster("/1. Coding/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
-plot(bathymetry)
-proj4string(bathymetry)
-bathymetry_proj <- projectRaster(bathymetry, crs=crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
-proj4string(bathymetry_proj)
-plot(bathymetry_proj)
-bathymetry_crop <- crop(bathymetry_proj, polygon_proj, snap='out') # crop
-bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outside pixels
-plot(bathymetry_crop)
-plot(polygon_proj, add=TRUE) # looks right
-
-# create one day of sea ice and crop
-Mar10_2010 <- raster_list$`20100310`
-proj4string(Mar10_2010)
-plot(Mar10_2010)
-plot(polygon_proj, add=TRUE) # looks right
-Mar10_2010_crop <- crop(Mar10_2010, polygon_proj, snap='out') # crop
-Mar10_2010_crop <- mask(Mar10_2010_crop, polygon_proj, snap='out') # mask outside pixels
-plot(Mar10_2010_crop)
-plot(polygon_proj, add=TRUE) # looks right
-      # make it finer scale
-Mar10_2010_crop_resam <- resample(Mar10_2010_crop, bathymetry_crop) #,method='bilinear')
-
-#
-
-
-# 5b.      Freeze-up map -----
-
-# combine 1 sea ice raster and bathymetry and get values
-freeze_covariates_brick <- brick(Mar10_2010_crop_resam, bathymetry_crop)
-names(freeze_covariates_brick) <- c("CONC", "BATH")
-head(freeze_covariates_brick)
-freeze_covariates_values <- values(freeze_covariates_brick)
-head(freeze_covariates_values)
-summary(freeze_covariates_values)
-freeze_covariates_values_df <- data.frame(freeze_covariates_values)
-
-# predict raster
-freeze_covariates_values_noNA = freeze_covariates_values[!is.na(freeze_covariates_values[, 1]) & !is.na(freeze_covariates_values[, 2]), ]
-freeze_covariates_values_noNA_df <- as.data.frame(freeze_covariates_values_noNA)
-
-# Scale them!
-freeze_covariates_values_noNA_df$BATH_SCALED = (freeze_covariates_values_noNA_df$BATH - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_avail_RSF_freezeup_FINAL$BATH)
-freeze_covariates_values_noNA_df$CONC_SCALED = (freeze_covariates_values_noNA_df$CONC - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC)
-freeze_covariates_values_noNA_df$CONC_2 = freeze_covariates_values_noNA_df$CONC^2
-freeze_covariates_values_noNA_df$CONC_2_SCALED = (freeze_covariates_values_noNA_df$CONC_2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / sd(used_avail_RSF_freezeup_FINAL$CONC_2)
-freeze_covariates_values_noNA_df$ID = "30135" # map will be based on this bear only, which makes no sense
-head(freeze_covariates_values_noNA_df)
-
-#freeze_covariates_values_df$BATH_SCALED = (freeze_covariates_values_df$BATH - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_avail_RSF_freezeup_FINAL$BATH)
-#freeze_covariates_values_df$CONC_SCALED = (freeze_covariates_values_df$CONC - mean(used_avail_RSF_freezeup_FINAL$CONC)) / sd(used_avail_RSF_freezeup_FINAL$CONC)
-#freeze_covariates_values_df$CONC_2 = freeze_covariates_values_df$CONC^2
-#freeze_covariates_values_df$CONC_2_SCALED = (freeze_covariates_values_df$CONC_2 - mean(used_avail_RSF_freezeup_FINAL$CONC_2)) / sd(used_avail_RSF_freezeup_FINAL$CONC_2)
-#freeze_covariates_values_df$ID = "30135" # map will be based on this bear only, which makes no sense
-
-# without NAs
-bears_freezeup_prediction3=predict(bears_freezeup_m5a, newdata=freeze_covariates_values_noNA_df, data=freeze_covariates_values_noNA_df)
-
-# with NAs
-#bears_freezeup_prediction4=predict(bears_freezeup_m5a, newdata=freeze_covariates_values_df, data=freeze_covariates_values_df)
-
-# add NA values back in
-
-# Peter: We make a blank vector with the same size as our desired prediction. Right now it has all 0 in it
-bears_freezeup_prediction3_all = numeric(length(freeze_covariates_values_df[,1]))
-# Peter: Then we fill every index at which the original value was NA with an NA (so now our new variable is NA everywhere the old one was)
-bears_freezeup_prediction3_all[is.na(freeze_covariates_values[, 1]) | is.na(freeze_covariates_values[, 2])] = NA
-# Peter: Now everywhere there's not an NA, we fill it with the actual values.
-bears_freezeup_prediction3_all[!is.na(freeze_covariates_values[, 1]) & !is.na(freeze_covariates_values[, 2])] = bears_freezeup_prediction3
-
-# make the map
-RSF_map <- freeze_covariates_brick[[1]] %>% setValues(bears_freezeup_prediction3_all)
-plot(RSF_map)
-
-#
-
-
-
-
-###
-
-
-
-
-# make the map
-RSF_map <- freeze_covariates_brick[[1]] %>% setValues(bears_freezeup_prediction4)
-plot(RSF_map)
-
-#
-
-
-logRSF.layer <- Covar.brick.small[[1]] %>% setValues(hayriver.prediction)
-plot(logRSF.layer)
-
-#
-
-
-
-# PETER's VERSIONS-----------
-
-# 5a.      Freeze-up Prep data --------------
-
-# import bear data and format
-used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
-used_avail_RSF_freezeup_FINAL$CONC_2 = '^'(used_avail_RSF_freezeup_FINAL$CONC,2)
-used_avail_RSF_freezeup_FINAL$CONC_2_SCALED <- scale(used_avail_RSF_freezeup_FINAL$CONC_2, scale=TRUE, center=TRUE)
-
-# run top bear model
-bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
-
-# load polygon for cropping
-#polygon <- readOGR("/1. Coding/Shapefiles/RSF_map_boundary.shp")
-polygon <- readOGR("/1. Coding/Shapefiles/seaiceboundary_finalbeardataset.shp")
-proj4string(polygon) # lat/long
-polygon_proj <- spTransform(polygon, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
-proj4string(polygon_proj) # lat/long
-plot(polygon_proj) 
-
-# Load sea ice
-#raster_list <- readRDS("/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20_final.rds")
-raster_list_uncropped <- readRDS("/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
-plot(raster_list_uncropped$`20101010`)
-
-
-# Load bathymetry
-bathymetry <- raster("/1. Coding/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
+bathymetry <- raster("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
 plot(bathymetry)
 proj4string(bathymetry)
 bathymetry_proj <- projectRaster(bathymetry, crs=crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
@@ -338,18 +244,6 @@ plot(bathymetry_crop)
 plot(polygon_proj, add=TRUE) # looks right
 
 
-# create one day of sea ice and crop - raster_list_uncropped
-Mar10_2011 <- raster_list_uncropped$`20110310`
-proj4string(Mar10_2011)
-plot(Mar10_2011)
-plot(polygon_proj, add=TRUE) # looks right
-Mar10_2011_crop <- crop(Mar10_2011, polygon_proj, snap='out') # crop
-Mar10_2011_crop <- mask(Mar10_2011_crop, polygon_proj, snap='out') # mask outside pixels
-plot(Mar10_2011_crop)
-plot(polygon_proj, add=TRUE) # looks right
-proj4string(Mar10_2011_crop)
-# make it finer scale
-Mar10_2011_crop_resam <- resample(Mar10_2011_crop,bathymetry_crop) #,method='bilinear')
 
 #
 
@@ -358,7 +252,7 @@ Mar10_2011_crop_resam <- resample(Mar10_2011_crop,bathymetry_crop) #,method='bil
 
 # combine 1 sea ice raster and bathymetry and get values
 # using raster_list_uncropped version
-freeze_covariates_brick <- brick(Mar10_2011_crop_resam, bathymetry_crop)
+freeze_covariates_brick <- brick(Dec02_2005_crop_resam_noland, bathymetry_crop)
 names(freeze_covariates_brick) <- c("CONC", "BATH")
 head(freeze_covariates_brick)
 
@@ -369,33 +263,141 @@ bath_scaled_raster <- (bath_unscaled-mean(used_avail_RSF_freezeup_FINAL$BATH))/s
 conc_scaled_raster <- (freeze_covariates_brick$CONC-mean(used_avail_RSF_freezeup_FINAL$CONC))/sd(used_avail_RSF_freezeup_FINAL$CONC)
 conc2_scaled_raster <- (freeze_covariates_brick$CONC^2-mean(used_avail_RSF_freezeup_FINAL$CONC_2))/sd(used_avail_RSF_freezeup_FINAL$CONC_2)
 
-plot(bath_scaled_raster)
-plot(conc_scaled_raster)
-plot(conc2_scaled_raster)
-
+#plot(bath_scaled_raster) # these take awhile to plot
+#plot(conc_scaled_raster)
+#plot(conc2_scaled_raster)
 
 # add rasters together with coefficients from model; linear model
-
-model_raster <- coef(bears_freezeup_m5a)
+model_raster <- coef(bears_freezeup_m5b)
 freeze_map <- model_raster$cond$ID$BATH_SCALED[1]*bath_scaled_raster+model_raster$cond$ID$CONC_SCALED[1]*conc_scaled_raster+model_raster$cond$ID$CONC_2_SCALED[1]*conc2_scaled_raster+model_raster$cond$ID$`(Intercept)`[1]
-
-# transform with link function and plot
-
-freeze_map <- 1/(1+exp(-freeze_map))
-
 plot(freeze_map)
 
-writeRaster(freeze_map, filename="freeze_RSF2.tif")
-
+# transform with link function and plot
+freeze_map <- 1/(1+exp(-freeze_map))
+plot(freeze_map)
+writeRaster(freeze_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_freeze_RSF_Apr2022.tif")
 
 # get values so I can summarize and put into bins in QGIS
-
 summary(freeze_map)
 freeze_map_df <- as.data.frame(values(freeze_map$layer))
 
+###
+
+# 5c.      Break-up prep data ------
+
+
+# run sections 2-3 first
+
+# breakup top model (2b) has: ICE + ICE_2
+
+# load polygon and raster_list from section 5a
+
+# create one day of sea ice and crop: June 16
+Jun16_1990 <- raster_list$`19900616`
+proj4string(Jun16_1990)
+plot(Jun16_1990)
+Jun16_1990_crop <- crop(Jun16_1990, polygon_proj, snap='out') # crop
+Jun16_1990_crop <- mask(Jun16_1990_crop, polygon_proj, snap='out') # mask outside pixels
+plot(Jun16_1990_crop)
+plot(polygon_proj, add=TRUE) # looks right
+Jun16_1990_crop_resam <- resample(Jun16_1990_crop, bathymetry_crop) # make it finer scale
+plot(Jun16_1990_crop_resam)
+plot(polygon_proj, add=TRUE)
+plot(land_mask, add=TRUE) # looks good!
+Jun16_1990_crop_resam_noland <- crop(Jun16_1990_crop_resam, land_mask_proj, snap='out') 
+Jun16_1990_crop_resam_noland <- mask(Jun16_1990_crop_resam, land_mask_proj, snap='out')
+plot(Jun16_1990_crop_resam_noland)
+plot(polygon_proj, add=TRUE) # it worked!
+
+#
+
+# 5d.      Breakup map ------
+
+conc_scaled_raster <- (Jun16_1990_crop_resam_noland-mean(used_avail_RSF_breakup_FINAL$CONC))/sd(used_avail_RSF_breakup_FINAL$CONC)
+conc2_scaled_raster <- (Jun16_1990_crop_resam_noland^2-mean(used_avail_RSF_breakup_FINAL$CONC_2))/sd(used_avail_RSF_breakup_FINAL$CONC_2)
+
+plot(conc_scaled_raster)
+plot(conc2_scaled_raster)
+
+# add rasters together with coefficients from model; linear model
+model_raster <- coef(bears_breakup_m2b)
+break_map <- model_raster$cond$ID$CONC_SCALED[1]*conc_scaled_raster+model_raster$cond$ID$CONC_2_SCALED[1]*conc2_scaled_raster+model_raster$cond$ID$`(Intercept)`[1]
+plot(break_map)
+
+# transform with link function and plot
+break_map <- 1/(1+exp(-break_map))
+plot(break_map)
+writeRaster(break_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_break_RSF_Apr2022.tif")
+
+# get values so I can summarize and put into bins in QGIS
+summary(break_map)
+break_map_df <- as.data.frame(values(break_map$layer))
+
+###
 
 
 
 
+# 5e.      Winter Prep data --------------
 
-# 6. ------
+# run sections 2-3 first
+
+# winter top model (5b) has: BATH + ICE + ICE_2
+# load bathymetry, polygon, and raster_list from section 5a
+
+# create one day of sea ice and crop: Mar 1 2005
+Mar10_2010 <- raster_list$`20100310`
+proj4string(Mar10_2010)
+plot(Mar10_2010)
+plot(polygon_proj, add=TRUE) # looks right
+Mar10_2010_crop <- crop(Mar10_2010, polygon_proj, snap='out') # crop
+Mar10_2010_crop <- mask(Mar10_2010_crop, polygon_proj, snap='out') # mask outside pixels
+plot(Mar10_2010_crop) 
+plot(polygon_proj, add=TRUE) # looks right
+Mar10_2010_crop_resam <- resample(Mar10_2010_crop, bathymetry_crop) # make it finer scale
+plot(Mar10_2010_crop_resam)
+plot(polygon_proj, add=TRUE)
+plot(land_mask_proj, add=TRUE) # looks good!
+Mar10_2010_crop_resam_noland <- crop(Mar10_2010_crop_resam, land_mask_proj, snap='out') 
+Mar10_2010_crop_resam_noland <- mask(Mar10_2010_crop_resam, land_mask_proj, snap='out')
+plot(Mar10_2010_crop_resam_noland)
+plot(polygon_proj, add=TRUE) # it worked!
+
+#
+
+
+# 5f.      Winter map -----
+
+# combine 1 sea ice raster and bathymetry and get values
+# using raster_list_uncropped version
+winter_covariates_brick <- brick(Mar10_2010_crop_resam_noland, bathymetry_crop)
+names(winter_covariates_brick) <- c("CONC", "BATH")
+head(winter_covariates_brick)
+
+bath_unscaled <- winter_covariates_brick$BATH
+bath_unscaled[bath_unscaled>0]=NA
+
+bath_scaled_raster <- (bath_unscaled-mean(used_avail_RSF_winter_FINAL$BATH))/sd(used_avail_RSF_winter_FINAL$BATH)
+conc_scaled_raster <- (freeze_covariates_brick$CONC-mean(used_avail_RSF_winter_FINAL$CONC))/sd(used_avail_RSF_winter_FINAL$CONC)
+conc2_scaled_raster <- (freeze_covariates_brick$CONC^2-mean(used_avail_RSF_winter_FINAL$CONC_2))/sd(used_avail_RSF_winter_FINAL$CONC_2)
+
+#plot(bath_scaled_raster) # these take awhile to plot
+#plot(conc_scaled_raster)
+#plot(conc2_scaled_raster)
+
+# add rasters together with coefficients from model; linear model
+model_raster <- coef(bears_winter_m5b)
+winter_map <- model_raster$cond$ID$BATH_SCALED[1]*bath_scaled_raster+model_raster$cond$ID$CONC_SCALED[1]*conc_scaled_raster+model_raster$cond$ID$CONC_2_SCALED[1]*conc2_scaled_raster+model_raster$cond$ID$`(Intercept)`[1]
+plot(winter_map)
+
+# transform with link function and plot
+winter_map <- 1/(1+exp(-winter_map))
+plot(winter_map)
+writeRaster(winter_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_winter_RSF_Apr2022.tif")
+
+# get values so I can summarize and put into bins in QGIS
+summary(winter_map)
+winter_map_df <- as.data.frame(values(winter_map$layer))
+
+###
+

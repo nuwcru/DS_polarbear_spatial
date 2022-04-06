@@ -48,7 +48,7 @@ setwd("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/PB_DataExploration
 
 # import raster_list
       # sea ice ("final" is the version that's already been masked - use raster_list_78 instead)
-raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78.rds")
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
       # was getting this error: "vector memory exhausted (limit reached?)
       # found a fix here: https://stackoverflow.com/questions/51295402/r-on-macos-error-vector-memory-exhausted-limit-reached
       # made the changes in terminal (had to change it to 250, rather than 100) and this worked

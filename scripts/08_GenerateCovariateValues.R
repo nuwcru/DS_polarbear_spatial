@@ -1011,10 +1011,10 @@ used_avail <- read_csv("data/Oct2020work/FINAL DATASET/used_avail_bath_ice_distl
   dplyr::select(-X,-X1)
 
 
-# Larissa's
+# Larissa's ice
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_distwaterversion.rds")
 
-# Erik's
+# Erik's ice
 # raster_list <- readRDS("/Users/erikhedlin/Downloads/raster_list_distwaterversion.rds")
 
 

@@ -189,11 +189,10 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_breakup_FINAL$CONC)) / sd(used_ava
 # 5a.      Freeze-up Prep data --------------
 
 # run sections 2-3 first
-
 # freezeup top model (5b) has: BATH + ICE + ICE_2
 
 # load polygon for cropping
-polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_map_boundary.shp")
+polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Sea ice boundary/Nov2020work/seaiceboundary_finalbeardataset.shp")
 proj4string(polygon) # lat/long
 polygon_proj <- spTransform(polygon, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
 proj4string(polygon_proj) # lat/long
@@ -201,10 +200,10 @@ plot(polygon_proj)
 
 # Load sea ice and land mask
 raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
-tail(names(raster_list))
-plot(raster_list$`20200102`)
-raster_values <- values(raster_list$`19781026`)
-head(raster_values)
+#tail(names(raster_list))
+#plot(raster_list$`20200102`)
+#raster_values <- values(raster_list$`19781026`)
+#head(raster_values)
 land_mask <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/Ocean_Clipped_RSFboundary.shp")
 land_mask_proj <- spTransform(land_mask, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
 proj4string(land_mask_proj) 
@@ -213,36 +212,33 @@ plot(polygon_proj, add=TRUE)
 
       # create one day of sea ice, crop, and mask land: Dec 2 2005
 Dec02_2005 <- raster_list$`20051202`
-proj4string(Dec02_2005)
-plot(Dec02_2005)
-plot(polygon_proj, add=TRUE) # looks right
+#proj4string(Dec02_2005)
+#plot(Dec02_2005)
+#plot(polygon_proj, add=TRUE) # looks right
 Dec02_2005_crop <- crop(Dec02_2005, polygon_proj, snap='out') # crop
 Dec02_2005_crop <- mask(Dec02_2005_crop, polygon_proj, snap='out') # mask outside pixels
-plot(Dec02_2005_crop)
-plot(polygon_proj, add=TRUE) # looks right
-Dec02_2005_crop_resam <- resample(Dec02_2005_crop, bathymetry_crop) # make it finer scale
-plot(Dec02_2005_crop_resam)
-plot(polygon_proj, add=TRUE)
-plot(land_mask, add=TRUE) # looks good!
-Dec02_2005_crop_resam_noland <- crop(Dec02_2005_crop_resam, land_mask_proj, snap='out') 
-Dec02_2005_crop_resam_noland <- mask(Dec02_2005_crop_resam, land_mask_proj, snap='out')
-plot(Dec02_2005_crop_resam_noland)
-plot(polygon_proj, add=TRUE) # it worked!
+#plot(Dec02_2005_crop)
+#plot(polygon_proj, add=TRUE) # looks right
+Dec02_2005_crop2 <- crop(Dec02_2005_crop, land_mask_proj, snap='out')
+Dec02_2005_crop2 <- mask(Dec02_2005_crop2, land_mask_proj, snap='out')
+Dec02_2005_crop_resam <- resample(Dec02_2005_crop2, bathymetry_crop) # make it finer scale
+#plot(Dec02_2005_crop_resam)
+#plot(polygon_proj, add=TRUE)
+#plot(land_mask, add=TRUE) # looks good!
 
 ### 
 
 # Load bathymetry
 bathymetry <- raster("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
-plot(bathymetry)
-proj4string(bathymetry)
+#plot(bathymetry)
+#proj4string(bathymetry)
 bathymetry_proj <- projectRaster(bathymetry, crs=crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
-proj4string(bathymetry_proj)
-plot(bathymetry_proj)
+#proj4string(bathymetry_proj)
+#plot(bathymetry_proj)
 bathymetry_crop <- crop(bathymetry_proj, polygon_proj, snap='out') # crop
 bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outside pixels
 plot(bathymetry_crop)
 plot(polygon_proj, add=TRUE) # looks right
-
 
 
 #
@@ -252,7 +248,7 @@ plot(polygon_proj, add=TRUE) # looks right
 
 # combine 1 sea ice raster and bathymetry and get values
 # using raster_list_uncropped version
-freeze_covariates_brick <- brick(Dec02_2005_crop_resam_noland, bathymetry_crop)
+freeze_covariates_brick <- brick(Dec02_2005_crop_resam, bathymetry_crop)
 names(freeze_covariates_brick) <- c("CONC", "BATH")
 head(freeze_covariates_brick)
 
@@ -275,7 +271,7 @@ plot(freeze_map)
 # transform with link function and plot
 freeze_map <- 1/(1+exp(-freeze_map))
 plot(freeze_map)
-writeRaster(freeze_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_freeze_RSF_Apr2022.tif")
+writeRaster(freeze_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_freeze_RSF_Apr2022.tif", overwrite=TRUE)
 
 # get values so I can summarize and put into bins in QGIS
 summary(freeze_map)
@@ -290,20 +286,33 @@ freeze_map_df <- as.data.frame(values(freeze_map$layer))
 
 # breakup top model (2b) has: ICE + ICE_2
 
-# load polygon and raster_list from section 5a
+# Load bathymetry
+bathymetry <- raster("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
+bathymetry_proj <- projectRaster(bathymetry, crs=crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+bathymetry_crop <- crop(bathymetry_proj, polygon_proj, snap='out') # crop
+bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outside pixels
+
+# load polygon for cropping
+polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Sea ice boundary/Nov2020work/seaiceboundary_finalbeardataset.shp")
+proj4string(polygon) # lat/long
+polygon_proj <- spTransform(polygon, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(polygon_proj) # lat/long
+plot(polygon_proj) 
+
+# Load sea ice and land mask
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
+land_mask <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/Ocean_Clipped_RSFboundary.shp")
+land_mask_proj <- spTransform(land_mask, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(land_mask_proj) 
+plot(land_mask_proj) 
+plot(polygon_proj, add=TRUE)
 
 # create one day of sea ice and crop: June 16
 Jun16_1990 <- raster_list$`19900616`
 proj4string(Jun16_1990)
-plot(Jun16_1990)
 Jun16_1990_crop <- crop(Jun16_1990, polygon_proj, snap='out') # crop
 Jun16_1990_crop <- mask(Jun16_1990_crop, polygon_proj, snap='out') # mask outside pixels
-plot(Jun16_1990_crop)
-plot(polygon_proj, add=TRUE) # looks right
 Jun16_1990_crop_resam <- resample(Jun16_1990_crop, bathymetry_crop) # make it finer scale
-plot(Jun16_1990_crop_resam)
-plot(polygon_proj, add=TRUE)
-plot(land_mask, add=TRUE) # looks good!
 Jun16_1990_crop_resam_noland <- crop(Jun16_1990_crop_resam, land_mask_proj, snap='out') 
 Jun16_1990_crop_resam_noland <- mask(Jun16_1990_crop_resam, land_mask_proj, snap='out')
 plot(Jun16_1990_crop_resam_noland)
@@ -327,7 +336,7 @@ plot(break_map)
 # transform with link function and plot
 break_map <- 1/(1+exp(-break_map))
 plot(break_map)
-writeRaster(break_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_break_RSF_Apr2022.tif")
+writeRaster(break_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_break_RSF_Apr2022.tif", overwrite=TRUE)
 
 # get values so I can summarize and put into bins in QGIS
 summary(break_map)
@@ -343,21 +352,41 @@ break_map_df <- as.data.frame(values(break_map$layer))
 # run sections 2-3 first
 
 # winter top model (5b) has: BATH + ICE + ICE_2
-# load bathymetry, polygon, and raster_list from section 5a
+
+# Load bathymetry
+bathymetry <- raster("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Bathymetry data/GEBCO/gebco_2020_n85.82123637199403_s35.03197789192201_w-96.98521256446841_e-15.826191902160673.tif")
+bathymetry_proj <- projectRaster(bathymetry, crs=crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+bathymetry_crop <- crop(bathymetry_proj, polygon_proj, snap='out') # crop
+bathymetry_crop <- mask(bathymetry_crop, polygon_proj, snap='out') # mask outside pixels
+
+# load polygon for cropping
+polygon <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/2. Mapping/Sea ice boundary/Nov2020work/seaiceboundary_finalbeardataset.shp")
+proj4string(polygon) # lat/long
+polygon_proj <- spTransform(polygon, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(polygon_proj) # lat/long
+plot(polygon_proj) 
+
+# Load sea ice and land mask
+raster_list <- readRDS("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/1. Coding/SeaIce_DataExploration/DS_seaice_rasterlistrds/raster_list_78-20.rds")
+land_mask <- readOGR("/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/Ocean_Clipped_RSFboundary.shp")
+land_mask_proj <- spTransform(land_mask, crs('+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs'))
+proj4string(land_mask_proj) 
+plot(land_mask_proj) 
+plot(polygon_proj, add=TRUE)
 
 # create one day of sea ice and crop: Mar 1 2005
 Mar10_2010 <- raster_list$`20100310`
-proj4string(Mar10_2010)
-plot(Mar10_2010)
-plot(polygon_proj, add=TRUE) # looks right
+#proj4string(Mar10_2010)
+#plot(Mar10_2010)
+#plot(polygon_proj, add=TRUE) # looks right
 Mar10_2010_crop <- crop(Mar10_2010, polygon_proj, snap='out') # crop
 Mar10_2010_crop <- mask(Mar10_2010_crop, polygon_proj, snap='out') # mask outside pixels
-plot(Mar10_2010_crop) 
-plot(polygon_proj, add=TRUE) # looks right
+#plot(Mar10_2010_crop) 
+#plot(polygon_proj, add=TRUE) # looks right
 Mar10_2010_crop_resam <- resample(Mar10_2010_crop, bathymetry_crop) # make it finer scale
-plot(Mar10_2010_crop_resam)
-plot(polygon_proj, add=TRUE)
-plot(land_mask_proj, add=TRUE) # looks good!
+#plot(Mar10_2010_crop_resam)
+#plot(polygon_proj, add=TRUE)
+#plot(land_mask_proj, add=TRUE) # looks good!
 Mar10_2010_crop_resam_noland <- crop(Mar10_2010_crop_resam, land_mask_proj, snap='out') 
 Mar10_2010_crop_resam_noland <- mask(Mar10_2010_crop_resam, land_mask_proj, snap='out')
 plot(Mar10_2010_crop_resam_noland)
@@ -393,7 +422,7 @@ plot(winter_map)
 # transform with link function and plot
 winter_map <- 1/(1+exp(-winter_map))
 plot(winter_map)
-writeRaster(winter_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_winter_RSF_Apr2022.tif")
+writeRaster(winter_map, filename="/Volumes/Larissa G-drive/UAlberta MSc/Thesis/3. Data/Shapefiles/RSF_maps/bears_winter_RSF_Apr2022.tif", overwrite=TRUE)
 
 # get values so I can summarize and put into bins in QGIS
 summary(winter_map)

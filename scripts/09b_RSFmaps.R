@@ -430,3 +430,122 @@ winter_map_df <- as.data.frame(values(winter_map$layer))
 
 ###
 
+
+# 6. K-fold cross validations ---------
+# 6a.      Break-up --------
+
+# run section 2 first
+
+# sort of based on this, but manually: https://www.statology.org/k-fold-cross-validation-in-r/
+
+# create dataframes for each bear
+unique(used_avail_RSF_breakup_FINAL$ID)
+breakup_11975 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="11975")
+breakup_13284 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="13284")
+breakup_13289 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="13289")
+breakup_10700 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="10700")
+breakup_10695 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="10695")
+breakup_10703 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="10703")
+breakup_10709 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="10709")
+breakup_10707 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="10707")
+breakup_13292 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="13292")
+breakup_12080 <- used_avail_RSF_breakup_FINAL %>% filter(ID=="12080")
+
+# create dataframes where I drop one bear at a time
+break_sin11975 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="11975"),]
+break_sin13284 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="13284"),]
+break_sin13289 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="13289"),]
+break_sin10700 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="10700"),]
+break_sin10695 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="10695"),]
+break_sin10703 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="10703"),]
+break_sin10709 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="10709"),]
+break_sin10707 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="10707"),]
+break_sin13292 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="13292"),]
+break_sin12080 <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$ID=="12080"),]
+
+# run top model (all points) 
+bears_breakup_m2b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_breakup_FINAL)
+
+# run top model (for each subset)
+break_sin11975model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin11975)
+break_sin13284model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin13284)
+break_sin13289model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin13289)
+break_sin10700model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin10700)
+break_sin10695model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin10695)
+break_sin10703model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin10703)
+break_sin10709model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin10709)
+break_sin10707model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin10707)
+break_sin13292model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin13292)
+break_sin12080model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_sin12080)
+
+# calculate mean squared error of each
+mean(resid(break_sin11975model)^2) # 0.01919363
+mean(resid(break_sin13284model)^2) # 0.01908194
+mean(resid(break_sin13289model)^2) # 0.01906623
+mean(resid(break_sin10700model)^2) # 0.01907415
+mean(resid(break_sin10695model)^2) # 0.01907424
+mean(resid(break_sin10703model)^2) # 0.01911169
+mean(resid(break_sin10709model)^2) # 0.01905029
+mean(resid(break_sin10707model)^2) # 0.01906896
+mean(resid(break_sin13292model)^2) # 0.01909267
+mean(resid(break_sin12080model)^2) # 0.01906077
+
+
+# get mean of all mse = 0.1908746
+mean(0.01919363+0.01908194+0.01906623+0.01907415+0.01907424+0.01911169+0.01905029+0.01906896+0.01909267+0.01906077)
+
+# now that I'm here, I don't know what to do
+# apparently a lower mse is better, but what is considered "low"?
+
+
+
+
+
+###
+
+
+
+# 6b.      Winter ------
+
+
+### IGNORE - incorrect code from break-up
+
+# get mean of predictions for each model
+break_sin11975_pred <- predict(break_sin11975model, breakup_11975, type="response") 
+summary(break_sin11975_pred) # mean = 0.02101
+break_sin13284_pred <- predict(break_sin13284model, breakup_13284, type="response") 
+summary(break_sin13284_pred) # mean = 0.01758
+break_sin13289_pred <- predict(break_sin13289model, breakup_13289, type="response") 
+summary(break_sin13289_pred) # mean = 0.01882
+break_sin10700_pred <- predict(break_sin10700model, breakup_10700, type="response") 
+summary(break_sin10700_pred) # mean = 0.01774
+break_sin10695_pred <- predict(break_sin10695model, breakup_10695, type="response") 
+summary(break_sin10695_pred) # mean = 0.02086
+break_sin10703_pred <- predict(break_sin10703model, breakup_10703, type="response") 
+summary(break_sin10703_pred) # mean = 0.02056
+break_sin10709_pred <- predict(break_sin10709model, breakup_10709, type="response") 
+summary(break_sin10709_pred) # mean = 0.02392
+break_sin10707_pred <- predict(break_sin10707model, breakup_10707, type="response") 
+summary(break_sin10707_pred) # mean = 0.01935
+break_sin13292_pred <- predict(break_sin13292model, breakup_13292, type="response") 
+summary(break_sin13292_pred) # mean = 0.01876
+break_sin12080_pred <- predict(break_sin12080model, breakup_12080, type="response") 
+summary(break_sin12080_pred) # mean = 0.01864
+
+# get mean of all those means
+mean(0.02101+0.01758+0.01882+0.01774+0.02086+0.02056+0.02392+0.01935+0.01876+0.01864)
+# 0.19724
+
+# get prediction of original model
+bears_breakup_m2b_pred <- predict(bears_breakup_m2b, type="response")
+summary(bears_breakup_m2b_pred) # mean = 0.01961
+
+
+# 6c.      Freeze-up --------
+
+
+
+
+
+
+

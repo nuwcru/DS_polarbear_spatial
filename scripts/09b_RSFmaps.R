@@ -497,53 +497,109 @@ mean(0.01919363+0.01908194+0.01906623+0.01907415+0.01907424+0.01911169+0.0190502
 # now that I'm here, I don't know what to do
 # apparently a lower mse is better, but what is considered "low"?
 
-
-
-
-
 ###
-
 
 
 # 6b.      Winter ------
 
+# run section 2 first
 
-### IGNORE - incorrect code from break-up
+# create dataframes for each bear
+unique(used_avail_RSF_winter_FINAL$ID)
+winter_13284 <- used_avail_RSF_winter_FINAL %>% filter(ID=="13284")
+winter_13289 <- used_avail_RSF_winter_FINAL %>% filter(ID=="13289")
+winter_13292 <- used_avail_RSF_winter_FINAL %>% filter(ID=="13292")
+winter_11975 <- used_avail_RSF_winter_FINAL %>% filter(ID=="11975")
+winter_13437 <- used_avail_RSF_winter_FINAL %>% filter(ID=="13437")
+winter_12080 <- used_avail_RSF_winter_FINAL %>% filter(ID=="12080")
+winter_10703 <- used_avail_RSF_winter_FINAL %>% filter(ID=="10703")
+winter_30131 <- used_avail_RSF_winter_FINAL %>% filter(ID=="30131")
+winter_30135 <- used_avail_RSF_winter_FINAL %>% filter(ID=="30135")
 
-# get mean of predictions for each model
-break_sin11975_pred <- predict(break_sin11975model, breakup_11975, type="response") 
-summary(break_sin11975_pred) # mean = 0.02101
-break_sin13284_pred <- predict(break_sin13284model, breakup_13284, type="response") 
-summary(break_sin13284_pred) # mean = 0.01758
-break_sin13289_pred <- predict(break_sin13289model, breakup_13289, type="response") 
-summary(break_sin13289_pred) # mean = 0.01882
-break_sin10700_pred <- predict(break_sin10700model, breakup_10700, type="response") 
-summary(break_sin10700_pred) # mean = 0.01774
-break_sin10695_pred <- predict(break_sin10695model, breakup_10695, type="response") 
-summary(break_sin10695_pred) # mean = 0.02086
-break_sin10703_pred <- predict(break_sin10703model, breakup_10703, type="response") 
-summary(break_sin10703_pred) # mean = 0.02056
-break_sin10709_pred <- predict(break_sin10709model, breakup_10709, type="response") 
-summary(break_sin10709_pred) # mean = 0.02392
-break_sin10707_pred <- predict(break_sin10707model, breakup_10707, type="response") 
-summary(break_sin10707_pred) # mean = 0.01935
-break_sin13292_pred <- predict(break_sin13292model, breakup_13292, type="response") 
-summary(break_sin13292_pred) # mean = 0.01876
-break_sin12080_pred <- predict(break_sin12080model, breakup_12080, type="response") 
-summary(break_sin12080_pred) # mean = 0.01864
+# create dataframes where I drop one bear at a time
+winter_sin13284 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="13284"),]
+winter_sin13289 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="13289"),]
+winter_sin13292 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="13292"),]
+winter_sin11975 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="11975"),]
+winter_sin13437 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="13437"),]
+winter_sin12080 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="12080"),]
+winter_sin10703 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="10703"),]
+winter_sin30131 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="30131"),]
+winter_sin30135 <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$ID=="30135"),]
 
-# get mean of all those means
-mean(0.02101+0.01758+0.01882+0.01774+0.02086+0.02056+0.02392+0.01935+0.01876+0.01864)
-# 0.19724
+# run top model (all points) 
+bears_winter_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_winter_FINAL)
 
-# get prediction of original model
-bears_breakup_m2b_pred <- predict(bears_breakup_m2b, type="response")
-summary(bears_breakup_m2b_pred) # mean = 0.01961
+# run top model (for each subset)
+winter_sin13284model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin13284)
+winter_sin13289model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin13289)
+winter_sin13292model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin13292)
+winter_sin11975model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin11975)
+winter_sin13437model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin13437)
+winter_sin12080model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin12080)
+winter_sin10703model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin10703)
+winter_sin30131model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin30131)
+winter_sin30135model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_sin30135)
 
+# calculate mean squared error of each
+mean(resid(winter_sin13284model)^2) # 0.01890987
+mean(resid(winter_sin13289model)^2) # 0.01910763
+mean(resid(winter_sin13292model)^2) # 0.01905353
+mean(resid(winter_sin11975model)^2) # 0.01921245
+mean(resid(winter_sin13437model)^2) # 0.01909339
+mean(resid(winter_sin12080model)^2) # 0.01903308
+mean(resid(winter_sin10703model)^2) # 0.01913563
+mean(resid(winter_sin30131model)^2) # 0.01912466
+mean(resid(winter_sin30135model)^2) # 0.01909858
+
+# get mean of all mse = 0.1717688
+mean(0.01890987+0.01910763+0.01905353+0.01921245+0.01909339+0.01903308+0.01913563+0.01912466+0.01909858)
+
+
+###
 
 # 6c.      Freeze-up --------
 
+# run section 2 first
 
+# create dataframes for each bear
+unique(used_avail_RSF_freezeup_FINAL$ID)
+freeze_10695 <- used_avail_RSF_freezeup_FINAL %>% filter(ID=="10695")
+freeze_13284 <- used_avail_RSF_freezeup_FINAL %>% filter(ID=="13284")
+freeze_13289 <- used_avail_RSF_freezeup_FINAL %>% filter(ID=="13289")
+freeze_13292 <- used_avail_RSF_freezeup_FINAL %>% filter(ID=="13292")
+freeze_30135 <- used_avail_RSF_freezeup_FINAL %>% filter(ID=="30135")
+
+# create dataframes where I drop one bear at a time
+freeze_sin10695 <- used_avail_RSF_freezeup_FINAL[!(used_avail_RSF_freezeup_FINAL$ID=="10695"),]
+freeze_sin13284 <- used_avail_RSF_freezeup_FINAL[!(used_avail_RSF_freezeup_FINAL$ID=="13284"),]
+freeze_sin13289 <- used_avail_RSF_freezeup_FINAL[!(used_avail_RSF_freezeup_FINAL$ID=="13289"),]
+freeze_sin13292 <- used_avail_RSF_freezeup_FINAL[!(used_avail_RSF_freezeup_FINAL$ID=="13292"),]
+freeze_sin30135 <- used_avail_RSF_freezeup_FINAL[!(used_avail_RSF_freezeup_FINAL$ID=="30135"),]
+
+
+# run top model (all points) 
+bears_freezeup_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=used_avail_RSF_freezeup_FINAL)
+
+# run top model (for each subset)
+freeze_sin10695model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freeze_sin10695)
+freeze_sin13284model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freeze_sin13284)
+freeze_sin13284model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freeze_sin13284)
+freeze_sin13292model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freeze_sin13292)
+freeze_sin30135model <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freeze_sin30135)
+
+# calculate mean squared error of each
+mean(resid(freeze_sin10695model)^2) # 0.01920394
+mean(resid(freeze_sin13284model)^2) # 0.0191388
+mean(resid(freeze_sin13284model)^2) # 0.0191388
+mean(resid(freeze_sin30135model)^2) # 0.01921228
+mean(resid(freeze_sin13292model)^2) # 0.01920601
+
+# get mean of all mse = 0.09589983
+mean(0.01920394+0.0191388+0.0191388+0.01921228+0.01920601)
+
+
+###
 
 
 

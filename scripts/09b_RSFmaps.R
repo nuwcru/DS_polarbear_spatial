@@ -605,3 +605,97 @@ mean(0.01920394+0.0191388+0.0191388+0.01921228+0.01920601)
 
 
 
+
+# 7. Figuring out weird ice selection ---------
+
+# run section 2 first
+
+used_freeze <- used_avail_RSF_freezeup_FINAL %>% filter(USED_AVAIL=="1")
+used_break <- used_avail_RSF_breakup_FINAL %>% filter(USED_AVAIL=="1")
+used_winter <- used_avail_RSF_winter_FINAL %>% filter(USED_AVAIL=="1")
+
+# freeze-up
+unique(used_freeze$ID)
+freeze_10695 <- used_freeze %>% filter(ID=="10695")
+freeze_13284 <- used_freeze %>% filter(ID=="13284")
+freeze_13289 <- used_freeze %>% filter(ID=="13289")
+freeze_13292 <- used_freeze %>% filter(ID=="13292")
+freeze_30135 <- used_freeze %>% filter(ID=="30135")
+summary(freeze_10695$CONC)
+freeze_10695_20 <- freeze_10695 %>% filter(CONC<="0.2")
+summary(freeze_13284$CONC)
+freeze_13284_20 <- freeze_13284 %>% filter(CONC<="0.2")
+summary(freeze_13289$CONC)
+freeze_13289_20 <- freeze_13289 %>% filter(CONC<="0.2")
+summary(freeze_13292$CONC)
+freeze_13292_20 <- freeze_13292 %>% filter(CONC<="0.2")
+summary(freeze_30135$CONC)
+freeze_30135_20 <- freeze_30135 %>% filter(CONC<="0.2")
+
+# winter
+unique(used_winter$ID)
+winter_13284 <- used_winter %>% filter(ID=="13284")
+summary(winter_13284$CONC)
+winter_13284_20 <- winter_13284 %>% filter(CONC<="0.2")
+winter_13289 <- used_winter %>% filter(ID=="13289")
+summary(winter_13289$CONC)
+winter_13289_20 <- winter_13289 %>% filter(CONC<="0.2")
+winter_13292 <- used_winter %>% filter(ID=="13292")
+summary(winter_13292$CONC)
+winter_13292_20 <- winter_13292 %>% filter(CONC<="0.2")
+winter_30135 <- used_winter %>% filter(ID=="30135")
+summary(winter_30135$CONC)
+winter_30135_20 <- winter_30135 %>% filter(CONC<="0.2")
+winter_11975 <- used_winter %>% filter(ID=="11975")
+summary(winter_11975$CONC)
+winter_11975_20 <- winter_11975 %>% filter(CONC<="0.2")
+winter_13437 <- used_winter %>% filter(ID=="13437")
+summary(winter_13437$CONC)
+winter_13437_20 <- winter_13437 %>% filter(CONC<="0.2")
+winter_12080 <- used_winter %>% filter(ID=="12080")
+summary(winter_12080$CONC)
+winter_12080_20 <- winter_12080 %>% filter(CONC<="0.2")
+winter_10703 <- used_winter %>% filter(ID=="10703")
+summary(winter_10703$CONC)
+winter_10703_20 <- winter_10703 %>% filter(CONC<="0.2")
+winter_30131 <- used_winter %>% filter(ID=="30131")
+summary(winter_30131$CONC)
+winter_30131_20 <- winter_30131 %>% filter(CONC<="0.2")
+
+# Break-up
+unique(used_break$ID)
+break_13284 <- used_break %>% filter(ID=="13284")
+summary(break_13284$CONC)
+break_13284_20 <- break_13284 %>% filter(CONC<="0.2")
+break_13289 <- used_break %>% filter(ID=="13289")
+summary(break_13289$CONC)
+break_13289_20 <- break_13289 %>% filter(CONC<="0.2")
+break_13292 <- used_break %>% filter(ID=="13292")
+summary(break_13292$CONC)
+break_13292_20 <- break_13292 %>% filter(CONC<="0.2")
+break_11975 <- used_break %>% filter(ID=="11975")
+summary(break_11975$CONC)
+break_11975_20 <- break_11975 %>% filter(CONC<="0.2")
+break_12080 <- used_break %>% filter(ID=="12080")
+summary(break_12080$CONC)
+break_12080_20 <- break_12080 %>% filter(CONC<="0.2")
+break_10703 <- used_break %>% filter(ID=="10703")
+summary(break_10703$CONC)
+break_10703_20 <- break_10703 %>% filter(CONC<="0.2")
+break_10695 <- used_break %>% filter(ID=="10695")
+summary(break_10695$CONC)
+break_10695_20 <- break_10695 %>% filter(CONC<="0.2")
+break_10700 <- used_break %>% filter(ID=="10700")
+summary(break_10700$CONC)
+break_10700_20 <- break_10700 %>% filter(CONC<="0.2")
+break_10709 <- used_break %>% filter(ID=="10709")
+summary(break_10709$CONC)
+break_10709_20 <- break_10709 %>% filter(CONC<="0.2")
+break_10707 <- used_break %>% filter(ID=="10707")
+summary(break_10707$CONC)
+break_10707_20 <- break_10707 %>% filter(CONC<="0.2")
+
+
+
+###
+

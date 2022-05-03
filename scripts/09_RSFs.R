@@ -2263,3 +2263,349 @@ curve(1 / (1 + exp(-((x - mean(used_avail_RSF_freezeup_FINAL$BATH)) / sd(used_av
 
 
 
+
+# ---------
+# 12. Redoing RSFs with low ice removed (Apr 2022) -------
+# 12a.      Freeze-up -------
+
+###
+# PREP DATA
+###
+
+# import data
+used_avail_RSF_freezeup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_freezeup_FINAL_Apr2021.csv")
+head(used_avail_RSF_freezeup_FINAL)
+
+# make df with <=15% CONC removed
+freezeup_subset <- used_avail_RSF_freezeup_FINAL[!(used_avail_RSF_freezeup_FINAL$CONC<=0.15),]
+summary(freezeup_subset$CONC) # worked! the min value is >15%
+freezeup_subset_used <- freezeup_subset %>% filter(USED_AVAIL==1) #145
+freezeup_subset_avail <- freezeup_subset %>% filter(USED_AVAIL==0) #7747
+
+# check there are enough individuals and pts/individual
+      # need at least 5 bears and 20 points per bear
+unique(freezeup_subset_used$ID) # 5 bears, good!
+freeze_10695 <- freezeup_subset_used %>% filter(ID=="10695") # 29, good!
+freeze_13284 <- freezeup_subset_used %>% filter(ID=="13284") # 27, good!
+freeze_13289 <- freezeup_subset_used %>% filter(ID=="13289") # 34, good!
+freeze_13292 <- freezeup_subset_used %>% filter(ID=="13292") # 25, good!
+freeze_30135 <- freezeup_subset_used %>% filter(ID=="30135") # 30, good!
+
+# create squared conc column then scale
+freezeup_subset$CONC_2 = '^'(freezeup_subset$CONC,2)
+freezeup_subset$CONC_2_SCALED <- scale(freezeup_subset$CONC_2, scale=TRUE, center=TRUE)
+
+# create squared water column then scale
+freezeup_subset$DIST_WATER_2 = '^'(freezeup_subset$DIST_WATER,2)
+freezeup_subset$DIST_WATER_2_SCALED <- scale(freezeup_subset$DIST_WATER_2, scale=TRUE, center=TRUE)
+
+###
+# RUN MODELS
+###
+
+
+# null
+bears_freezeup_null <- glmmTMB(USED_AVAIL~(1|ID), family=binomial(), data=freezeup_subset) 
+bears_freezeup_null
+summary(bears_freezeup_null)
+
+
+# Model 1: ID + BATH
+bears_freezeup_m1 <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m1 # AIC: 1452.152
+summary(bears_freezeup_m1)
+
+# Model 2a: ID + CONC
+bears_freezeup_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m2a # AIC: 1452.408
+
+# Model 2b: ID + CONC + CONC_2
+bears_freezeup_m2b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m2b # AIC: 1454.3666 
+
+# Model 3: ID + LAND
+bears_freezeup_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m3 # AIC: 1452.3817
+
+# Model 4a: ID + WATER
+bears_freezeup_m4a <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m4a # AIC: 1452.1543
+
+# Model 4b: ID + WATER + WATER_2
+bears_freezeup_m4b <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m4b # AIC: 1451.4411
+summary(bears_freezeup_m4b)
+
+# Model 5a: ID + BATH + CONC
+bears_freezeup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m5a # AIC: 1453.9671
+
+# Model 5b: ID + BATH + CONC + CONC_2
+bears_freezeup_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m5b # AIC: 1455.9653
+
+# Model 6: ID + BATH + LAND
+bears_freezeup_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m6 # AIC: 1453.9279
+
+# Model 7a: ID + CONC + WATER
+bears_freezeup_m7a <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m7a # AIC: 1454.1489 
+
+# Model 7b: ID + CONC + CONC_2 + WATER 
+bears_freezeup_m7b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m7b # AIC: 1456.0814
+
+# Model 7c: ID + CONC + WATER + WATER_2
+bears_freezeup_m7c <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m7c # AIC: 1453.4386 
+
+# Model 7d: ID + CONC + CONC_2 + WATER + WATER_2
+bears_freezeup_m7d <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m7d # AIC: 1455.3164
+
+# Model 8a: ID + LAND + WATER
+bears_freezeup_m8a <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m8a # AIC: 1454.1530
+
+# Model 8b: ID + LAND + WATER + WATER_2
+bears_freezeup_m8b <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=freezeup_subset)
+bears_freezeup_m8b # AIC: 1453.4072
+
+# 12b.      Winter ---------
+
+###
+# PREP DATA
+###
+
+# import data
+used_avail_RSF_winter_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_winter_FINAL_Apr2021.csv")
+head(used_avail_RSF_winter_FINAL)
+
+# make df with <=20% CONC removed
+winter_subset <- used_avail_RSF_winter_FINAL[!(used_avail_RSF_winter_FINAL$CONC<=0.15),]
+summary(winter_subset$CONC) # worked!
+winter_subset_used <- winter_subset %>% filter(USED_AVAIL==1) #201
+winter_subset_avail <- winter_subset %>% filter(USED_AVAIL==0) #11162
+
+# check there are enough individuals and pts/individual
+      # need at least 5 bears and 20 points per bear
+unique(winter_subset_used$ID) # 9 bears, good!
+      # 13284 13289 13292 13437 12080 10703 11975 30131 30135
+winter_13284 <- winter_subset_used %>% filter(ID=="13284") # 19**
+winter_13289 <- winter_subset_used %>% filter(ID=="13289") # 28, good!
+winter_13292 <- winter_subset_used %>% filter(ID=="13292") # 24, good!
+winter_13437 <- winter_subset_used %>% filter(ID=="13437") # 46, good!
+winter_12080 <- winter_subset_used %>% filter(ID=="12080") # 21, good!
+winter_10703 <- winter_subset_used %>% filter(ID=="10703") # 17**
+winter_11975 <- winter_subset_used %>% filter(ID=="11975") # 4**
+winter_30131 <- winter_subset_used %>% filter(ID=="30131") # 19**
+winter_30135 <- winter_subset_used %>% filter(ID=="30135") # 23, good!
+      # need to remove 13284, 10703, 11975, and 30131
+      # I'll still have 5 bears
+
+winter_subset <- winter_subset[!(winter_subset$ID==13284),]
+winter_subset <- winter_subset[!(winter_subset$ID==10703),]
+winter_subset <- winter_subset[!(winter_subset$ID==11975),]
+winter_subset <- winter_subset[!(winter_subset$ID==30131),]
+unique(winter_subset$ID) # looks good!
+
+# create squared conc column then scale
+winter_subset$CONC_2 = '^'(winter_subset$CONC,2)
+winter_subset$CONC_2_SCALED <- scale(winter_subset$CONC_2, scale=TRUE, center=TRUE)
+
+# create squared water column then scale
+winter_subset$DIST_WATER_2 = '^'(winter_subset$DIST_WATER,2)
+winter_subset$DIST_WATER_2_SCALED <- scale(winter_subset$DIST_WATER_2, scale=TRUE, center=TRUE)
+
+
+###
+# RUN MODELS
+###
+
+
+# null
+bears_winter_null <- glmmTMB(USED_AVAIL~(1|ID), family=binomial(), data=winter_subset) 
+bears_winter_null # AID: 1402.1525
+summary(bears_winter_null)
+
+# Model 1: ID + BATH
+bears_winter_m1 <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m1 # AIC: 1402.3317
+summary(bears_winter_m1)
+
+# Model 2a: ID + CONC
+bears_winter_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m2a # AIC: 1404.0319
+
+# Model 2b: ID + CONC + CONC_2
+bears_winter_m2b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m2b # AIC: 1405.6432
+
+# Model 3: ID + LAND
+bears_winter_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m3 # AIC: 1402.6427
+summary(bears_winter_m3)
+
+# Model 4a: ID + WATER
+bears_winter_m4a <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m4a # AIC: 1404.0824 
+
+# Model 4b: ID + WATER + WATER_2
+bears_winter_m4b <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m4b # AIC: 1406.0804
+
+# Model 5a: ID + BATH + CONC
+bears_winter_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m5a # AIC: 1402.952
+
+# Model 5b: ID + BATH + CONC + CONC_2
+bears_winter_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m5b # AIC: 1404.1932 
+
+# Model 6: ID + BATH + LAND
+bears_winter_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m6 # AIC: 1404.1658
+
+# Model 7a: ID + CONC + WATER
+bears_winter_m7a <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m7a # AIC: 1405.7691
+
+# Model 7b: ID + CONC + CONC_2 + WATER
+bears_winter_m7b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m7b # AIC: 1407.420 
+
+# Model 7c: ID + CONC + WATER + WATER_2
+bears_winter_m7c <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m7c # AIC: 1407.7136
+
+# Model 7d: ID + CONC + CONC_2 + WATER + WATER_2
+bears_winter_m7d <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m7d # AIC: 1409.3145
+
+# Model 8a: ID + LAND + WATER
+bears_winter_m8a <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m8a # AIC: 1404.4770
+
+# Model 8b: ID + LAND + WATER
+bears_winter_m8b <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=winter_subset)
+bears_winter_m8b # AIC: 1406.3632
+
+# 12c.      Break-up -------
+
+
+###
+# PREP DATA
+###
+
+# import data
+used_avail_RSF_breakup_FINAL <- read.csv("data/Oct2020work/FINAL DATASET/used_avail_RSF_breakup_FINAL_Apr2021.csv")
+head(used_avail_RSF_breakup_FINAL)
+
+# make df with <=15% CONC removed
+break_subset <- used_avail_RSF_breakup_FINAL[!(used_avail_RSF_breakup_FINAL$CONC<=0.15),]
+summary(break_subset$CONC) # worked!
+break_subset_used <- break_subset %>% filter(USED_AVAIL==1) #297
+break_subset_avail <- break_subset %>% filter(USED_AVAIL==0) #15725
+
+
+# check there are enough individuals and pts/individual
+      # need at least 5 bears and 20 points per bear
+unique(break_subset$ID) # 9 bears, good!
+      # 11975 13284 13289 10700 10695 10703 10709 10707 13292 12080
+break_11975 <- break_subset_used %>% filter(ID=="11975") # 10**
+break_13284 <- break_subset_used %>% filter(ID=="13284") # 24, good!
+break_13289 <- break_subset_used %>% filter(ID=="13289") # 37, good!
+break_10700 <- break_subset_used %>% filter(ID=="10700") # 35, good!
+break_10695 <- break_subset_used %>% filter(ID=="10695") # 32, good!
+break_10703<- break_subset_used %>% filter(ID=="10703") # 42, good!
+break_10709 <- break_subset_used %>% filter(ID=="10709") # 32, good!
+break_10707 <- break_subset_used %>% filter(ID=="10707") # 28, good!
+break_13292 <- break_subset_used %>% filter(ID=="13292") # 26, good!
+break_12080 <- break_subset_used %>% filter(ID=="12080") # 31, good!
+      # need to remove 11975
+      # I'll still have 9 bears
+break_subset <- break_subset[!(break_subset$ID==11975),]
+unique(break_subset$ID) # looks good!
+
+# create squared conc column then scale
+break_subset$CONC_2 = '^'(break_subset$CONC,2)
+break_subset$CONC_2_SCALED <- scale(break_subset$CONC_2, scale=TRUE, center=TRUE)
+
+# create squared water column then scale
+break_subset$DIST_WATER_2 = '^'(break_subset$DIST_WATER,2)
+break_subset$DIST_WATER_2_SCALED <- scale(break_subset$DIST_WATER_2, scale=TRUE, center=TRUE)
+
+
+###
+# RUN MODELS
+###
+
+
+# null
+bears_breakup_null <- glmmTMB(USED_AVAIL~(1|ID), family=binomial(), data=break_subset)
+bears_breakup_null # AIC: 2843.866
+
+# Model 1: ID + BATH
+bears_breakup_m1 <- glmmTMB(USED_AVAIL~BATH_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m1 # AIC: 2842.943
+
+# Model 2a: ID + CONC
+bears_breakup_m2a <- glmmTMB(USED_AVAIL~CONC_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m2a # AIC: 2842.389
+
+# Model 2b: ID + CONC + CONC_2
+bears_breakup_m2b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m2b # AIC: 2844.351 
+
+# Model 3: ID + LAND
+bears_breakup_m3 <- glmmTMB(USED_AVAIL~DIST_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m3 # AIC: 2839.538 
+summary(bears_breakup_m3)
+
+# Model 4a: ID + WATER
+bears_breakup_m4a <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m4a # AIC: 2845.119
+
+# Model 4b: ID + WATER + WATER_2
+bears_breakup_m4b <- glmmTMB(USED_AVAIL~DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m4b # AIC: 2845.045
+
+# Model 5a: ID + BATH + CONC
+bears_breakup_m5a <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m5a # AIC: 2843.454 
+
+# Model 5b: ID + BATH + CONC + CONC_2
+bears_breakup_m5b <- glmmTMB(USED_AVAIL~BATH_SCALED+CONC_SCALED+CONC_2_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m5b # AIC: 2845.412 
+
+# Model 6: ID + BATH + LAND
+bears_breakup_m6 <- glmmTMB(USED_AVAIL~BATH_SCALED+DIST_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m6 # AIC: 2841.220 
+summary(bears_breakup_m6)
+
+# Model 7a: ID + CONC + WATER
+bears_breakup_m7a <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m7a # AIC: 2843.978
+
+# Model 7b: ID + CONC + CONC_2 + WATER 
+bears_breakup_m7b <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m7b # AIC: 2845.924 
+
+# Model 7c: ID + CONC + WATER + WATER_2
+bears_breakup_m7c <- glmmTMB(USED_AVAIL~CONC_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m7c # AIC: 2843.983
+
+# Model 7d: ID + CONC + CONC_2 + WATER + WATER_2
+bears_breakup_m7d <- glmmTMB(USED_AVAIL~CONC_SCALED+CONC_2_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m7d # AIC: 2845.931
+
+# Model 8a: ID + LAND + WATER
+bears_breakup_m8a <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m8a # AIC: 2841.529
+summary(bears_breakup_m8a)
+
+# Model 8b: ID + LAND + WATER + WATER_2
+bears_breakup_m8b <- glmmTMB(USED_AVAIL~DIST_SCALED+DIST_WATER_SCALED+DIST_WATER_2_SCALED+(1|ID), family=binomial(), data=break_subset)
+bears_breakup_m8b # AIC: 2842.789
+
